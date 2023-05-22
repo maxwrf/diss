@@ -1,9 +1,14 @@
 # Reference: https://github.com/DanAkarca/generativenetworkmodel/blob/master/Scripts/ii.%20Computing%20the%20seed%20network.m
 import numpy as np
 from scipy.io import loadmat
+from scipy.spatial.distance import pdist, squareform
 
 
 def get_seed_network(prop=0.2):
+    """
+    Loads illustrative seed networks as in 'GNMs for neurodevelopmental struct'
+    """
+
     d_p = "/local/data/mphilcompbio/2022/mw894/diss/fake-seed/"
 
     # connections across the neurons, across all the sixty eight samples
@@ -19,7 +24,8 @@ def get_seed_network(prop=0.2):
     A = np.zeros(connections.shape)
     A[index] = 1
 
-    return A
+    # laod distances
+    coordinates = loadmat(d_p + 'dk_coordinates.mat')['coordinates']
+    D = squareform(pdist(coordinates))
 
-# Location of the neurons (only required for viz?)
-# dk_coordinates = loadmat(d_p + 'dk_coordinates.mat')['coordinates']
+    return A, D
