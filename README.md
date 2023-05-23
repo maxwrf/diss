@@ -1,12 +1,12 @@
 # MPhil in Computation Biology Dissertation: Testing the robustness of generative networks for capturing patterns of spontaneous activity in developing neural circuits
 
 Generative modelling techniques have been used to summarise pairwise connectivity patterns in recordings of spontaneous neural activity [1].
-In the original paper, homophilic wiring principles best accounted for the network topologies inferred from experimental recordings.  
+In the original paper, homophilic wiring principles best accounted for the network topologies inferred from experimental recordings.
 One limitation of this current approach is that it is unclear how robust the
 methods are when given relatively small recording durations (e.g. 5
 minutes).
 
-The plan in this project will be to test the robustness of networks created by subsampling from longer duration recordings (e.g. taking 10 min segments from the 30 min recordings) to see the variability of the networks that are generated.  
+The plan in this project will be to test the robustness of networks created by subsampling from longer duration recordings (e.g. taking 10 min segments from the 30 min recordings) to see the variability of the networks that are generated.
 This will effectively test the reliability of the STTC (Spike Time Tiling Coefficient) when presented with shorter recordings.
 
 Two further aspects of this project to explore:
