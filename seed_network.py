@@ -4,16 +4,14 @@ from scipy.io import loadmat
 from scipy.spatial.distance import pdist, squareform
 
 
-def get_seed_network(prop=0.2):
+def get_seed_network(config: dict, prop=0.2) -> tuple:
     """
     Loads illustrative seed networks as in 'GNMs for neurodevelopmental struct'
     """
 
-    d_p = "/local/data/mphilcompbio/2022/mw894/diss/fake-seed/"
-
     # connections across the neurons, across all the sixty eight samples
     connections = loadmat(
-        d_p + 'example_binarised_connectomes.mat')[
+        config['data_path'] + 'example_binarised_connectomes.mat')[
             'example_binarised_connectomes']
 
     # remove the first dimension to get average
@@ -25,7 +23,7 @@ def get_seed_network(prop=0.2):
     A[index] = 1
 
     # laod distances
-    coordinates = loadmat(d_p + 'dk_coordinates.mat')['coordinates']
+    coordinates = loadmat(config['data_path'] + 'dk_coordinates.mat')['coordinates']
     D = squareform(pdist(coordinates))
 
     return A, D

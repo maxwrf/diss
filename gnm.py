@@ -2,8 +2,9 @@
 import numpy as np
 
 from seed_network import get_seed_network
-from scipy.io import loadmat
+from utils import params_from_json
 
+#np.random.seed(123)
 
 class GNM():
     def __init__(self,
@@ -13,7 +14,7 @@ class GNM():
                  model_type: str,
                  params: np.ndarray) -> None:
 
-        self.A = A  # adjacency matrix
+        self.A = A.copy()  # adjacency matrix
         self.D = D  # euclidean distances
         self.n_nodes = len(D)  # number of nodes
         self.m = m  # target number of connections
@@ -27,18 +28,14 @@ class GNM():
         """
         Initiates the network generation leveraging the diffferent rules
         """
-        if self.model_type == "clu_avg":
-            # compute initial the value matrix
-            self.c = self.get_clustering_coeff()
-            K = (self.c[:, np.newaxis] + self.c) / 2
-
+        if self.model_type in ["clu-avg", "clu-dist"]:
             # start the algorithm using the different paramter combos
             for i_param in range(self.n_params):
                 eta = self.params[i_param, 0]
                 gamma = self.params[i_param, 1]
-                self.b[:, :, i_param] = self.gen_clu_avg(eta, gamma, K)
+                self.b[:, :, i_param] = self.gen_clu_avg(eta, gamma)
         else:
-            pass
+            BaseException
 
     def get_clustering_coeff(self) -> np.array:
         """
@@ -72,17 +69,56 @@ class GNM():
             self.A[idx_x, idx_y] = 1
             self.A[idx_y, idx_x] = 1
 
-    def gen_clu_avg(self, eta, gamma, K) -> None:
+    def init_K(self) -> None:
+        """
+        Initializes the value matrix
+        """
+        if self.model_type == "clu-avg":
+            K = (self.c[:, np.newaxis] + self.c) / 2
+        elif self.model_type == "clu-dist":
+            K = np.abs(self.c[:, np.newaxis] - self.c)
+
+        self.K = K + self.epsilon
+    
+    def update_K(self, bth) -> None:
+        """
+        Updates the value matrix after a new edge has been added
+        Need to update all rows and columns for every edge in bth
+        """
+
+        if self.model_type == "clu-avg":
+            self.K[:, bth] = (np.repeat(self.c[:, np.newaxis], len(
+                bth), axis=1) + self.c[bth]) / 2
+
+            self.K[bth, :] = (np.repeat(self.c[:, np.newaxis], len(
+                bth), axis=1) + self.c[bth]).T / 2
+            
+        elif self.model_type == "clu-dist":
+            self.K[:, bth] = np.abs(np.repeat(self.c[:, np.newaxis], len(
+                bth), axis=1) - self.c[bth])
+
+            self.K[bth, :] = np.abs(np.repeat(self.c[:, np.newaxis], len(
+                bth), axis=1) - self.c[bth]).T
+            
+        else:
+            BaseException
+
+        # numerical stability
+        self.K[:, bth] = self.K[:, bth] + self.epsilon
+        self.K[bth, :] = self.K[bth, :] + self.epsilon
+
+    def gen_clu_avg(self, eta, gamma) -> None:
         """
         generative nework build using average clustering coefficient
         """
-
-        # maths instability
-        K = K + self.epsilon
+        
+        # compute initial value matrix
+        self.c = self.get_clustering_coeff()
+        self.init_K()
 
         # compute cost and value
         Fd = self.D ** eta
-        Fk = K ** gamma
+        Fk = self.K ** gamma
 
         # compute the prob for adding connection where there is none
         Ff = Fd * Fk * (self.A == 0)
@@ -98,10 +134,11 @@ class GNM():
         m_seed = np.count_nonzero(self.A) / 2
 
         for i in range(int(m_seed + 1), self.m + 1):
-            # select the element to update
-            # C = np.concatenate(([0], np.cumsum(P)))
-            # r = np.sum(np.random.rand() * C[-1] >= C)
-            r = np.argmax(P)
+            # select the element to update (biased dice)
+            #C = np.concatenate(([0], np.cumsum(P)))
+            #r = np.sum(np.random.rand() * C[-1] >= C)
+            r = np.random.choice(range(len(P)), p=P/sum(P))
+
             uu = u[r]
             vv = v[r]
 
@@ -120,7 +157,7 @@ class GNM():
 
             # update the clustering coefficient: at col node)
             bv = np.where(self.A[vv, :])[0]
-            sv = A[bv, :][:, bv]
+            sv = self.A[bv, :][:, bv]
             self.c[vv] = np.sum(sv) / (k[vv] ** 2 - k[vv])
 
             # update the clustering coefficient: at common neighbours
@@ -133,30 +170,27 @@ class GNM():
             # get all the indices in the value matrix to update
             bth = np.union1d(bth, np.array([uu, vv]))
 
-            # update all rows
-            K[:, bth] = (np.repeat(self.c[:, np.newaxis], len(
-                bth), axis=1) + self.c[bth]) / 2 + self.epsilon
-
-            # update all cols
-            K[bth, :] = (np.repeat(self.c[:, np.newaxis], len(
-                bth), axis=1) + self.c[bth]).T / 2 + self.epsilon
+            # update values
+            self.update_K(bth)
 
             # Compute the updated probabilities with the new graph
-            Ff[bth, :] = Fd[bth, :] * (K[bth, :] ** gamma)
-            Ff[:, bth] = Fd[:, bth] * (K[:, bth] ** gamma)
+            Ff[bth, :] = Fd[bth, :] * (self.K[bth, :] ** gamma)
+            Ff[:, bth] = Fd[:, bth] * (self.K[:, bth] ** gamma)
             Ff = Ff * (self.A == 0)
             P = Ff[u, v]
 
         # return indcies of upper triangle adjacent nodes (there is an edge now)
         triu_idx = np.triu_indices(self.A.shape[0], k=1)
         edge_idx = np.where(self.A[triu_idx] == 1)[0]
-        out = np.column_stack((triu_idx[0][edge_idx], triu_idx[1][edge_idx]))
+        out = np.column_stack((triu_idx[0][edge_idx] +1, triu_idx[1][edge_idx]))
         return out
 
 
+# load config
+config = params_from_json("./config.json")
+
 # load a seed network, A = adjacency matrix and D = distance matrix
-d_p = "/local/data/mphilcompbio/2022/mw894/diss/fake-seed/"
-A, D = get_seed_network()
+A, D = get_seed_network(config)
 
 # load a fake parameter sampling space
 etalimits = [-7, 7]
@@ -168,9 +202,17 @@ p, q = np.meshgrid(np.linspace(etalimits[0], etalimits[1], int(np.sqrt(nruns))),
 
 params = np.unique(np.vstack((p.flatten(), q.flatten())).T, axis=0)
 
-params = params*-1
 # testing the model
 A = A[:10, :10]
 D = D[:10, :10]
-gnm = GNM(A, D, 10, "clu_avg", params)
-gnm.main()
+
+params = np.array([[3,3]])
+
+g_clu_avg = GNM(A, D, 3, "clu-avg", params)
+g_clu_avg.main()
+g_clu_avg.b[...,-1]
+
+
+g_clu_dist = GNM(A, D, 3, "clu-dist", params)
+g_clu_dist.main()
+g_clu_dist.b[...,-1]
