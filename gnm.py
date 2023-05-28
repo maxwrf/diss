@@ -28,14 +28,14 @@ class GNM():
         """
         Initiates the network generation leveraging the diffferent rules
         """
-        if self.model_type in ["clu-avg", "clu-dist"]:
+        if self.model_type in ['clu-avg', 'clu-dist', 'clu-max', 'clu-min', 'clu-prod']:
             # start the algorithm using the different paramter combos
             for i_param in range(self.n_params):
                 eta = self.params[i_param, 0]
                 gamma = self.params[i_param, 1]
                 self.b[:, :, i_param] = self.gen_clu_avg(eta, gamma)
         else:
-            BaseException
+            raise BaseException
 
     def get_clustering_coeff(self) -> np.array:
         """
@@ -77,6 +77,14 @@ class GNM():
             K = (self.c[:, np.newaxis] + self.c) / 2
         elif self.model_type == "clu-dist":
             K = np.abs(self.c[:, np.newaxis] - self.c)
+        elif self.model_type == "clu-max":
+            K = np.maximum(self.c[:,np.newaxis], self.c)
+        elif self.model_type == "clu-min":
+            K = np.minimum(self.c[:,np.newaxis], self.c)
+        elif self.model_type == "clu-prod":
+            K = (self.c[:, np.newaxis] * self.c)
+        else: 
+            raise BaseException
 
         self.K = K + self.epsilon
     
@@ -100,8 +108,22 @@ class GNM():
             self.K[bth, :] = np.abs(np.repeat(self.c[:, np.newaxis], len(
                 bth), axis=1) - self.c[bth]).T
             
+        elif self.model_type == "clu-max":
+            self.K[:, bth] = np.maximum(np.repeat(self.c[:, np.newaxis], len(
+                bth), axis=1), self.c[bth])
+
+            self.K[bth, :] = np.maximum(np.repeat(self.c[:, np.newaxis], len(
+                bth), axis=1), self.c[bth]).T
+            
+        elif self.model_type == "clu-prod":
+            self.K[:, bth] = np.multiply(np.repeat(self.c[:, np.newaxis], len(
+                bth), axis=1), self.c[bth])
+
+            self.K[bth, :] = np.multiply(np.repeat(self.c[:, np.newaxis], len(
+                bth), axis=1), self.c[bth]).T
+            
         else:
-            BaseException
+            raise BaseException
 
         # numerical stability
         self.K[:, bth] = self.K[:, bth] + self.epsilon
@@ -208,11 +230,28 @@ D = D[:10, :10]
 
 params = np.array([[3,3]])
 
+# cluster product
+g_clu_min = GNM(A, D, 3, "clu-prod", params)
+g_clu_min.main()
+g_clu_min.b[...,-1]
+
+# cluster minimum
+g_clu_min = GNM(A, D, 3, "clu-min", params)
+g_clu_min.main()
+g_clu_min.b[...,-1]
+
+# cluster maximum
+g_clu_max = GNM(A, D, 3, "clu-max", params)
+g_clu_max.main()
+g_clu_max.b[...,-1]
+
+# cluster average
 g_clu_avg = GNM(A, D, 3, "clu-avg", params)
 g_clu_avg.main()
 g_clu_avg.b[...,-1]
 
-
+# cluster distance
 g_clu_dist = GNM(A, D, 3, "clu-dist", params)
 g_clu_dist.main()
 g_clu_dist.b[...,-1]
+
