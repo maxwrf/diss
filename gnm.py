@@ -33,7 +33,7 @@ class GNM():
             for i_param in range(self.n_params):
                 eta = self.params[i_param, 0]
                 gamma = self.params[i_param, 1]
-                self.b[:, :, i_param] = self.gen_clu_avg(eta, gamma)
+                self.b[:, :, i_param] = self.__main(eta, gamma)
         else:
             raise BaseException
 
@@ -73,19 +73,18 @@ class GNM():
         """
         Initializes the value matrix
         """
-        if self.model_type == "clu-avg":
-            K = (self.c[:, np.newaxis] + self.c) / 2
-        elif self.model_type == "clu-dist":
-            K = np.abs(self.c[:, np.newaxis] - self.c)
-        elif self.model_type == "clu-max":
-            K = np.maximum(self.c[:,np.newaxis], self.c)
-        elif self.model_type == "clu-min":
-            K = np.minimum(self.c[:,np.newaxis], self.c)
-        elif self.model_type == "clu-prod":
-            K = (self.c[:, np.newaxis] * self.c)
-        else: 
-            raise BaseException
 
+        funcs = {
+            'clu-avg': lambda c_1, c_2: np.add(c_1, c_2) / 2,
+            'clu-dist': lambda c_1, c_2: np.abs(np.subtract(c_1, c_2)),
+            'clu-max': np.maximum,
+            'clu-min': np.minimum,
+            'clu-prod': np.multiply
+        }
+
+        f = funcs[self.model_type]
+
+        K = f(self.c[:,np.newaxis], self.c)
         self.K = K + self.epsilon
     
     def update_K(self, bth) -> None:
@@ -94,48 +93,34 @@ class GNM():
         Need to update all rows and columns for every edge in bth
         """
 
-        if self.model_type == "clu-avg":
-            self.K[:, bth] = (np.repeat(self.c[:, np.newaxis], len(
-                bth), axis=1) + self.c[bth]) / 2
+        funcs = {
+            'clu-avg': lambda c_1, c_2: np.add(c_1, c_2) / 2,
+            'clu-dist': lambda c_1, c_2: np.abs(np.subtract(c_1, c_2)),
+            'clu-max': np.maximum,
+            'clu-min': np.minimum,
+            'clu-prod': np.multiply
+        }
 
-            self.K[bth, :] = (np.repeat(self.c[:, np.newaxis], len(
-                bth), axis=1) + self.c[bth]).T / 2
-            
-        elif self.model_type == "clu-dist":
-            self.K[:, bth] = np.abs(np.repeat(self.c[:, np.newaxis], len(
-                bth), axis=1) - self.c[bth])
+        f = funcs[self.model_type]
 
-            self.K[bth, :] = np.abs(np.repeat(self.c[:, np.newaxis], len(
-                bth), axis=1) - self.c[bth]).T
-            
-        elif self.model_type == "clu-max":
-            self.K[:, bth] = np.maximum(np.repeat(self.c[:, np.newaxis], len(
+        self.K[:, bth] = f(np.repeat(self.c[:, np.newaxis], len(
                 bth), axis=1), self.c[bth])
 
-            self.K[bth, :] = np.maximum(np.repeat(self.c[:, np.newaxis], len(
+        self.K[bth, :] = f(np.repeat(self.c[:, np.newaxis], len(
                 bth), axis=1), self.c[bth]).T
-            
-        elif self.model_type == "clu-prod":
-            self.K[:, bth] = np.multiply(np.repeat(self.c[:, np.newaxis], len(
-                bth), axis=1), self.c[bth])
-
-            self.K[bth, :] = np.multiply(np.repeat(self.c[:, np.newaxis], len(
-                bth), axis=1), self.c[bth]).T
-            
-        else:
-            raise BaseException
 
         # numerical stability
         self.K[:, bth] = self.K[:, bth] + self.epsilon
         self.K[bth, :] = self.K[bth, :] + self.epsilon
 
-    def gen_clu_avg(self, eta, gamma) -> None:
+    def __main(self, eta, gamma) -> None:
         """
         generative nework build using average clustering coefficient
         """
         
         # compute initial value matrix
         self.c = self.get_clustering_coeff()
+
         self.init_K()
 
         # compute cost and value
@@ -230,6 +215,12 @@ D = D[:10, :10]
 
 params = np.array([[3,3]])
 
+
+# cluster average
+g_clu_avg = GNM(A, D, 3, "clu-avg", params)
+g_clu_avg.main()
+g_clu_avg.b[...,-1]
+
 # cluster product
 g_clu_min = GNM(A, D, 3, "clu-prod", params)
 g_clu_min.main()
@@ -244,11 +235,6 @@ g_clu_min.b[...,-1]
 g_clu_max = GNM(A, D, 3, "clu-max", params)
 g_clu_max.main()
 g_clu_max.b[...,-1]
-
-# cluster average
-g_clu_avg = GNM(A, D, 3, "clu-avg", params)
-g_clu_avg.main()
-g_clu_avg.b[...,-1]
 
 # cluster distance
 g_clu_dist = GNM(A, D, 3, "clu-dist", params)
