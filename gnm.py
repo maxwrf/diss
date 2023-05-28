@@ -4,7 +4,7 @@ import numpy as np
 from seed_network import get_seed_network
 from utils import params_from_json
 
-#np.random.seed(123)
+np.random.seed(123)
 
 class GNM():
     def __init__(self,
@@ -28,7 +28,10 @@ class GNM():
         """
         Initiates the network generation leveraging the diffferent rules
         """
-        if self.model_type in ['clu-avg', 'clu-dist', 'clu-max', 'clu-min', 'clu-prod']:
+        if self.model_type in ['clu-avg', 'clu-dist', 'clu-max', 'clu-min', 'clu-prod',
+                               'deg-avg', 'deg-dist', 'deg-max', 'deg-min', 'deg-prod',
+                               'neighbors'
+                               ]:
             # start the algorithm using the different paramter combos
             for i_param in range(self.n_params):
                 eta = self.params[i_param, 0]
@@ -69,49 +72,103 @@ class GNM():
             self.A[idx_x, idx_y] = 1
             self.A[idx_y, idx_x] = 1
 
-    def init_K(self) -> None:
+    def __init_K(self) -> None:
         """
         Initializes the value matrix
         """
 
+        if self.model_type == 'neighbors':
+            self.K = self.A.dot(A)*~np.eye(self.A.shape[0], dtype=bool) + self.epsilon
+            return
+
         funcs = {
-            'clu-avg': lambda c_1, c_2: np.add(c_1, c_2) / 2,
-            'clu-dist': lambda c_1, c_2: np.abs(np.subtract(c_1, c_2)),
-            'clu-max': np.maximum,
-            'clu-min': np.minimum,
-            'clu-prod': np.multiply
+            'avg': lambda c_1, c_2: np.add(c_1, c_2) / 2,
+            'dist': lambda c_1, c_2: np.abs(np.subtract(c_1, c_2)),
+            'max': np.maximum,
+            'min': np.minimum,
+            'prod': np.multiply
         }
 
-        f = funcs[self.model_type]
+        f = funcs[self.model_type[4:]]
 
-        K = f(self.c[:,np.newaxis], self.c)
+        K = f(self.stat[:,np.newaxis], self.stat)
         self.K = K + self.epsilon
     
-    def update_K(self, bth) -> None:
+    def __update_K(self, bth) -> None:
         """
         Updates the value matrix after a new edge has been added
         Need to update all rows and columns for every edge in bth
         """
+        if self.model_type == 'neighbors':
+            # needs to update all edges where one vertex is either uu or vv
+            # and the vertex has an edge shared with vv or uu respectively
+            uu, vv = bth
+            # get all the nodes connected to uu
+            x = self.A[uu,:].copy()
+            x[vv] = 0
+            # get all the nodes connected to vv
+            y = self.A[:, vv].copy()
+            y[uu] = 0
+
+            # the nodes that are connected to uu (as in x) but also to vv 
+            # (check here) will have annother common neighbor
+            self.K[vv, x] +=1
+            self.K[x, vv] +=1
+            
+            # those nodes that are connected vv (as in y) but also to uu 
+            # (check here) will have annother common neigbor
+            self.K[y, uu] +=1
+            self.K[uu, y] +=1
+
+            return
 
         funcs = {
-            'clu-avg': lambda c_1, c_2: np.add(c_1, c_2) / 2,
-            'clu-dist': lambda c_1, c_2: np.abs(np.subtract(c_1, c_2)),
-            'clu-max': np.maximum,
-            'clu-min': np.minimum,
-            'clu-prod': np.multiply
+            'avg': lambda c_1, c_2: np.add(c_1, c_2) / 2,
+            'dist': lambda c_1, c_2: np.abs(np.subtract(c_1, c_2)),
+            'max': np.maximum,
+            'min': np.minimum,
+            'prod': np.multiply
         }
 
-        f = funcs[self.model_type]
+        f = funcs[self.model_type[4:]]
 
-        self.K[:, bth] = f(np.repeat(self.c[:, np.newaxis], len(
-                bth), axis=1), self.c[bth])
+        self.K[:, bth] = f(np.repeat(self.stat[:, np.newaxis], len(
+                bth), axis=1), self.stat[bth])
 
-        self.K[bth, :] = f(np.repeat(self.c[:, np.newaxis], len(
-                bth), axis=1), self.c[bth]).T
+        self.K[bth, :] = f(np.repeat(self.stat[:, np.newaxis], len(
+                bth), axis=1), self.stat[bth]).T
 
         # numerical stability
         self.K[:, bth] = self.K[:, bth] + self.epsilon
         self.K[bth, :] = self.K[bth, :] + self.epsilon
+
+    def __update_stat(self, uu, vv, k) -> np.array:
+        if self.model_type[0:3] == 'clu':
+            # update the clustering coefficient: at row node
+            bu = np.where(self.A[uu, :])[0]
+            su = self.A[bu, :][:, bu]
+            self.stat[uu] = np.sum(su) / (k[uu] ** 2 - k[uu])
+
+            # update the clustering coefficient: at col node)
+            bv = np.where(self.A[vv, :])[0]
+            sv = self.A[bv, :][:, bv]
+            self.stat[vv] = np.sum(sv) / (k[vv] ** 2 - k[vv])
+
+            # update the clustering coefficient: at common neighbours
+            bth = np.intersect1d(bu, bv)
+            self.stat[bth] = self.stat[bth] + 2. / (k[bth]**2 - k[bth])
+
+            # clean up because we have not checked that node degree must > 1
+            self.stat[k < 2] = 0
+
+            # get all the indices in the value matrix to update
+            bth = np.union1d(bth, np.array([uu, vv]))
+        elif self.model_type[0:3] == 'deg':
+            self.stat = k
+            bth = np.array([uu, vv])
+        else:
+            bth = np.array([uu, vv])
+        return bth
 
     def __main(self, eta, gamma) -> None:
         """
@@ -119,9 +176,12 @@ class GNM():
         """
         
         # compute initial value matrix
-        self.c = self.get_clustering_coeff()
+        if self.model_type[0:3] == 'clu':
+            self.stat = self.get_clustering_coeff()
+        elif self.model_type[0:3] == 'deg':
+            self.stat = sum(self.A, 2)
 
-        self.init_K()
+        self.__init_K()
 
         # compute cost and value
         Fd = self.D ** eta
@@ -149,42 +209,26 @@ class GNM():
             uu = u[r]
             vv = v[r]
 
-            # update the adjacency matrix
-            self.A[uu, vv] = 1
-            self.A[vv, uu] = 1
-
             # update the node degree array
             k[uu] += 1
             k[vv] += 1
 
-            # update the clustering coefficient: at row node)
-            bu = np.where(self.A[uu, :])[0]
-            su = self.A[bu, :][:, bu]
-            self.c[uu] = np.sum(su) / (k[uu] ** 2 - k[uu])
+            # update the adjacency matrix
+            self.A[uu, vv] = 1
+            self.A[vv, uu] = 1
 
-            # update the clustering coefficient: at col node)
-            bv = np.where(self.A[vv, :])[0]
-            sv = self.A[bv, :][:, bv]
-            self.c[vv] = np.sum(sv) / (k[vv] ** 2 - k[vv])
-
-            # update the clustering coefficient: at common neighbours
-            bth = np.intersect1d(bu, bv)
-            self.c[bth] = self.c[bth] + 2. / (k[bth]**2 - k[bth])
-
-            # clean up because we have not checked that node degree must > 1
-            self.c[k < 2] = 0
-
-            # get all the indices in the value matrix to update
-            bth = np.union1d(bth, np.array([uu, vv]))
+            # update the statistic
+            bth = self.__update_stat(uu, vv, k)
 
             # update values
-            self.update_K(bth)
+            self.__update_K(bth)
 
             # Compute the updated probabilities with the new graph
             Ff[bth, :] = Fd[bth, :] * (self.K[bth, :] ** gamma)
             Ff[:, bth] = Fd[:, bth] * (self.K[:, bth] ** gamma)
             Ff = Ff * (self.A == 0)
             P = Ff[u, v]
+
 
         # return indcies of upper triangle adjacent nodes (there is an edge now)
         triu_idx = np.triu_indices(self.A.shape[0], k=1)
@@ -210,34 +254,63 @@ p, q = np.meshgrid(np.linspace(etalimits[0], etalimits[1], int(np.sqrt(nruns))),
 params = np.unique(np.vstack((p.flatten(), q.flatten())).T, axis=0)
 
 # testing the model
-A = A[:10, :10]
+A = A[:10, :10].astype(int)
 D = D[:10, :10]
 
 params = np.array([[3,3]])
 
 
-# cluster average
-g_clu_avg = GNM(A, D, 3, "clu-avg", params)
-g_clu_avg.main()
-g_clu_avg.b[...,-1]
+# # cluster average
+# g_clu_avg = GNM(A, D, 3, "clu-avg", params)
+# g_clu_avg.main()
+# g_clu_avg.b[...,-1]
 
-# cluster product
-g_clu_min = GNM(A, D, 3, "clu-prod", params)
-g_clu_min.main()
-g_clu_min.b[...,-1]
+# # cluster product
+# g_clu_min = GNM(A, D, 3, "clu-prod", params)
+# g_clu_min.main()
+# g_clu_min.b[...,-1]
 
-# cluster minimum
-g_clu_min = GNM(A, D, 3, "clu-min", params)
-g_clu_min.main()
-g_clu_min.b[...,-1]
+# # cluster minimum
+# g_clu_min = GNM(A, D, 3, "clu-min", params)
+# g_clu_min.main()
+# g_clu_min.b[...,-1]
 
-# cluster maximum
-g_clu_max = GNM(A, D, 3, "clu-max", params)
-g_clu_max.main()
-g_clu_max.b[...,-1]
+# # cluster maximum
+# g_clu_max = GNM(A, D, 3, "clu-max", params)
+# g_clu_max.main()
+# g_clu_max.b[...,-1]
 
-# cluster distance
-g_clu_dist = GNM(A, D, 3, "clu-dist", params)
-g_clu_dist.main()
-g_clu_dist.b[...,-1]
+# # cluster distance
+# g_clu_dist = GNM(A, D, 3, "clu-dist", params)
+# g_clu_dist.main()
+# g_clu_dist.b[...,-1]
 
+# # degree average
+# g_deg_avg = GNM(A, D, 3, "deg-avg", params)
+# g_deg_avg.main()
+# g_deg_avg.b[...,-1]
+
+# # degree product
+# g_deg_min = GNM(A, D, 3, "deg-prod", params)
+# g_deg_min.main()
+# g_deg_min.b[...,-1]
+
+# # degree minimum
+# g_deg_min = GNM(A, D, 3, "deg-min", params)
+# g_deg_min.main()
+# g_deg_min.b[...,-1]
+
+# # degree maximum
+# g_deg_max = GNM(A, D, 3, "deg-max", params)
+# g_deg_max.main()
+# g_deg_max.b[...,-1]
+
+# # degree distance
+# g_deg_dist = GNM(A, D, 3, "deg-dist", params)
+# g_deg_dist.main()
+# g_deg_dist.b[...,-1]
+
+# neighbors
+g_neigh = GNM(A, D, 3, "neighbors", params)
+g_neigh.main()
+g_neigh.b[...,-1]
