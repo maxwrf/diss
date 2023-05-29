@@ -24,21 +24,24 @@ class GNM():
         self.b = np.zeros((m, 2, self.n_params))  # out, conenctions
         self.epsilon = 1e-5
 
+        self.funcs = {
+            'avg': lambda c_1, c_2: np.add(c_1, c_2) / 2,
+            'dist': lambda c_1, c_2: np.abs(np.subtract(c_1, c_2)),
+            'max': np.maximum,
+            'min': np.minimum,
+            'prod': np.multiply
+        }
+
     def main(self):
         """
         Initiates the network generation leveraging the diffferent rules
         """
-        if self.model_type in ['clu-avg', 'clu-dist', 'clu-max', 'clu-min', 'clu-prod',
-                               'deg-avg', 'deg-dist', 'deg-max', 'deg-min', 'deg-prod',
-                               'neighbors'
-                               ]:
-            # start the algorithm using the different paramter combos
-            for i_param in range(self.n_params):
-                eta = self.params[i_param, 0]
-                gamma = self.params[i_param, 1]
-                self.b[:, :, i_param] = self.__main(eta, gamma)
-        else:
-            raise BaseException
+        print(self.model_type)
+        # start the algorithm using the different paramter combos
+        for i_param in range(self.n_params):
+            eta = self.params[i_param, 0]
+            gamma = self.params[i_param, 1]
+            self.b[:, :, i_param] = self.__main(eta, gamma)
 
     def get_clustering_coeff(self) -> np.array:
         """
@@ -78,34 +81,29 @@ class GNM():
         """
 
         if self.model_type == 'neighbors':
-            self.K = self.A.dot(A)*~np.eye(self.A.shape[0], dtype=bool) + self.epsilon
-            return
-
-        funcs = {
-            'avg': lambda c_1, c_2: np.add(c_1, c_2) / 2,
-            'dist': lambda c_1, c_2: np.abs(np.subtract(c_1, c_2)),
-            'max': np.maximum,
-            'min': np.minimum,
-            'prod': np.multiply
-        }
-
-        f = funcs[self.model_type[4:]]
-
-        K = f(self.stat[:,np.newaxis], self.stat)
-        self.K = K + self.epsilon
+            self.K = self.A.dot(A)*~np.eye(self.A.shape[0], dtype=bool)
+        elif self.model_type == 'matching':
+            self.K = self.get_matching_indices()
+        else:
+            f = self.funcs[self.model_type[4:]]
+            self.K = f(self.stat[:,np.newaxis], self.stat)
+        
+        # minimum prob
+        self.K = self.K + self.epsilon
     
-    def __update_K(self, bth) -> None:
+    def __update_K(self, bth, k) -> None:
         """
         Updates the value matrix after a new edge has been added
-        Need to update all rows and columns for every edge in bth
         """
         if self.model_type == 'neighbors':
             # needs to update all edges where one vertex is either uu or vv
             # and the vertex has an edge shared with vv or uu respectively
             uu, vv = bth
+
             # get all the nodes connected to uu
             x = self.A[uu,:].copy()
             x[vv] = 0
+
             # get all the nodes connected to vv
             y = self.A[:, vv].copy()
             y[uu] = 0
@@ -120,27 +118,32 @@ class GNM():
             self.K[y, uu] +=1
             self.K[uu, y] +=1
 
-            return
+        elif self.model_type == 'matching':
+            uu, vv = bth
+            update_uu = np.nonzero(self.A[:, uu])[0]
+            update_vv = np.nonzero(self.A[:, vv])[0]
+            
+            for j in update_uu:
+                print(j)
 
-        funcs = {
-            'avg': lambda c_1, c_2: np.add(c_1, c_2) / 2,
-            'dist': lambda c_1, c_2: np.abs(np.subtract(c_1, c_2)),
-            'max': np.maximum,
-            'min': np.minimum,
-            'prod': np.multiply
-        }
+            c1 = np.concatenate((A[:, uu], A[uu, :]))
 
-        f = funcs[self.model_type[4:]]
+            print(c1)
 
-        self.K[:, bth] = f(np.repeat(self.stat[:, np.newaxis], len(
-                bth), axis=1), self.stat[bth])
+            
+        else:
+            # for clu an deg models, update all rows & columns for verices in bth
+            f = self.funcs[self.model_type[4:]]
 
-        self.K[bth, :] = f(np.repeat(self.stat[:, np.newaxis], len(
-                bth), axis=1), self.stat[bth]).T
+            self.K[:, bth] = f(np.repeat(self.stat[:, np.newaxis], len(
+                    bth), axis=1), self.stat[bth])
 
-        # numerical stability
-        self.K[:, bth] = self.K[:, bth] + self.epsilon
-        self.K[bth, :] = self.K[bth, :] + self.epsilon
+            self.K[bth, :] = f(np.repeat(self.stat[:, np.newaxis], len(
+                    bth), axis=1), self.stat[bth]).T
+
+            # numerical stability
+            self.K[:, bth] = self.K[:, bth] + self.epsilon
+            self.K[bth, :] = self.K[bth, :] + self.epsilon
 
     def __update_stat(self, uu, vv, k) -> np.array:
         if self.model_type[0:3] == 'clu':
@@ -166,13 +169,13 @@ class GNM():
         elif self.model_type[0:3] == 'deg':
             self.stat = k
             bth = np.array([uu, vv])
-        else:
+        else: # for neighbours and matching
             bth = np.array([uu, vv])
         return bth
 
     def __main(self, eta, gamma) -> None:
         """
-        generative nework build using average clustering coefficient
+        generative nework build
         """
         
         # compute initial value matrix
@@ -221,7 +224,7 @@ class GNM():
             bth = self.__update_stat(uu, vv, k)
 
             # update values
-            self.__update_K(bth)
+            self.__update_K(bth, k)
 
             # Compute the updated probabilities with the new graph
             Ff[bth, :] = Fd[bth, :] * (self.K[bth, :] ** gamma)
@@ -236,6 +239,25 @@ class GNM():
         out = np.column_stack((triu_idx[0][edge_idx] +1, triu_idx[1][edge_idx]))
         return out
 
+    def get_matching_indices(self) -> np.array:
+        """
+        For any two nodes in the adjacency matrix, computes the overlap in the 
+        connections.
+        Note that if two nodes have a common neigbour, the two edeges are both
+        counted as part of the intesection set.
+        Any connection between the two nodes is excluded
+        """
+
+        # Compute the degree (sum of neighbors)
+        degree = np.sum(self.A, axis=0)
+        
+        # Compute the intersection matrix (common neighbors)
+        intersection = np.dot(self.A, self.A)*~np.eye(self.A.shape[0], dtype=bool)
+
+        # Compute the union of connections, exclude connections between nodes
+        union = degree[:, np.newaxis] + degree - 2*self.A 
+
+        return np.divide(intersection*2, union, where=union!=0)
 
 # load config
 config = params_from_json("./config.json")
@@ -311,6 +333,11 @@ params = np.array([[3,3]])
 # g_deg_dist.b[...,-1]
 
 # neighbors
-g_neigh = GNM(A, D, 3, "neighbors", params)
-g_neigh.main()
-g_neigh.b[...,-1]
+# g_neigh = GNM(A, D, 3, "neighbors", params)
+# g_neigh.main()
+# g_neigh.b[...,-1]
+
+# matching
+g_matching = GNM(A, D, 3, "matching", params)
+g_matching.main()
+g_matching.b[...,-1]
