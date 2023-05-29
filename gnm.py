@@ -119,18 +119,30 @@ class GNM():
             self.K[uu, y] +=1
 
         elif self.model_type == 'matching':
+            # need to update all nodes that have common neighbors with uu and
+            # vv respectively
+
             uu, vv = bth
-            update_uu = np.nonzero(self.A[:, uu])[0]
-            update_vv = np.nonzero(self.A[:, vv])[0]
-            
+            update_uu = np.where(self.A.dot(self.A[:, uu]))[0]
+            update_vv = np.where(self.A.dot(self.A[:, vv]))[0]
+            update_uu = update_uu[update_uu!= uu]
+            update_vv = update_vv[update_vv!= vv]
+
+            # for each of these node combinations we recompute matching score
             for j in update_uu:
-                print(j)
+                connects = sum(k[[uu, j]]) - 2* self.A[uu, j]
+                union_connects = np.dot(self.A[uu,:], self.A[j,:]) * 2
+                score = union_connects / connects if connects > 0 else self.epsilon
+                self.K[uu, j] = score
+                self.K[j, uu] = score
+                
+            for j in update_vv:
+                connects = sum(k[[vv, j]]) - 2* self.A[vv, j]
+                union_connects = np.dot(self.A[vv,:], self.A[j,:]) * 2
+                score = union_connects / connects if connects > 0 else self.epsilon
+                self.K[vv, j] = score
+                self.K[j, vv] = score
 
-            c1 = np.concatenate((A[:, uu], A[uu, :]))
-
-            print(c1)
-
-            
         else:
             # for clu an deg models, update all rows & columns for verices in bth
             f = self.funcs[self.model_type[4:]]
@@ -182,7 +194,7 @@ class GNM():
         if self.model_type[0:3] == 'clu':
             self.stat = self.get_clustering_coeff()
         elif self.model_type[0:3] == 'deg':
-            self.stat = sum(self.A, 2)
+            self.stat = np.sum(self.A, axis=0)
 
         self.__init_K()
 
@@ -194,7 +206,7 @@ class GNM():
         Ff = Fd * Fk * (self.A == 0)
 
         # degree of each node
-        k = sum(self.A, 2)
+        k = np.sum(self.A, axis=0)
 
         # get the indicies of the upper right of the p matrix
         u, v = np.triu_indices(self.n_nodes, k=1)
@@ -276,8 +288,8 @@ p, q = np.meshgrid(np.linspace(etalimits[0], etalimits[1], int(np.sqrt(nruns))),
 params = np.unique(np.vstack((p.flatten(), q.flatten())).T, axis=0)
 
 # testing the model
-A = A[:10, :10].astype(int)
-D = D[:10, :10]
+A = A[:5, :5].astype(int)
+D = D[:5, :5]
 
 params = np.array([[3,3]])
 
