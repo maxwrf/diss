@@ -1,11 +1,6 @@
 # Reference: MATLAB Brain Connectivity Toolbox
 import numpy as np
 
-from seed_network import get_seed_network
-from utils import params_from_json
-
-np.random.seed(123)
-
 class GNM():
     def __init__(self,
                  A: np.ndarray,
@@ -36,7 +31,7 @@ class GNM():
         """
         Initiates the network generation leveraging the diffferent rules
         """
-        print(self.model_type)
+        print('Model type:', self.model_type)
         # start the algorithm using the different paramter combos
         for i_param in range(self.n_params):
             eta = self.params[i_param, 0]
@@ -84,6 +79,8 @@ class GNM():
             self.K = self.A.dot(A)*~np.eye(self.A.shape[0], dtype=bool)
         elif self.model_type == 'matching':
             self.K = self.get_matching_indices()
+        elif self.model_type == 'spatial':
+            self.K = np.ones(self.A.shape)
         else:
             f = self.funcs[self.model_type[4:]]
             self.K = f(self.stat[:,np.newaxis], self.stat)
@@ -129,6 +126,7 @@ class GNM():
             update_vv = update_vv[update_vv!= vv]
 
             # for each of these node combinations we recompute matching score
+            # TODO: refactor
             for j in update_uu:
                 connects = sum(k[[uu, j]]) - 2* self.A[uu, j]
                 union_connects = np.dot(self.A[uu,:], self.A[j,:]) * 2
@@ -143,6 +141,9 @@ class GNM():
                 self.K[vv, j] = score
                 self.K[j, vv] = score
 
+        elif self.model_type == 'spatial':
+            return
+        
         else:
             # for clu an deg models, update all rows & columns for verices in bth
             f = self.funcs[self.model_type[4:]]
@@ -271,85 +272,4 @@ class GNM():
 
         return np.divide(intersection*2, union, where=union!=0)
 
-# load config
-config = params_from_json("./config.json")
 
-# load a seed network, A = adjacency matrix and D = distance matrix
-A, D = get_seed_network(config)
-
-# load a fake parameter sampling space
-etalimits = [-7, 7]
-gamlimits = [-7, 7]
-nruns = 1
-
-p, q = np.meshgrid(np.linspace(etalimits[0], etalimits[1], int(np.sqrt(nruns))),
-                   np.linspace(gamlimits[0], gamlimits[1], int(np.sqrt(nruns))))
-
-params = np.unique(np.vstack((p.flatten(), q.flatten())).T, axis=0)
-
-# testing the model
-A = A[:5, :5].astype(int)
-D = D[:5, :5]
-
-params = np.array([[3,3]])
-
-
-# # cluster average
-# g_clu_avg = GNM(A, D, 3, "clu-avg", params)
-# g_clu_avg.main()
-# g_clu_avg.b[...,-1]
-
-# # cluster product
-# g_clu_min = GNM(A, D, 3, "clu-prod", params)
-# g_clu_min.main()
-# g_clu_min.b[...,-1]
-
-# # cluster minimum
-# g_clu_min = GNM(A, D, 3, "clu-min", params)
-# g_clu_min.main()
-# g_clu_min.b[...,-1]
-
-# # cluster maximum
-# g_clu_max = GNM(A, D, 3, "clu-max", params)
-# g_clu_max.main()
-# g_clu_max.b[...,-1]
-
-# # cluster distance
-# g_clu_dist = GNM(A, D, 3, "clu-dist", params)
-# g_clu_dist.main()
-# g_clu_dist.b[...,-1]
-
-# # degree average
-# g_deg_avg = GNM(A, D, 3, "deg-avg", params)
-# g_deg_avg.main()
-# g_deg_avg.b[...,-1]
-
-# # degree product
-# g_deg_min = GNM(A, D, 3, "deg-prod", params)
-# g_deg_min.main()
-# g_deg_min.b[...,-1]
-
-# # degree minimum
-# g_deg_min = GNM(A, D, 3, "deg-min", params)
-# g_deg_min.main()
-# g_deg_min.b[...,-1]
-
-# # degree maximum
-# g_deg_max = GNM(A, D, 3, "deg-max", params)
-# g_deg_max.main()
-# g_deg_max.b[...,-1]
-
-# # degree distance
-# g_deg_dist = GNM(A, D, 3, "deg-dist", params)
-# g_deg_dist.main()
-# g_deg_dist.b[...,-1]
-
-# neighbors
-# g_neigh = GNM(A, D, 3, "neighbors", params)
-# g_neigh.main()
-# g_neigh.b[...,-1]
-
-# matching
-g_matching = GNM(A, D, 3, "matching", params)
-g_matching.main()
-g_matching.b[...,-1]
