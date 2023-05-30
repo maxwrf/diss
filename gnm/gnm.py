@@ -99,7 +99,7 @@ class GNM():
         Initializes the value matrix
         """
         if self.model_type == 'neighbors':
-            self.K = self.A.dot(A)*~np.eye(self.A.shape[0], dtype=bool)
+            self.K = self.A.dot(self.A)*~np.eye(self.A.shape[0], dtype=bool)
         elif self.model_type == 'matching':
             self.K = self.get_matching_indices()
         elif self.model_type == 'spatial':
@@ -126,22 +126,22 @@ class GNM():
             uu, vv = bth
 
             # get all the nodes connected to uu
-            x = self.A[uu,:].copy()
-            x[vv] = 0
+            x = np.where(self.A[uu,:])[0]
+            x = x[x != vv]
 
             # get all the nodes connected to vv
-            y = self.A[:, vv].copy()
-            y[uu] = 0
+            y = np.where(self.A[:, vv])[0]
+            y = y[y != uu]
 
             # the nodes that are connected to uu (as in x) but also to vv 
             # (check here) will have annother common neighbor
-            self.K[vv, x] +=1
-            self.K[x, vv] +=1
+            self.K[vv, x] += 1
+            self.K[x, vv] += 1
             
             # those nodes that are connected vv (as in y) but also to uu 
             # (check here) will have annother common neigbor
-            self.K[y, uu] +=1
-            self.K[uu, y] +=1
+            self.K[y, uu] += 1
+            self.K[uu, y] += 1
 
         elif self.model_type == 'matching':
             # need to update all nodes that have common neighbors with uu and
