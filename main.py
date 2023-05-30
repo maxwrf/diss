@@ -4,7 +4,7 @@ import networkx as nx
 
 from scipy.io import loadmat
 from scipy.spatial.distance import pdist, squareform
-from seed_network import get_seed_network
+from gnm.seed_network import get_seed_network
 
 
 d_p = "/local/data/mphilcompbio/2022/mw894/diss/fake-seed/"

@@ -9,14 +9,14 @@ class GNM():
                  model_type: str,
                  params: np.ndarray) -> None:
 
-        self.A = A.copy()  # adjacency matrix
+        self.A = np.array(A, copy=True)  # adjacency matrix
         self.D = D  # euclidean distances
         self.n_nodes = len(D)  # number of nodes
         self.m = m  # target number of connections
         self.model_type = model_type  # str indicating generative rule
         self.params = params  # matrix of eta and gamma combinations
         self.n_params = self.params.shape[0]  # number of param combos
-        self.b = np.zeros((m, 2, self.n_params))  # out, conenctions
+        self.b = np.zeros((m, self.n_params),dtype=int)  # n_connenctions, runs
         self.epsilon = 1e-5
 
         self.funcs = {
@@ -27,16 +27,40 @@ class GNM():
             'prod': np.multiply
         }
 
+    @staticmethod
+    def generate_param_space(n_runs: int = 100, 
+                             eta_limts: np.array = [-7, 7],
+                             gamma_limits: np.array =[-7, 7]) -> np.array:
+        """
+        Createas a linear parameter space defined by the eta and gamma bounds
+        for the desired number of runs
+        """
+        p, q = np.meshgrid(np.linspace(
+            eta_limts[0], eta_limts[1], int(np.sqrt(n_runs))),
+                        np.linspace(
+            gamma_limits[0], gamma_limits[1], int(np.sqrt(n_runs))))
+
+        return np.unique(np.vstack((p.flatten(), q.flatten())).T, axis=0)
+
     def main(self):
         """
         Initiates the network generation leveraging the diffferent rules
         """
         print('Model type:', self.model_type)
+
+        # copy of the original adjacency matrix to reset after each param combo
+        A_initial = np.array(self.A, copy=True)
+
         # start the algorithm using the different paramter combos
         for i_param in range(self.n_params):
+            # reset adjacency matrix and value matrix
+            self.A = np.array(A_initial, copy=True)
+            self.K = None
+
             eta = self.params[i_param, 0]
             gamma = self.params[i_param, 1]
-            self.b[:, :, i_param] = self.__main(eta, gamma)
+            self.b[:, i_param] = self.__main(eta, gamma)
+
 
     def get_clustering_coeff(self) -> np.array:
         """
@@ -74,7 +98,6 @@ class GNM():
         """
         Initializes the value matrix
         """
-
         if self.model_type == 'neighbors':
             self.K = self.A.dot(A)*~np.eye(self.A.shape[0], dtype=bool)
         elif self.model_type == 'matching':
@@ -82,6 +105,11 @@ class GNM():
         elif self.model_type == 'spatial':
             self.K = np.ones(self.A.shape)
         else:
+            # if cluster or degree models
+            if self.model_type[0:3] == 'clu':
+                self.stat = self.get_clustering_coeff()
+            elif self.model_type[0:3] == 'deg':
+                self.stat = np.sum(self.A, axis=0)
             f = self.funcs[self.model_type[4:]]
             self.K = f(self.stat[:,np.newaxis], self.stat)
         
@@ -190,13 +218,8 @@ class GNM():
         """
         generative nework build
         """
-        
-        # compute initial value matrix
-        if self.model_type[0:3] == 'clu':
-            self.stat = self.get_clustering_coeff()
-        elif self.model_type[0:3] == 'deg':
-            self.stat = np.sum(self.A, axis=0)
 
+        # compute initial value matrix
         self.__init_K()
 
         # compute cost and value
@@ -210,7 +233,7 @@ class GNM():
         k = np.sum(self.A, axis=0)
 
         # get the indicies of the upper right of the p matrix
-        u, v = np.triu_indices(self.n_nodes, k=1)
+        u, v = np.triu_indices_from(self.A, k=1)
         P = Ff[u, v]
 
         # number of connections we start with
@@ -236,7 +259,7 @@ class GNM():
             # update the statistic
             bth = self.__update_stat(uu, vv, k)
 
-            # update values
+            # update value matrix
             self.__update_K(bth, k)
 
             # Compute the updated probabilities with the new graph
@@ -247,10 +270,9 @@ class GNM():
 
 
         # return indcies of upper triangle adjacent nodes (there is an edge now)
-        triu_idx = np.triu_indices(self.A.shape[0], k=1)
-        edge_idx = np.where(self.A[triu_idx] == 1)[0]
-        out = np.column_stack((triu_idx[0][edge_idx] +1, triu_idx[1][edge_idx]))
-        return out
+        mask = np.triu(self.A, k=1)
+        indices = np.where(mask)
+        return np.array([(idx_x+1)*10+idx_y for idx_x,idx_y in zip(indices[0], indices[1])], dtype=int)
 
     def get_matching_indices(self) -> np.array:
         """
