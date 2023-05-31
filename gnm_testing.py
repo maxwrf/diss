@@ -118,3 +118,21 @@ plot_edge_freqs(mlab_data)
 g_neighbors = GNM(A, D, m, "neighbors", params)
 g_neighbors.main()
 plot_edge_freqs(g_neighbors.b)
+
+# matching
+p = config['data_path'] + 'testing/r_matching.csv'
+mlab_data = np.genfromtxt(p, delimiter=',').astype(int)
+plot_edge_freqs(mlab_data)
+
+g_matching = GNM(A, D, m, "matching", params)
+g_matching.main()
+plot_edge_freqs(g_matching.b)
+
+# spatial
+p = config['data_path'] + 'testing/r_spatial.csv'
+mlab_data = np.genfromtxt(p, delimiter=',').astype(int)
+plot_edge_freqs(mlab_data)
+
+g_spatial = GNM(A, D, m, "spatial", params)
+g_spatial.main()
+plot_edge_freqs(g_spatial.b)

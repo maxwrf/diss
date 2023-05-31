@@ -1,6 +1,7 @@
 # Reference: MATLAB Brain Connectivity Toolbox
 import numpy as np
 
+
 class GNM():
     def __init__(self,
                  A: np.ndarray,
@@ -16,7 +17,8 @@ class GNM():
         self.model_type = model_type  # str indicating generative rule
         self.params = params  # matrix of eta and gamma combinations
         self.n_params = self.params.shape[0]  # number of param combos
-        self.b = np.zeros((m, self.n_params),dtype=int)  # n_connenctions, runs
+        # n_connenctions, runs
+        self.b = np.zeros((m, self.n_params), dtype=int)
         self.epsilon = 1e-5
 
         self.funcs = {
@@ -28,16 +30,16 @@ class GNM():
         }
 
     @staticmethod
-    def generate_param_space(n_runs: int = 100, 
+    def generate_param_space(n_runs: int = 100,
                              eta_limts: np.array = [-7, 7],
-                             gamma_limits: np.array =[-7, 7]) -> np.array:
+                             gamma_limits: np.array = [-7, 7]) -> np.array:
         """
         Createas a linear parameter space defined by the eta and gamma bounds
         for the desired number of runs
         """
         p, q = np.meshgrid(np.linspace(
             eta_limts[0], eta_limts[1], int(np.sqrt(n_runs))),
-                        np.linspace(
+            np.linspace(
             gamma_limits[0], gamma_limits[1], int(np.sqrt(n_runs))))
 
         return np.unique(np.vstack((p.flatten(), q.flatten())).T, axis=0)
@@ -60,7 +62,6 @@ class GNM():
             eta = self.params[i_param, 0]
             gamma = self.params[i_param, 1]
             self.b[:, i_param] = self.__main(eta, gamma)
-
 
     def get_clustering_coeff(self) -> np.array:
         """
@@ -111,11 +112,11 @@ class GNM():
             elif self.model_type[0:3] == 'deg':
                 self.stat = np.sum(self.A, axis=0)
             f = self.funcs[self.model_type[4:]]
-            self.K = f(self.stat[:,np.newaxis], self.stat)
-        
+            self.K = f(self.stat[:, np.newaxis], self.stat)
+
         # minimum prob
         self.K = self.K + self.epsilon
-    
+
     def __update_K(self, bth, k) -> None:
         """
         Updates the value matrix after a new edge has been added
@@ -126,19 +127,19 @@ class GNM():
             uu, vv = bth
 
             # get all the nodes connected to uu
-            x = np.where(self.A[uu,:])[0]
+            x = np.where(self.A[uu, :])[0]
             x = x[x != vv]
 
             # get all the nodes connected to vv
             y = np.where(self.A[:, vv])[0]
             y = y[y != uu]
 
-            # the nodes that are connected to uu (as in x) but also to vv 
+            # the nodes that are connected to uu (as in x) but also to vv
             # (check here) will have annother common neighbor
             self.K[vv, x] += 1
             self.K[x, vv] += 1
-            
-            # those nodes that are connected vv (as in y) but also to uu 
+
+            # those nodes that are connected vv (as in y) but also to uu
             # (check here) will have annother common neigbor
             self.K[y, uu] += 1
             self.K[uu, y] += 1
@@ -150,37 +151,37 @@ class GNM():
             uu, vv = bth
             update_uu = np.where(self.A.dot(self.A[:, uu]))[0]
             update_vv = np.where(self.A.dot(self.A[:, vv]))[0]
-            update_uu = update_uu[update_uu!= uu]
-            update_vv = update_vv[update_vv!= vv]
+            update_uu = update_uu[update_uu != uu]
+            update_vv = update_vv[update_vv != vv]
 
             # for each of these node combinations we recompute matching score
             # TODO: refactor
             for j in update_uu:
-                connects = sum(k[[uu, j]]) - 2* self.A[uu, j]
-                union_connects = np.dot(self.A[uu,:], self.A[j,:]) * 2
+                connects = sum(k[[uu, j]]) - 2 * self.A[uu, j]
+                union_connects = np.dot(self.A[uu, :], self.A[j, :]) * 2
                 score = union_connects / connects if connects > 0 else self.epsilon
                 self.K[uu, j] = score
                 self.K[j, uu] = score
-                
+
             for j in update_vv:
-                connects = sum(k[[vv, j]]) - 2* self.A[vv, j]
-                union_connects = np.dot(self.A[vv,:], self.A[j,:]) * 2
+                connects = sum(k[[vv, j]]) - 2 * self.A[vv, j]
+                union_connects = np.dot(self.A[vv, :], self.A[j, :]) * 2
                 score = union_connects / connects if connects > 0 else self.epsilon
                 self.K[vv, j] = score
                 self.K[j, vv] = score
 
         elif self.model_type == 'spatial':
             return
-        
+
         else:
             # for clu an deg models, update all rows & columns for verices in bth
             f = self.funcs[self.model_type[4:]]
 
             self.K[:, bth] = f(np.repeat(self.stat[:, np.newaxis], len(
-                    bth), axis=1), self.stat[bth])
+                bth), axis=1), self.stat[bth])
 
             self.K[bth, :] = f(np.repeat(self.stat[:, np.newaxis], len(
-                    bth), axis=1), self.stat[bth]).T
+                bth), axis=1), self.stat[bth]).T
 
             # numerical stability
             self.K[:, bth] = self.K[:, bth] + self.epsilon
@@ -210,7 +211,7 @@ class GNM():
         elif self.model_type[0:3] == 'deg':
             self.stat = k
             bth = np.array([uu, vv])
-        else: # for neighbours and matching
+        else:  # for neighbours and matching
             bth = np.array([uu, vv])
         return bth
 
@@ -268,11 +269,10 @@ class GNM():
             Ff = Ff * (self.A == 0)
             P = Ff[u, v]
 
-
         # return indcies of upper triangle adjacent nodes (there is an edge now)
         mask = np.triu(self.A, k=1)
         indices = np.where(mask)
-        return np.array([(idx_x+1)*10+idx_y for idx_x,idx_y in zip(indices[0], indices[1])], dtype=int)
+        return np.array([(idx_x+1)*10+idx_y for idx_x, idx_y in zip(indices[0], indices[1])], dtype=int)
 
     def get_matching_indices(self) -> np.array:
         """
@@ -280,18 +280,17 @@ class GNM():
         connections.
         Note that if two nodes have a common neigbour, the two edeges are both
         counted as part of the intesection set.
-        Any connection between the two nodes is excluded
+        Any connection between the two nodes is excluded.
         """
 
         # Compute the degree (sum of neighbors)
         degree = np.sum(self.A, axis=0)
-        
+
         # Compute the intersection matrix (common neighbors)
-        intersection = np.dot(self.A, self.A)*~np.eye(self.A.shape[0], dtype=bool)
+        intersection = np.dot(self.A, self.A) * \
+            ~np.eye(self.A.shape[0], dtype=bool)
 
         # Compute the union of connections, exclude connections between nodes
-        union = degree[:, np.newaxis] + degree - 2*self.A 
+        union = degree[:, np.newaxis] + degree - 2*self.A
 
-        return np.divide(intersection*2, union, where=union!=0)
-
-
+        return np.divide(intersection*2, union, where=union != 0)
