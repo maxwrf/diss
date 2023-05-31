@@ -8,11 +8,16 @@ import pandas as pd
 
 class G2C_data():
     def __init__(self, mea_data_dir: str):
+        # load the file info
         self.mea_data_dir = mea_data_dir
         self.__make_meafile_cache()
 
+        # load the meta data
         self.mea_file_df = pd.DataFrame([self.__sort_data(f)
                                          for f in self.mea_data_files])
+
+        self.mea_file_df['region'] = self.mea_file_df['region'].apply(
+            lambda s: s.decode())
 
     def __make_meafile_cache(self) -> list:
         """
@@ -33,16 +38,14 @@ class G2C_data():
         with h5py.File(file_name, 'r') as file:
             file_age = file['meta/age'][()]
             file_region = file['meta/region'][()]
+            file_recording_time = file['recordingtime'][()]
 
-        return {'file': str(file_name), 'age': file_age, 'region': file_region}
+        return {'file': str(file_name),
+                'age': file_age[0],
+                'region': file_region[0],
+                'recording_time': file_recording_time}
 
-    def __load_meta_data(self):
-        # load all the meta data from the mea directory
-
-        mea_file_df['region'] = mea_file_df['region'].apply(
-            lambda s: s.decode())
-
-    def h5_read_spikes(file_path) -> np.array:
+    def __h5_read_spikes(self, file_path) -> np.array:
         """
         Given the path to an mea file, returns a numpy array of the spike data
         """
@@ -52,13 +55,13 @@ class G2C_data():
 
         return spikes_data
 
-    def spikes(ages, regions, mea_file_df) -> list:
+    def __get_spikes(self) -> list:
         """
         Given an age and a region, computes reads the corresponding spikes and 
         returns a list of the spike data
         """
-        mea_file_subset = mea_file_df[(mea_file_df['age'].isin(ages))
-                                      & (mea_file_df['region'].isin(regions))]
+        mea_file_subset = self.mea_file_df[(self.mea_file_df['age'].isin(self.ages))
+                                           & (self.mea_file_df['region'].isin(self.regions))]
 
         # add column for easy spike data retrieval
         mea_file_subset['spike_idx'] = range(len(mea_file_subset))
@@ -66,7 +69,7 @@ class G2C_data():
         # collect the data
         spike_l = list()
         for file_name in mea_file_subset['file']:
-            spikes_data = h5_read_spikes(file_name)
+            spikes_data = self.__h5_read_spikes(file_name)
             spike_l.append(spikes_data)
 
         return spike_l, mea_file_subset
@@ -79,7 +82,8 @@ class G2C_data():
         loaded data as well as a df with the meta data
         """
 
-        # collect the data for the ages
-        spike_data, meta_data = spikes(ages, regions, mea_file_df)
+        self.ages = ages
+        self.regions = regions
 
-        return spike_data, meta_data
+        # collect the data for the ages
+        self.spike_data, self.spike_meta_data = self.__get_spikes()
