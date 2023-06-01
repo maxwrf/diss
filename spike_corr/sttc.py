@@ -1,6 +1,8 @@
 # Reference: https://github.com/sje30/sjemea/tree/master
 
 import numpy as np
+from tqdm import tqdm
+from multiprocess import Pool
 
 
 class STTC:
@@ -71,11 +73,14 @@ class STTC:
         """
         Computes pairwise sttc for all spikes in list
         """
+        """
+        Computes pairwise sttc for all spikes in list
+        """
         n_spikes = len(spikes)
         m = np.ones((n_spikes, n_spikes))
         idx = np.triu_indices_from(m, k=1)
 
-        for i, j in zip(idx[0], idx[1]):
+        for i, j in tqdm(zip(idx[0], idx[1])):
             res = STTC.sttc(spikes[i], spikes[j], dt, rec_time)
             m[i, j] = m[j, i] = res
 
