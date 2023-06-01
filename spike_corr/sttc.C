@@ -182,31 +182,81 @@ static PyObject *sttc(PyObject *self, PyObject *args)
 
 static PyObject *tiling(PyObject *self, PyObject *args)
 {
-    int i, n_arrays;
-    PyObject *list;
+    int i, j, n_arrays;
 
-    if (!PyArg_ParseTuple(args, "O", &list))
+    // parsing the python inputs
+    double dt;
+    PyObject *list;
+    PyArrayObject *time;
+
+    if (!PyArg_ParseTuple(args, "OdO", &list, &dt, &time))
     {
         return NULL;
     };
 
+    // parse time
+    if (!PyArray_Check(time))
+    {
+        PyErr_SetString(PyExc_TypeError, "time needs be np array");
+    };
+    double *time_data;
+    int n_time = PyArray_SIZE(time);
+    if (n_time != 2)
+    {
+        PyErr_SetString(PyExc_TypeError, "time needs to have length 2");
+    }
+    npy_intp time_dims[] = {[0] = 2};
+    PyArray_AsCArray((PyObject **)&time, &time_data, time_dims, 1, PyArray_DescrFromType(NPY_DOUBLE));
+
+    // prepare result matrix
     n_arrays = PyObject_Length(list);
-    printf("number of arrays: %d", n_arrays);
+    // double result_data[n_arrays][n_arrays];
+    npy_intp result_dims[] = {[0] = n_arrays, [1] = n_arrays};
+    // PyObject *result = PyArray_SimpleNew(2, result_dims, NPY_DOUBLE);
+    PyArrayObject *result = (PyArrayObject *)PyArray_SimpleNew(2, result_dims, NPY_DOUBLE);
+    double *result_data = (double *)PyArray_DATA(result);
+
+    // main loop computing tiled sttc
+    double temp;
+
+    // set diag to one
     for (i = 0; i < n_arrays; i++)
     {
-        PyArrayObject *elem;
-        elem = (PyArrayObject *)PyList_GetItem(list, i);
+        result_data[i * n_arrays + i] = 1;
+    };
 
-        int n1 = PyArray_SIZE(elem);
-        double *np_array;
+    // main loop
+    for (i = 0; i < n_arrays; i++)
+    {
+        // retrieve spike train 1 from array
+        PyArrayObject *st1;
+        st1 = (PyArrayObject *)PyList_GetItem(list, i);
+
+        // convert spike train array 1 to c array
+        int n1 = PyArray_SIZE(st1);
+        double *st1_data;
         npy_intp st1_dims[] = {[0] = n1};
-        PyArray_AsCArray((PyObject **)&elem, &np_array, st1_dims, 1, PyArray_DescrFromType(NPY_DOUBLE));
+        PyArray_AsCArray((PyObject **)&st1, &st1_data, st1_dims, 1, PyArray_DescrFromType(NPY_DOUBLE));
 
-        // np_array = (double *)PyArray_DATA(elem);
-        printf("Value 0 : %.10f\n", *np_array);
+        for (j = (i + 1); j < n_arrays; j++)
+        {
+            // retrieve spike train 2 from array
+            PyArrayObject *st2;
+            st2 = (PyArrayObject *)PyList_GetItem(list, j);
+
+            // convert spike train array 1 to c array
+            int n2 = PyArray_SIZE(st2);
+            double *st2_data;
+            npy_intp st2_dims[] = {[0] = n2};
+            PyArray_AsCArray((PyObject **)&st2, &st2_data, st2_dims, 1, PyArray_DescrFromType(NPY_DOUBLE));
+
+            // compute sttc
+            temp = Csttc(st1_data, st2_data, n1, n2, dt, time_data);
+            result_data[i * n_arrays + j] = result_data[j * n_arrays + i] = temp;
+        }
     }
 
-    return PyFloat_FromDouble(0);
+    return PyArray_Return(result);
 }
 
 static PyObject *version(PyObject *self)
