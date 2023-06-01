@@ -1,8 +1,8 @@
 # Reference: https://github.com/sje30/sjemea/tree/master
+# To slow for tiling
 
 import numpy as np
 from tqdm import tqdm
-from multiprocess import Pool
 
 
 class STTC:

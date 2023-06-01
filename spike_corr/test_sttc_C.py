@@ -14,13 +14,10 @@ st3 = np.array([2, 3, 6.4, 10.8])
 time = np.array([0, 11])
 dt = 0.5
 
-x = STTC.sttc(st1, st2, dt, time)
-print(x) # 0.1550688802543270?
+f = STTC.sttc(st1, st2, dt, time)
+print(f) # 0.1550688802543270?
 
 sts = [st1, st2, st3]
-x = STTC.tiling(sts, dt, time)
+m = STTC.tiling(sts, dt, time)
 
-print(x)
-
-
-
+print(m)

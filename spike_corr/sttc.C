@@ -1,3 +1,4 @@
+// Reference: https://github.com/sje30/sjemea/tree/master
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #include <Python.h>
@@ -48,7 +49,6 @@ double run_T(int n,
              double end,
              double *spike_times_1)
 {
-
     /* Calculate T_A, the fraction of time 'tiled' by spikes with +/- dt.
      *
      * This calculation requires checks to see that (a) you don't count
@@ -94,7 +94,7 @@ double run_T(int n,
         }
 
         // check if spikes are within dt of the start and/or end, if so
-        // just need to subract overlap of first and/or last spike as all
+        // just need to subtract overlap of first and/or last spike as all
         // within-train overlaps have been accounted for (in the case that
         // more than one spike is within dt of the start/end
 
@@ -265,8 +265,8 @@ static PyObject *version(PyObject *self)
 }
 
 static PyMethodDef methods[] = {
-    {"sttc", sttc, METH_VARARGS, "Calculating and print prime numbers between lower bound and upper bound "},
-    {"tiling", tiling, METH_VARARGS, "Computes matrix of sttc's"},
+    {"sttc", sttc, METH_VARARGS, "Calculate sttc from two spike trains, returns float"},
+    {"tiling", tiling, METH_VARARGS, "Computes matrix of sttc from list of spike trains"},
     {"version", (PyCFunction)version, METH_NOARGS, "return the version of the module"},
     {NULL, NULL, 0, NULL}};
 
@@ -274,7 +274,7 @@ static struct PyModuleDef STTC = {
     PyModuleDef_HEAD_INIT,
     "STTC",
     "sttc Module",
-    -1, // global state
+    -1,
     methods};
 
 // Initializer
