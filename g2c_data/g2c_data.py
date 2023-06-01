@@ -61,7 +61,7 @@ class G2C_data():
         returns a list of the spike data
         """
         mea_file_subset = self.mea_file_df[(self.mea_file_df['age'].isin(self.ages))
-                                           & (self.mea_file_df['region'].isin(self.regions))]
+                                           & (self.mea_file_df['region'].isin(self.regions))].copy()
 
         # add column for easy spike data retrieval
         mea_file_subset['spike_idx'] = range(len(mea_file_subset))
@@ -76,7 +76,7 @@ class G2C_data():
 
     def create_spike_data(self,
                           ages: list = [14, 17],
-                          regions: list = ['ctx', 'hpc']):
+                          regions: list = ['ctx', 'hpc']) -> None:
         """
         Loads the spike data from the provided directory and returns a list of the
         loaded data as well as a df with the meta data

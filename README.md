@@ -14,6 +14,8 @@ Need to make sure to include below headers for compilation and point at the head
 ```
 
 ## Application to Cortex and Hippocampus data
+We run the generative models on microelectrode array data from the cortex and hippocampus respectively, the data is available in this [GitHub repo](https://github.com/sje30/g2chvcdata). 
+Code to load the spike data is available in [G2C data](./g2c_data) (g2c = genes to cognition).
 
 ## Reproducibility
 All scripts should run in the conda environment as specified in the [requirements file](./req.txt).
