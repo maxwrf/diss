@@ -3,33 +3,33 @@
 #include <Python.h>
 #include <numpy/arrayobject.h>
 
-double run_P(int N1,
-             int N2,
+double run_P(int na,
+             int nb,
              double dt,
-             double *spike_times_1,
-             double *spike_times_2)
+             double *sta_data,
+             double *stb_data)
 {
     /* Calculate the term P_1. the fraction of spikes from train 1 that
      * are within +/- dt of train 2.
      */
 
-    int i, j, Nab;
+    int i, j, N12;
 
-    Nab = 0;
+    N12 = 0;
     j = 0;
-    for (i = 0; i <= (N1 - 1); i++)
+    for (i = 0; i <= (na - 1); i++)
     {
-        while (j < N2)
+        while (j < nb)
         {
             // check every spike in train 1 to see if there's a spike in
             //  train 2 within dt  (don't count spike pairs)
             //  don't need to search all j each iteration
-            if (fabs(spike_times_1[i] - spike_times_2[j]) <= dt)
+            if (fabs(sta_data[i] - stb_data[j]) <= dt)
             {
-                Nab = Nab + 1;
+                N12 = N12 + 1;
                 break;
             }
-            else if (spike_times_2[j] > spike_times_1[i])
+            else if (stb_data[j] > sta_data[i])
             {
                 break;
             }
@@ -39,13 +39,13 @@ double run_P(int N1,
             }
         }
     }
-    return Nab;
+    return N12;
 }
 
-double run_T(int N1v,
-             double dtv,
-             double startv,
-             double endv,
+double run_T(int n,
+             double dt,
+             double start,
+             double end,
              double *spike_times_1)
 {
 
@@ -56,21 +56,17 @@ double run_T(int N1v,
      * beg/end of recording.
      */
 
-    double dt = dtv;
-    double start = startv;
-    double end = endv;
-    int N1 = N1v;
     double time_A;
     int i = 0;
     double diff;
 
     // maximum
-    time_A = 2 * (double)N1 * dt;
+    time_A = 2 * (double)n * dt;
 
     // Assume at least one spike in train!
 
     // if just one spike in train
-    if (N1 == 1)
+    if (n == 1)
     {
 
         if ((spike_times_1[0] - start) < dt)
@@ -85,7 +81,7 @@ double run_T(int N1v,
 
     else
     { /* more than one spike in train */
-        while (i < (N1 - 1))
+        while (i < (n - 1))
         {
             diff = spike_times_1[i + 1] - spike_times_1[i];
             if (diff < 2 * dt)
@@ -106,15 +102,20 @@ double run_T(int N1v,
         {
             time_A = time_A - start + spike_times_1[0] - dt;
         }
-        if ((end - spike_times_1[N1 - 1]) < dt)
+        if ((end - spike_times_1[n - 1]) < dt)
         {
-            time_A = time_A - spike_times_1[N1 - 1] - dt + end;
+            time_A = time_A - spike_times_1[n - 1] - dt + end;
         }
     }
     return time_A;
 }
 
-double Csttc(double *st1_data, double *st2_data, int n1, int n2, double dt, double *time_data)
+double Csttc(double *st1_data,
+             double *st2_data,
+             int n1,
+             int n2,
+             double dt,
+             double *time_data)
 {
     double TA, TB, PA, PB, T;
 
@@ -179,6 +180,35 @@ static PyObject *sttc(PyObject *self, PyObject *args)
     return PyFloat_FromDouble(res);
 }
 
+static PyObject *tiling(PyObject *self, PyObject *args)
+{
+    int i, n_arrays;
+    PyObject *list;
+
+    if (!PyArg_ParseTuple(args, "O", &list))
+    {
+        return NULL;
+    };
+
+    n_arrays = PyObject_Length(list);
+    printf("number of arrays: %d", n_arrays);
+    for (i = 0; i < n_arrays; i++)
+    {
+        PyArrayObject *elem;
+        elem = (PyArrayObject *)PyList_GetItem(list, i);
+
+        int n1 = PyArray_SIZE(elem);
+        double *np_array;
+        npy_intp st1_dims[] = {[0] = n1};
+        PyArray_AsCArray((PyObject **)&elem, &np_array, st1_dims, 1, PyArray_DescrFromType(NPY_DOUBLE));
+
+        // np_array = (double *)PyArray_DATA(elem);
+        printf("Value 0 : %.10f\n", *np_array);
+    }
+
+    return PyFloat_FromDouble(0);
+}
+
 static PyObject *version(PyObject *self)
 {
     return Py_BuildValue("s", "Version 0.01");
@@ -186,6 +216,7 @@ static PyObject *version(PyObject *self)
 
 static PyMethodDef methods[] = {
     {"sttc", sttc, METH_VARARGS, "Calculating and print prime numbers between lower bound and upper bound "},
+    {"tiling", tiling, METH_VARARGS, "Computes matrix of sttc's"},
     {"version", (PyCFunction)version, METH_NOARGS, "return the version of the module"},
     {NULL, NULL, 0, NULL}};
 
@@ -196,9 +227,8 @@ static struct PyModuleDef STTC = {
     -1, // global state
     methods};
 
-// Initializer function
-PyMODINIT_FUNC
-PyInit_STTC(void)
+// Initializer
+PyMODINIT_FUNC PyInit_STTC(void)
 {
     PyObject *mod = PyModule_Create(&STTC);
     import_array();

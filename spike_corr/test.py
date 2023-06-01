@@ -14,6 +14,7 @@ time = np.array([0, 11])
 dt = 0.5
 
 x = STTC.sttc(st1, st2, dt, time)
+print(x) # 0.1550688802543270?
 
-print(x)
-# 0.1550688802543270
+sts = [st1, st2]
+STTC.tiling(sts)

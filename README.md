@@ -1,5 +1,32 @@
-# MPhil in Computation Biology Dissertation: Testing the robustness of generative networks for capturing patterns of spontaneous activity in developing neural circuits
+# CompBio Dissertation: Testing the robustness of GNMs for capturing patterns of spontaneous activity in developing neural circuits
 
+## Generative network models (GNMs)
+Python implementation of thirteen different generative network building rules available in [GNMs](./gnm/).
+A more detailed description of the individual models is available in [GNM docs](./gnm/gnm-docs.md).
+
+## Spike time tiling coefficient 
+C implementation packaged as python package located in [Spike Correlation](./spike_corr/).
+Could either directly run the binary but was created on Mac, or build the package by running the *setup.py* file in the same folder.
+Need to make sure to include below headers for compilation and point at the header files that come with the versions specified in the conda environment (see below).
+```C
+#include <Python.h>
+#include <numpy/arrayobject.h>
+```
+
+## Application to Cortex and Hippocampus data
+
+## Reproducibility
+All scripts should run in the conda environment as specified in the [requirements file](./req.txt).
+When conda is installed, the below command should reconstruct the environment including all package versions used here.
+```console
+$ conda create --name <PUT YOUR EVN NAME HERE> --file ./req.txt
+```
+You should then be able to activate the environment:
+```console
+$ conda activate <PUT YOUR EVN NAME HERE>
+```
+
+## Initial project proposal
 Generative modelling techniques have been used to summarise pairwise connectivity patterns in recordings of spontaneous neural activity [1].
 In the original paper, homophilic wiring principles best accounted for the network topologies inferred from experimental recordings.
 One limitation of this current approach is that it is unclear how robust the
