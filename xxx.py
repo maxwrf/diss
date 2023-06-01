@@ -1,5 +1,3 @@
-
-
 import numpy as np
 from utils.config import params_from_json
 from utils.g2c_data import G2C_data
@@ -35,17 +33,6 @@ g2c.create_spike_data(ages=[14, 17], regions=['ctx', 'hpc'])
 #     return mean_val
 
 
-# def tiling_allpairwise(s, dt):
-#     # Placeholder implementation
-#     n = len(s)
-
-
-#     m = np.zeros((n, n))
-#     for i, j in combinations(range(n), 2):
-#         m[i, j] = m[j, i] = s[i] + s[j] + dt
-#     return m
-
-
 spike_times_1 = np.array([2.1, 6, 10])
 spike_times_2 = np.array([1, 2, 2.2, 5])
 rec_time = np.array([0, 11])
@@ -54,5 +41,6 @@ s_d = [spike_times_1, spike_times_2]
 
 STTC.sttc(spike_times_1, spike_times_2, dt, rec_time)
 
-
-STTC.tiling_all_pairwise(s_d, dt, rec_time)
+# dt = 0.05
+# g2c.spike_meta_data['recording_time'].mean(axis=0)
+# STTC.tiling_all_pairwise(g2c.spike_data, dt, np.array([0., 911.23162393]))

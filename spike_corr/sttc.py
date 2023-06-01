@@ -66,6 +66,8 @@ class STTC:
 
         PA, PB = STTC.__get_Ps(n1, n2, dt, spike_times_1, spike_times_2)
 
+        print(TA, TB, PA, PB)
+
         return 0.5 * (PA - TB) / (1 - TB * PA) + 0.5 * (PB - TA) / (1 - TA * PB)
 
     @staticmethod

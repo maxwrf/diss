@@ -1,5 +1,6 @@
-#include <Python.h>
+#include <R.h>
 #include <stdio.h>
+#include <Rmath.h>
 
 /* Code for calculating Tiling coefficient.
  * All spike trains must be ordered, smallest time first.
@@ -60,10 +61,9 @@ double run_T(int N1v, double dtv, double startv, double endv,
   double time_A;
   int i = 0;
   double diff;
-  s
 
-      // maximum
-      time_A = 2 * (double)N1 * dt;
+  // maximum
+  time_A = 2 * (double)N1 * dt;
 
   // Assume at least one spike in train!
 
@@ -143,13 +143,13 @@ void run_TM(int *N1v, int *N2v, double *dtv, double *Time,
   }
 }
 
-void Ctiling_arr(Sfloat *spikes,
-                 int *pn,
-                 int *nspikes,
-                 int *first_spike,
-                 Sfloat *rec_time, /* recording time */
-                 Sfloat *pdt,
-                 Sfloat *corrs /* return array */)
+void tiling_arr(Sfloat *spikes,
+                int *pn,
+                int *nspikes,
+                int *first_spike,
+                Sfloat *rec_time, /* recording time */
+                Sfloat *pdt,
+                Sfloat *corrs /* return array */)
 {
 
   /* Compute all pairwise interactions, include self. */
@@ -176,10 +176,4 @@ void Ctiling_arr(Sfloat *spikes,
       corrs[(b * n) + a] = res;
     }
   }
-}
-
-static PyObject *tiling_arr(PyObject *self, PyObject *args)
-{
-
-  spikes[i], spikes[j], dt, rec_time
 }
