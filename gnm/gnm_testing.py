@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 from gnm.gnm import GNM
 from gnm.seed_network import get_seed_network
-from utils.utils import params_from_json, plot_edge_freqs
+from ..utils.utils import params_from_json, plot_edge_freqs
 
 
 # load config
@@ -16,7 +16,7 @@ D = D[:10, :10]
 
 # load a fake parameters and number of runs
 nruns = 10000
-params = np.repeat(np.array([[3,3]]), nruns, axis=0)
+params = np.repeat(np.array([[3, 3]]), nruns, axis=0)
 m = 10
 
 
