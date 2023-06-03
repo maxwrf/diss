@@ -9,8 +9,8 @@ config = params_from_json("./config.json")
 mea_data_dir = config['data_path'] + 'g2c_data/'
 
 g2c = G2C_data(mea_data_dir)
-g2c.create_spike_data(ages=[14, 17],
-                      regions=['ctx', 'hpc'])
+g2c.create_spike_data(ages=[7], 
+                      regions=['ctx'])
 
 
 # g2c.spike_meta_data['recording_time'].mean(axis=0)

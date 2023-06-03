@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from gnm.gnm import GNM
-from gnm.seed_network import get_seed_network
+from utils.seed_network import get_seed_network
 from ..utils.utils import params_from_json, plot_edge_freqs
 
 

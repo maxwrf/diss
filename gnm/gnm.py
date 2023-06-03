@@ -3,6 +3,38 @@ import numpy as np
 
 
 class GNM():
+    # make rules accessable statically
+    gnm_rules = [
+        'sptl',
+        'neighbors',
+        'matching',
+        'clu-avg',
+        'clu-min',
+        'clu-max',
+        'clu-dist',
+        'clu-prod',
+        'deg-avg',
+        'deg-min',
+        'deg-max',
+        'deg-dist',
+        'deg-prod'
+    ]
+
+    @staticmethod
+    def generate_param_space(n_runs: int = 100,
+                             eta_limts: np.array = [-7, 7],
+                             gamma_limits: np.array = [-7, 7]) -> np.array:
+        """
+        Createas a linear parameter space defined by the eta and gamma bounds
+        for the desired number of runs
+        """
+        p, q = np.meshgrid(np.linspace(
+            eta_limts[0], eta_limts[1], int(np.sqrt(n_runs))),
+            np.linspace(
+            gamma_limits[0], gamma_limits[1], int(np.sqrt(n_runs))))
+
+        return np.unique(np.vstack((p.flatten(), q.flatten())).T, axis=0)
+
     def __init__(self,
                  A: np.ndarray,
                  D: np.ndarray,
@@ -28,21 +60,6 @@ class GNM():
             'min': np.minimum,
             'prod': np.multiply
         }
-
-    @staticmethod
-    def generate_param_space(n_runs: int = 100,
-                             eta_limts: np.array = [-7, 7],
-                             gamma_limits: np.array = [-7, 7]) -> np.array:
-        """
-        Createas a linear parameter space defined by the eta and gamma bounds
-        for the desired number of runs
-        """
-        p, q = np.meshgrid(np.linspace(
-            eta_limts[0], eta_limts[1], int(np.sqrt(n_runs))),
-            np.linspace(
-            gamma_limits[0], gamma_limits[1], int(np.sqrt(n_runs))))
-
-        return np.unique(np.vstack((p.flatten(), q.flatten())).T, axis=0)
 
     def main(self):
         """
