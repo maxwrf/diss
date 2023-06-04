@@ -24,3 +24,28 @@ def plot_edge_freqs(b: np.array, n_largest: int = 20):
     plt.close(fig)
     plt.close()
     return fig
+
+
+def ks_test(x, y):
+    """
+    Computes the Kolmogorov-Smirnov (KS) between two arrays.
+    Is a non-parametric test of equality of continous 1D probability 
+    distributions from two samples
+    A = adjacency matrix
+    n = number of nodes
+    """
+    x_sorted = np.sort(x)
+    y_sorted = np.sort(y)
+    all_sorted = np.sort(np.concatenate([x_sorted, y_sorted]))
+
+    # Calculate the cumulative distribution functions (CDFs)
+    cdf_x = np.searchsorted(x_sorted, np.sort(np.concatenate(
+        [x_sorted, y_sorted])), side='right') / x.shape[0]
+    cdf_y = np.searchsorted(y_sorted, np.sort(np.concatenate(
+        [x_sorted, y_sorted])), side='right') / y.shape[0]
+
+    # ks stastistic is the maximum difference
+    diff_cdf = np.abs(cdf_x - cdf_y)
+    ks_statistic = np.max(diff_cdf)
+
+    return ks_statistic

@@ -1,11 +1,12 @@
 # Reference: MATLAB Brain Connectivity Toolbox
+import math
 import numpy as np
 
 
 class GNM():
     # make rules accessable statically
     gnm_rules = [
-        'sptl',
+        'spatial',
         'neighbors',
         'matching',
         'clu-avg',
@@ -61,11 +62,10 @@ class GNM():
             'prod': np.multiply
         }
 
-    def main(self):
+    def generate_models(self):
         """
         Initiates the network generation leveraging the diffferent rules
         """
-        print('Model type:', self.model_type)
 
         # copy of the original adjacency matrix to reset after each param combo
         A_initial = np.array(self.A, copy=True)
@@ -79,6 +79,20 @@ class GNM():
             eta = self.params[i_param, 0]
             gamma = self.params[i_param, 1]
             self.b[:, i_param] = self.__main(eta, gamma)
+
+    def reconstruct_A(self, b_index: int) -> np.array:
+        """
+        Given an index for paramter combination, reconstruct the adjacency
+        matrix from the paramteres
+        b_index = index indicating the result from the desired parameter combi
+        """
+        A = np.zeros((self.n_nodes, self.n_nodes))
+
+        power_ten = 10**(np.ceil(np.log10(self.b[:, b_index])+1) // 2)
+        idx_x = (self.b[:, b_index] // power_ten - 1).astype(int)
+        idx_y = (self.b[:, b_index] % power_ten).astype(int)
+        A[idx_x, idx_y] = 1
+        return A+A.T
 
     def get_clustering_coeff(self) -> np.array:
         """
@@ -209,12 +223,14 @@ class GNM():
             # update the clustering coefficient: at row node
             bu = np.where(self.A[uu, :])[0]
             su = self.A[bu, :][:, bu]
-            self.stat[uu] = np.sum(su) / (k[uu] ** 2 - k[uu])
+            self.stat[uu] = (np.sum(su) / (k[uu] ** 2 - k[uu])
+                             ) if k[uu] > 1 else 0
 
             # update the clustering coefficient: at col node)
             bv = np.where(self.A[vv, :])[0]
             sv = self.A[bv, :][:, bv]
-            self.stat[vv] = np.sum(sv) / (k[vv] ** 2 - k[vv])
+            self.stat[vv] = (np.sum(sv) / (k[vv] ** 2 - k[vv])
+                             ) if k[vv] > 1 else 0
 
             # update the clustering coefficient: at common neighbours
             bth = np.intersect1d(bu, bv)
@@ -241,7 +257,7 @@ class GNM():
         self.__init_K()
 
         # compute cost and value
-        Fd = self.D ** eta
+        Fd = np.power(self.D, eta, where=~np.eye(self.n_nodes, dtype=bool))
         Fk = self.K ** gamma
 
         # compute the prob for adding connection where there is none
@@ -259,8 +275,8 @@ class GNM():
 
         for i in range(int(m_seed + 1), self.m + 1):
             # select the element to update (biased dice)
-            #C = np.concatenate(([0], np.cumsum(P)))
-            #r = np.sum(np.random.rand() * C[-1] >= C)
+            # C = np.concatenate(([0], np.cumsum(P)))
+            # r = np.sum(np.random.rand() * C[-1] >= C)
             r = np.random.choice(range(len(P)), p=P/sum(P))
 
             uu = u[r]
@@ -289,11 +305,12 @@ class GNM():
         # return indcies of upper triangle adjacent nodes (there is an edge now)
         mask = np.triu(self.A, k=1)
         indices = np.where(mask)
-        return np.array([(idx_x+1)*10+idx_y for idx_x, idx_y in zip(indices[0], indices[1])], dtype=int)
+        power_ten = 10**np.ceil(np.log10(indices[1] + 1))
+        return np.array([(indices[0]+1)*power_ten + indices[1]], dtype=int)
 
     def get_matching_indices(self) -> np.array:
         """
-        For any two nodes in the adjacency matrix, computes the overlap in the 
+        For any two nodes in the adjacency matrix, computes the overlap in the
         connections.
         Note that if two nodes have a common neigbour, the two edeges are both
         counted as part of the intesection set.

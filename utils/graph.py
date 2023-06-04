@@ -5,10 +5,10 @@ class Graph:
     @staticmethod
     def clustering_coeff(A: np.array, n: int) -> np.array:
         """
-            Computes the clustering coefficients for each node
-            A = adjacency matrix
-            n = number of nodes
-            """
+        Computes the clustering coefficients for each node
+        A = adjacency matrix
+        n = number of nodes
+        """
         clu_coeff = np.zeros(n)
         for i_node in range(n):
             nbrs = np.where(A[i_node, :])[0]
