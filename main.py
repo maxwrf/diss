@@ -9,6 +9,7 @@ sys.path.append(os.path.dirname(current_path))  # noqa
 import math
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from tqdm.auto import tqdm
 from scipy.io import loadmat
 from scipy.spatial.distance import pdist, squareform
@@ -109,6 +110,28 @@ def main(A, D, A_Ys,
                                             'model_idx']).apply(
         lambda g: g.loc[g['max_energy'].idxmin(), :]).reset_index(drop=True)
 
+    # energy landscape
+    model = "spatial"
+
+    for i_sample in range(A_Ys.shape[0]):
+        data = df_results.loc[(df_results.sample_idx == i_sample) & (
+            df_results.model_name == model), ["eta", "gamma", "max_energy"]].values
+
+        landscape = data[:, -1].reshape(
+            (np.unique(data[:, 0]).size, np.unique(data[:, 1]).size))
+
+        # plot
+        fig, ax = plt.subplots()
+        im = ax.imshow(landscape, cmap=plt.colormaps['viridis'].reversed())
+        ax.invert_yaxis()
+        ax.set_xticks(
+            np.arange(len(np.unique(data[:, 0]))), labels=np.unique(data[:, 0]))
+        ax.set_xlabel("Eta")
+        ax.set_yticks(
+            np.arange(len(np.unique(data[:, 1]))), labels=np.unique(data[:, 1]))
+        ax.set_ylabel("Gamma")
+        cbar = ax.figure.colorbar(im, ax=ax)
+        fig.savefig('./plots/landscape.png')
     return 1
 
 

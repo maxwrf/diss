@@ -9,11 +9,18 @@ config = params_from_json("./config.json")
 mea_data_dir = config['data_path'] + 'g2c_data/'
 
 g2c = G2C_data(mea_data_dir)
-g2c.create_spike_data(ages=[7], 
+g2c.create_spike_data(ages=[7],
                       regions=['ctx'])
 
 
 # g2c.spike_meta_data['recording_time'].mean(axis=0)
+
+tiling(
+    g2c.spikes[0].spike_data,
+    g2c.spikes[0].spike_counts,
+    g2c.spikes[0].recording_time
+    0.05
+)
 
 dt = 0.05
 tiling(g2c.spike_data[:10], dt, np.array([0., 911.23162393]))

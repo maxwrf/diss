@@ -6,6 +6,21 @@ import numpy as np
 import pandas as pd
 
 
+class SpikeTrain():
+    def __init__(self, file_path):
+        """
+        Given the path to an mea file, returns a Spike Train object
+        """
+        with h5py.File(file_path, 'r') as file:
+            self.file = str(file['meta/age'][()])
+            self.age = file['meta/age'][()][0]
+            self.region = file['meta/region'][()][0]
+            self.recording_time = file['recordingtime'][()]
+            self.spike_counts = file['sCount'][()]
+            self.electrode_pos = file['epos'][()]
+            self.spike_data = file['spikes'][()]
+
+
 class G2C_data():
     def __init__(self, mea_data_dir: str):
         # load the file info
@@ -38,22 +53,10 @@ class G2C_data():
         with h5py.File(file_name, 'r') as file:
             file_age = file['meta/age'][()]
             file_region = file['meta/region'][()]
-            file_recording_time = file['recordingtime'][()]
 
         return {'file': str(file_name),
                 'age': file_age[0],
-                'region': file_region[0],
-                'recording_time': file_recording_time}
-
-    def __h5_read_spikes(self, file_path) -> np.array:
-        """
-        Given the path to an mea file, returns a numpy array of the spike data
-        """
-        with h5py.File(file_path, 'r') as file:
-            # spikes_data = file['spikes'][:]
-            spikes_data = file['spikes'][()]
-
-        return spikes_data
+                'region': file_region[0]}
 
     def __get_spikes(self) -> list:
         """
@@ -68,9 +71,8 @@ class G2C_data():
 
         # collect the data
         spike_l = list()
-        for file_name in mea_file_subset['file']:
-            spikes_data = self.__h5_read_spikes(file_name)
-            spike_l.append(spikes_data)
+        for file_path in mea_file_subset['file']:
+            spike_l.append(SpikeTrain(file_path))
 
         return spike_l, mea_file_subset
 
@@ -86,4 +88,4 @@ class G2C_data():
         self.regions = regions
 
         # collect the data for the ages
-        self.spike_data, self.spike_meta_data = self.__get_spikes()
+        self.spikes, self.spikes_data = self.__get_spikes()
