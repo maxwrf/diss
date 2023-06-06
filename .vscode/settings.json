@@ -3,6 +3,8 @@
         "example.C": "cpp",
         "tiliing2.C": "cpp",
         "sttc.C": "cpp",
-        "tiling.C": "cpp"
+        "tiling.C": "cpp",
+        "random": "cpp",
+        "ratio": "cpp"
     }
 }

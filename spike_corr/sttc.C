@@ -182,14 +182,13 @@ static PyObject *sttc(PyObject *self, PyObject *args)
 
 static PyObject *tiling(PyObject *self, PyObject *args)
 {
-    int i, j, n_arrays;
+    int i, j;
 
     // parsing the python inputs
     double dt;
-    PyObject *list;
-    PyArrayObject *time;
+    PyArrayObject *time, *spikes, *spike_counts;
 
-    if (!PyArg_ParseTuple(args, "OdO", &list, &dt, &time))
+    if (!PyArg_ParseTuple(args, "OOOd", &spikes, &spike_counts, &time, &dt))
     {
         return NULL;
     };
@@ -208,51 +207,55 @@ static PyObject *tiling(PyObject *self, PyObject *args)
     npy_intp time_dims[] = {[0] = 2};
     PyArray_AsCArray((PyObject **)&time, &time_data, time_dims, 1, PyArray_DescrFromType(NPY_DOUBLE));
 
+    // parse spikes
+    double *spike_data;
+    npy_intp spike_dims[] = {[0] = 2};
+    PyArray_AsCArray((PyObject **)&spikes,
+                     &spike_data,
+                     spike_dims,
+                     1,
+                     PyArray_DescrFromType(NPY_DOUBLE));
+
+    // parse spike counts
+    double *spike_count_data;
+    int n_electrodes = PyArray_SIZE(spike_counts) - 1;
+    npy_intp spike_count_dims[] = {[0] = 2};
+    PyArray_AsCArray((PyObject **)&spike_counts,
+                     &spike_count_data,
+                     spike_count_dims,
+                     1,
+                     PyArray_DescrFromType(NPY_DOUBLE));
+
     // prepare result matrix
-    n_arrays = PyObject_Length(list);
-    // double result_data[n_arrays][n_arrays];
-    npy_intp result_dims[] = {[0] = n_arrays, [1] = n_arrays};
-    // PyObject *result = PyArray_SimpleNew(2, result_dims, NPY_DOUBLE);
+    npy_intp result_dims[] = {[0] = n_electrodes,
+                              [1] = n_electrodes};
     PyArrayObject *result = (PyArrayObject *)PyArray_SimpleNew(2, result_dims, NPY_DOUBLE);
     double *result_data = (double *)PyArray_DATA(result);
 
-    // main loop computing tiled sttc
-    double temp;
-
-    // set diag to one
-    for (i = 0; i < n_arrays; i++)
-    {
-        result_data[i * n_arrays + i] = 1;
-    };
-
     // main loop
-    for (i = 0; i < n_arrays; i++)
+    for (i = 0; i < n_electrodes; i++)
     {
-        // retrieve spike train 1 from array
-        PyArrayObject *st1;
-        st1 = (PyArrayObject *)PyList_GetItem(list, i);
+        // retrieve spike train 1 indices
+        int sp1_offset = *(spike_count_data + i);
+        double *st1_ptr = (spike_data + sp1_offset);
+        int n1 = *(spike_count_data + i + 1) - *(spike_count_data + i) - 1;
 
-        // convert spike train array 1 to c array
-        int n1 = PyArray_SIZE(st1);
-        double *st1_data;
-        npy_intp st1_dims[] = {[0] = n1};
-        PyArray_AsCArray((PyObject **)&st1, &st1_data, st1_dims, 1, PyArray_DescrFromType(NPY_DOUBLE));
-
-        for (j = (i + 1); j < n_arrays; j++)
+        for (j = 0; j < n_electrodes; j++)
         {
-            // retrieve spike train 2 from array
-            PyArrayObject *st2;
-            st2 = (PyArrayObject *)PyList_GetItem(list, j);
-
-            // convert spike train array 1 to c array
-            int n2 = PyArray_SIZE(st2);
-            double *st2_data;
-            npy_intp st2_dims[] = {[0] = n2};
-            PyArray_AsCArray((PyObject **)&st2, &st2_data, st2_dims, 1, PyArray_DescrFromType(NPY_DOUBLE));
+            // retrieve spike train 2 indices
+            int sp2_offset = *(spike_count_data + j);
+            double *st2_ptr = (spike_data + sp2_offset);
+            int n2 = *(spike_count_data + j + 1) - *(spike_count_data + j) - 1;
 
             // compute sttc
-            temp = Csttc(st1_data, st2_data, n1, n2, dt, time_data);
-            result_data[i * n_arrays + j] = result_data[j * n_arrays + i] = temp;
+            double temp = Csttc(st1_ptr,
+                                st2_ptr,
+                                n1,
+                                n2,
+                                dt,
+                                time_data);
+
+            result_data[i * n_electrodes + j] = result_data[j * n_electrodes + i] = temp;
         }
     }
 
