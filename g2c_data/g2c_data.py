@@ -4,21 +4,8 @@ import h5py
 import os
 import numpy as np
 import pandas as pd
-
-
-class SpikeTrain():
-    def __init__(self, file_path):
-        """
-        Given the path to an mea file, returns a Spike Train object
-        """
-        with h5py.File(file_path, 'r') as file:
-            self.file = str(file['meta/age'][()])
-            self.age = file['meta/age'][()][0]
-            self.region = file['meta/region'][()][0]
-            self.recording_time = file['recordingtime'][()]
-            self.spike_counts = file['sCount'][()]
-            self.electrode_pos = file['epos'][()]
-            self.spike_data = file['spikes'][()]
+from g2c_data.spike_train import SpikeTrain
+from scipy.spatial.distance import cdist
 
 
 class G2C_data():
@@ -89,3 +76,18 @@ class G2C_data():
 
         # collect the data for the ages
         self.spikes, self.spikes_data = self.__get_spikes()
+
+        # get the unique electrodes
+        electrodes = [s.electrodes for s in self.spikes]
+        electrodes = np.concatenate(electrodes, axis=0)
+        electrodes = np.vectorize(lambda s: s[:5])(electrodes)
+        self.electrodes = np.unique(electrodes).astype(str)
+
+        # fist number times 200, 9 - second number times 200
+        self.electrode_pos = np.array([
+            np.array([int(str(e[-1]))*200, (9-int(e[-2]))*200]) for e in self.electrodes])
+
+        self.D = cdist(self.electrode_pos,
+                       self.electrode_pos, metric='euclidean')
+
+        return 0
