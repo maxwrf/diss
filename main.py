@@ -7,12 +7,9 @@ current_path = os.path.dirname(os.path.abspath(__file__))  # noqa
 sys.path.append(os.path.dirname(current_path))  # noqa
 
 import math
+import h5py
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 from tqdm.auto import tqdm
-from scipy.io import loadmat
-from scipy.spatial.distance import pdist, squareform
 from utils.seed_network import get_seed_network
 from utils.config import params_from_json
 from utils.graph import Graph
@@ -92,47 +89,18 @@ def main(A, D, A_Ys,
                 K_all[i_sample, j_model, k_param, :] = K[k_param, :]
                 K_max_all[i_sample, j_model, k_param] = np.max(K[k_param, :])
 
-    # VIZ etc.
+    with h5py.File(config['results_path'] + "gnm_results.h5", 'w') as f:
+        f.create_dataset('K_all', data=K_all)
+        f.create_dataset('K_max_all', data=K_max_all)
+        f.attrs['n_samples'] = n_samples
+        f.attrs['gnm_rules'] = GNM.gnm_rules
+        f.attrs['n_runs'] = n_runs
+        f.attrs['eta_limits'] = eta_limits
+        f.attrs['gamma_limits'] = gamma_limits
+        f.attrs['eta'] = params[:, 0]
+        f.attrs['gamma'] = params[:, 1]
 
-    # make a table with energy statistics for each model type
-    idx = np.indices(K_max_all.shape).reshape(K_max_all.ndim, -1).T
-    df_results = pd.DataFrame({'sample_idx': idx[:, 0],
-                               'model_idx':  idx[:, 1],
-                               'param_idx':  idx[:, 2],
-                               'model_name': np.array(GNM.gnm_rules)[idx[:, 1]],
-                               'eta': params[:, 0][idx[:, 2]],
-                               'gamma': params[:, 1][idx[:, 2]],
-                               'max_energy': np.ravel(K_max_all)
-                               })
-
-    # get the top performing parameter combination each (min energy)
-    df_top_performing = df_results.groupby(['sample_idx',
-                                            'model_idx']).apply(
-        lambda g: g.loc[g['max_energy'].idxmin(), :]).reset_index(drop=True)
-
-    # energy landscape
-    model = "spatial"
-
-    for i_sample in range(A_Ys.shape[0]):
-        data = df_results.loc[(df_results.sample_idx == i_sample) & (
-            df_results.model_name == model), ["eta", "gamma", "max_energy"]].values
-
-        landscape = data[:, -1].reshape(
-            (np.unique(data[:, 0]).size, np.unique(data[:, 1]).size))
-
-        # plot
-        fig, ax = plt.subplots()
-        im = ax.imshow(landscape, cmap=plt.colormaps['viridis'].reversed())
-        ax.invert_yaxis()
-        ax.set_xticks(
-            np.arange(len(np.unique(data[:, 0]))), labels=np.unique(data[:, 0]))
-        ax.set_xlabel("Eta")
-        ax.set_yticks(
-            np.arange(len(np.unique(data[:, 1]))), labels=np.unique(data[:, 1]))
-        ax.set_ylabel("Gamma")
-        cbar = ax.figure.colorbar(im, ax=ax)
-        fig.savefig('./plots/landscape.png')
-    return 1
+    return 0
 
 
 # get the initalized adjacency matrix where > 20% of the patient samples
