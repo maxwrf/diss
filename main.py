@@ -17,13 +17,14 @@ from utils.gnm_utils import ks_test
 from gnm.gnm import GNM
 
 
-def main(A, D, A_Ys,
-         n_samples=2,
+def main(A_init: np.ndarray,
+         D: np.ndarray,
+         A_Ys: np.ndarray,
          eta_limits=[-7, 7],
          gamma_limits=[-7, 7],
          n_runs=64):
-    # subsample for development
-    A_Ys = A_Ys[0:n_samples, ...]
+
+    A_Ys = A_Ys[:2, ...]
 
     # generate the parameter space
     params = GNM.generate_param_space(n_runs, eta_limits, gamma_limits)
@@ -64,10 +65,9 @@ def main(A, D, A_Ys,
         pbar = tqdm(range(len(GNM.gnm_rules)), leave=False)
         for j_model in pbar:
             pbar.set_description(f"Processing {GNM.gnm_rules[j_model]}")
-            model = GNM(A, D, m, GNM.gnm_rules[j_model], params)
+            model = GNM(A_init, D, m, GNM.gnm_rules[j_model], params)
             model.generate_models()
-            nb = model.b.shape[0]
-            K = np.zeros((nb, 4))
+            K = np.zeros((params.shape[0], 4))
 
             # over generated graphs from all parameter combinations
             for k_param in range(params.shape[0]):
@@ -92,7 +92,7 @@ def main(A, D, A_Ys,
     with h5py.File(config['results_path'] + "gnm_results.h5", 'w') as f:
         f.create_dataset('K_all', data=K_all)
         f.create_dataset('K_max_all', data=K_max_all)
-        f.attrs['n_samples'] = n_samples
+        f.attrs['n_samples'] = A_Ys.shape[0]
         f.attrs['gnm_rules'] = GNM.gnm_rules
         f.attrs['n_runs'] = n_runs
         f.attrs['eta_limits'] = eta_limits
@@ -106,6 +106,9 @@ def main(A, D, A_Ys,
 # get the initalized adjacency matrix where > 20% of the patient samples
 # connectomes already had connections (target data set)
 config = params_from_json("./config.json")
-A, D, A_Ys = get_seed_network(config, prop=.2, get_connections=True)
-
-main(A, D, A_Ys, n_samples=2)
+A, D, A_Ys = get_seed_network(config,
+                              prop=.2,
+                              get_connections=True,
+                              n_samples=None
+                              )
+main(A, D, A_Ys, n_runs=1000)

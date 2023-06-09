@@ -38,17 +38,18 @@ def main():
 
         # reshape for landscape
         landscape = data[:, -1].reshape(
-            (np.unique(data[:, 0]).size, np.unique(data[:, 1]).size))
+            (np.unique(data[:, 0]).size, np.unique(data[:, 1]).size)).T
 
         # plot
         axes[i_model].set_title(model)
         im = axes[i_model].imshow(
             landscape, cmap=plt.colormaps['viridis'], vmin=0, vmax=1)
 
-        axes[i_model].set_xticks(
-            np.arange(len(np.unique(data[:, 0]))), labels=np.unique(data[:, 0]))
-        axes[i_model].set_yticks(
-            np.arange(len(np.unique(data[:, 1]))), labels=np.unique(data[:, 1]))
+        # tick_positions_x = np.linspace(min(data[:, 0]), max(data[:, 0]), 10)
+        # tick_positions_y = np.linspace(min(data[:, 1]), max(data[:, 1]), 10)
+
+        # axes[i_model].set_xticks(tick_positions_x)
+        # axes[i_model].set_yticks(tick_positions_y)
 
         axes[i_model].set_xlabel("Eta")
         axes[i_model].set_ylabel("Gamma")
