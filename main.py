@@ -6,7 +6,7 @@ import os
 current_path = os.path.dirname(os.path.abspath(__file__))  # noqa
 sys.path.append(os.path.dirname(current_path))  # noqa
 
-import math
+import time
 import h5py
 import numpy as np
 from tqdm.auto import tqdm
@@ -22,9 +22,16 @@ def main(A_init: np.ndarray,
          A_Ys: np.ndarray,
          eta_limits=[-7, 7],
          gamma_limits=[-7, 7],
-         n_runs=64):
+         n_runs=64,
+         n_samples=None,
+         store=False
+         ):
 
-    A_Ys = A_Ys[:2, ...]
+    start_time = time.time()
+
+    # For development limit samples
+    if n_samples is not None:
+        A_Ys = A_Ys[:n_samples, ...]
 
     # generate the parameter space
     params = GNM.generate_param_space(n_runs, eta_limits, gamma_limits)
@@ -89,16 +96,21 @@ def main(A_init: np.ndarray,
                 K_all[i_sample, j_model, k_param, :] = K[k_param, :]
                 K_max_all[i_sample, j_model, k_param] = np.max(K[k_param, :])
 
-    with h5py.File(config['results_path'] + "gnm_results.h5", 'w') as f:
-        f.create_dataset('K_all', data=K_all)
-        f.create_dataset('K_max_all', data=K_max_all)
-        f.attrs['n_samples'] = A_Ys.shape[0]
-        f.attrs['gnm_rules'] = GNM.gnm_rules
-        f.attrs['n_runs'] = n_runs
-        f.attrs['eta_limits'] = eta_limits
-        f.attrs['gamma_limits'] = gamma_limits
-        f.attrs['eta'] = params[:, 0]
-        f.attrs['gamma'] = params[:, 1]
+    if store:
+        with h5py.File(config['results_path'] + "gnm_results.h5", 'w') as f:
+            f.create_dataset('K_all', data=K_all)
+            f.create_dataset('K_max_all', data=K_max_all)
+            f.attrs['n_samples'] = A_Ys.shape[0]
+            f.attrs['gnm_rules'] = GNM.gnm_rules
+            f.attrs['n_runs'] = n_runs
+            f.attrs['eta_limits'] = eta_limits
+            f.attrs['gamma_limits'] = gamma_limits
+            f.attrs['eta'] = params[:, 0]
+            f.attrs['gamma'] = params[:, 1]
+
+    end_time = time.time()
+    execution_time = end_time - start_time
+    print("Execution Time:", execution_time, "seconds")
 
     return 0
 
@@ -108,7 +120,6 @@ def main(A_init: np.ndarray,
 config = params_from_json("./config.json")
 A, D, A_Ys = get_seed_network(config,
                               prop=.2,
-                              get_connections=True,
-                              n_samples=None
+                              get_connections=True
                               )
-main(A, D, A_Ys, n_runs=1000)
+main(A, D, A_Ys, n_runs=64, n_samples=4, store=False)

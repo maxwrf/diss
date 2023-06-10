@@ -1,4 +1,5 @@
 {
     "data_path": "/Users/maxwuerfek/code/diss/data/",
-    "results_path": "/Users/maxwuerfek/code/diss/results/"
+    "results_path": "/Users/maxwuerfek/code/diss/results/",
+    "cores": 4
 }

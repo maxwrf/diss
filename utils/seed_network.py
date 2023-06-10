@@ -5,7 +5,6 @@ from scipy.spatial.distance import pdist, squareform
 
 
 def get_seed_network(config: dict,
-                     n_samples: int = None,
                      prop: float = 0.2,
                      get_connections=False) -> tuple:
     """
@@ -17,9 +16,6 @@ def get_seed_network(config: dict,
     connectomes = loadmat(
         config['data_path'] + 'example_binarised_connectomes.mat')[
             'example_binarised_connectomes']
-
-    if n_samples is not None:
-        connectomes = connectomes[0:n_samples, ...]
 
     # remove the first dimension to get average
     connections = np.mean(connectomes, axis=0).squeeze()

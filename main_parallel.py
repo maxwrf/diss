@@ -6,8 +6,8 @@ import os
 current_path = os.path.dirname(os.path.abspath(__file__))  # noqa
 sys.path.append(os.path.dirname(current_path))  # noqa
 
-import math
-from multiprocess import pool
+import time
+from joblib import Parallel, delayed
 import h5py
 import numpy as np
 from tqdm.auto import tqdm
@@ -18,7 +18,7 @@ from utils.gnm_utils import ks_test
 from gnm.gnm import GNM
 
 
-def task(A_Y, i_sample):
+def task(A_Y, D, params, A_init):
     # number of target connections
     m = np.count_nonzero(A_Y) // 2
 
@@ -43,9 +43,7 @@ def task(A_Y, i_sample):
                                  params.shape[0]))
 
     # Run the generative models for this sample
-    pbar = tqdm(range(len(GNM.gnm_rules)), leave=False)
-    for j_model in pbar:
-        pbar.set_description(f"Processing {GNM.gnm_rules[j_model]}")
+    for j_model in range(len(GNM.gnm_rules)):
         model = GNM(A_init, D, m, GNM.gnm_rules[j_model], params)
         model.generate_models()
         K = np.zeros((params.shape[0], 4))
@@ -78,9 +76,16 @@ def main(A_init: np.ndarray,
          A_Ys: np.ndarray,
          eta_limits=[-7, 7],
          gamma_limits=[-7, 7],
-         n_runs=64):
+         n_runs=64,
+         n_samples=None,
+         store=False
+         ):
 
-    A_Ys = A_Ys[:2, ...]
+    start_time = time.time()
+
+    # For development limit samples
+    if n_samples is not None:
+        A_Ys = A_Ys[:n_samples, ...]
 
     # generate the parameter space
     params = GNM.generate_param_space(n_runs, eta_limits, gamma_limits)
@@ -98,25 +103,32 @@ def main(A_init: np.ndarray,
                           params.shape[0]))
 
     # for each data sample
-    first_arg = range(A_Ys.shape[0])
-    second_arg = [A_Ys[i_sample, ...] for i in range(A_Ys.shape[0])]
+    results = Parallel(n_jobs=4)(delayed(task)(A_Ys[i_sample, ...],
+                                               D,
+                                               params,
+                                               A_init)
+                                 for i_sample in tqdm(range(A_Ys.shape[0])))
 
-    for K_all_sample, K_max_all_sample in pool.starmap(
-            task, zip(first_arg, second_arg)):
+    for i_sample, (K_all_sample, K_max_all_sample) in enumerate(results):
         # store the results
         K_all[i_sample, ...] = K_all_sample
         K_max_all[i_sample, ...] = K_max_all_sample
 
-    with h5py.File(config['results_path'] + "gnm_results.h5", 'w') as f:
-        f.create_dataset('K_all', data=K_all)
-        f.create_dataset('K_max_all', data=K_max_all)
-        f.attrs['n_samples'] = A_Ys.shape[0]
-        f.attrs['gnm_rules'] = GNM.gnm_rules
-        f.attrs['n_runs'] = n_runs
-        f.attrs['eta_limits'] = eta_limits
-        f.attrs['gamma_limits'] = gamma_limits
-        f.attrs['eta'] = params[:, 0]
-        f.attrs['gamma'] = params[:, 1]
+    if store:
+        with h5py.File(config['results_path'] + "gnm_results.h5", 'w') as f:
+            f.create_dataset('K_all', data=K_all)
+            f.create_dataset('K_max_all', data=K_max_all)
+            f.attrs['n_samples'] = A_Ys.shape[0]
+            f.attrs['gnm_rules'] = GNM.gnm_rules
+            f.attrs['n_runs'] = n_runs
+            f.attrs['eta_limits'] = eta_limits
+            f.attrs['gamma_limits'] = gamma_limits
+            f.attrs['eta'] = params[:, 0]
+            f.attrs['gamma'] = params[:, 1]
+
+    end_time = time.time()
+    execution_time = end_time - start_time
+    print("Execution Time:", execution_time, "seconds")
 
     return 0
 
@@ -126,7 +138,6 @@ def main(A_init: np.ndarray,
 config = params_from_json("./config.json")
 A, D, A_Ys = get_seed_network(config,
                               prop=.2,
-                              get_connections=True,
-                              n_samples=None
+                              get_connections=True
                               )
-main(A, D, A_Ys, n_runs=1000)
+main(A, D, A_Ys, n_runs=64, n_samples=4, store=False)
