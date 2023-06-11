@@ -36,7 +36,6 @@ def ks_test(x, y):
     """
     x_sorted = np.sort(x)
     y_sorted = np.sort(y)
-    all_sorted = np.sort(np.concatenate([x_sorted, y_sorted]))
 
     # Calculate the cumulative distribution functions (CDFs)
     cdf_x = np.searchsorted(x_sorted, np.sort(np.concatenate(

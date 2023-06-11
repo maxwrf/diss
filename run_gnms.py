@@ -7,18 +7,21 @@ current_path = os.path.dirname(os.path.abspath(__file__))  # noqa
 sys.path.append(os.path.dirname(current_path))  # noqa
 
 import time
+import datetime
 from joblib import Parallel, delayed
 import h5py
 import numpy as np
 from tqdm.auto import tqdm
-from utils.seed_network import get_seed_network
-from utils.config import params_from_json
 from utils.graph import Graph
 from utils.gnm_utils import ks_test
 from gnm.gnm import GNM
 
 
 def task(A_Y, D, params, A_init):
+    """
+    Runs the geenrative models for a single sample, this allows for parallel
+    model generation on different cores
+    """
     # number of target connections
     m = np.count_nonzero(A_Y) // 2
 
@@ -74,11 +77,14 @@ def task(A_Y, D, params, A_init):
 def main(A_init: np.ndarray,
          D: np.ndarray,
          A_Ys: np.ndarray,
+         config: dict,
+         dset_name: str,
          eta_limits=[-7, 7],
          gamma_limits=[-7, 7],
          n_runs=64,
          n_samples=None,
-         store=False
+         store=False,
+         debug=False
          ):
 
     start_time = time.time()
@@ -103,11 +109,17 @@ def main(A_init: np.ndarray,
                           params.shape[0]))
 
     # for each data sample
-    results = Parallel(n_jobs=config['cores'])(delayed(task)(A_Ys[i_sample, ...],
-                                               D,
-                                               params,
-                                               A_init)
-                                               for i_sample in tqdm(range(A_Ys.shape[0])))
+    if debug:
+        results = [task(A_Ys[i_sample, ...],
+                        D,
+                        params,
+                        A_init[i_sample, ...]) for i_sample in range(A_Ys.shape[0])]
+    else:
+        results = Parallel(n_jobs=config['cores'])(delayed(task)(A_Ys[i_sample, ...],
+                                                                 D,
+                                                                 params,
+                                                                 A_init[i_sample, ...])
+                                                   for i_sample in tqdm(range(A_Ys.shape[0])))
 
     for i_sample, (K_all_sample, K_max_all_sample) in enumerate(results):
         # store the results
@@ -115,7 +127,9 @@ def main(A_init: np.ndarray,
         K_max_all[i_sample, ...] = K_max_all_sample
 
     if store:
-        with h5py.File(config['results_path'] + "gnm_results.h5", 'w') as f:
+        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        with h5py.File(
+                config['results_path'] + timestamp + "_gnm_" + dset_name + ".h5", 'w') as f:
             f.create_dataset('K_all', data=K_all)
             f.create_dataset('K_max_all', data=K_max_all)
             f.attrs['n_samples'] = A_Ys.shape[0]
@@ -131,13 +145,3 @@ def main(A_init: np.ndarray,
     print("Execution Time:", execution_time, "seconds")
 
     return 0
-
-
-# get the initalized adjacency matrix where > 20% of the patient samples
-# connectomes already had connections (target data set)
-config = params_from_json("./config.json")
-A, D, A_Ys = get_seed_network(config,
-                              prop=.2,
-                              get_connections=True
-                              )
-main(A, D, A_Ys, n_runs=64, n_samples=4, store=False)

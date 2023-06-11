@@ -1,5 +1,6 @@
 import numpy as np
 import h5py
+import random
 import sttc.import_sttc_C  # adds path for .so
 from STTC import tiling
 
@@ -36,8 +37,22 @@ class SpikeTrain():
         st_idx = np.where(np.isin(mea_electrodes, self.elelectrodes))[0]
 
         # construct the adjacency matrix
-        self.A = np.zeros((mea_electrodes.shape[0], mea_electrodes.shape[0]))
+        self.A_Y = np.zeros((mea_electrodes.shape[0], mea_electrodes.shape[0]))
         A_subset = ((self.sttc > sttc_cutoff) *
                     ~np.eye(self.sttc.shape[0], dtype=bool)).astype(int)
-        self.A[np.repeat(st_idx, st_idx.shape[0]),
-               np.tile(st_idx, st_idx.shape[0])] = A_subset.flatten()
+        self.A_Y[np.repeat(st_idx, st_idx.shape[0]),
+                 np.tile(st_idx, st_idx.shape[0])] = A_subset.flatten()
+
+    def get_A_init_rand(self, prop=0.2):
+        """
+        Initalizes an adjacency matrix for a sample by taking a proportion
+        of the actual samples
+        """
+        self.A_init = np.zeros_like(self.A_Y)
+        mask = np.triu(self.A_Y, k=1)
+        idx = np.where(mask)
+
+        subsample = random.sample(range(idx[0].shape[0]), int(
+            round(idx[0].shape[0] * 0.2, 0)))
+        self.A_init[idx[0][subsample], idx[1][subsample]] = 1
+        self.A_init[idx[1][subsample], idx[0][subsample]] = 1
