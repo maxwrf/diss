@@ -69,7 +69,7 @@ def main(A_init: np.ndarray,
         x[:, 3] = Graph.euclidean_edge_length(A_Y, D)
 
         # Run the generative models for this sample
-        pbar = tqdm(range(len(GNM.gnm_rules)), leave=False)
+        pbar = tqdm(range(1), leave=False)
         for j_model in pbar:
             pbar.set_description(f"Processing {GNM.gnm_rules[j_model]}")
             model = GNM(A_init, D, m, GNM.gnm_rules[j_model], params)
@@ -122,4 +122,6 @@ A, D, A_Ys = get_seed_network(config,
                               prop=.2,
                               get_connections=True
                               )
-main(A, D, A_Ys, n_runs=2, n_samples=2, store=False)
+
+main(A, D, A_Ys, n_runs=3, n_samples=2, store=False)
+1

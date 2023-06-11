@@ -1,5 +1,4 @@
 # Reference: MATLAB Brain Connectivity Toolbox
-import math
 import numpy as np
 
 

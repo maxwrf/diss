@@ -103,11 +103,11 @@ def main(A_init: np.ndarray,
                           params.shape[0]))
 
     # for each data sample
-    results = Parallel(n_jobs=4)(delayed(task)(A_Ys[i_sample, ...],
+    results = Parallel(n_jobs=config['cores'])(delayed(task)(A_Ys[i_sample, ...],
                                                D,
                                                params,
                                                A_init)
-                                 for i_sample in tqdm(range(A_Ys.shape[0])))
+                                               for i_sample in tqdm(range(A_Ys.shape[0])))
 
     for i_sample, (K_all_sample, K_max_all_sample) in enumerate(results):
         # store the results

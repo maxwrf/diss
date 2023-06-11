@@ -5,9 +5,30 @@ import matplotlib.pyplot as plt
 from utils.config import params_from_json
 
 
-def plot_landscape(df_results, metadata):
+def plot_boxplots(df_results, metadata, config):
     """
-    xxx
+    For every rule get for every sample the best model (param comb)
+    Plot a histogram accordingly
+    """
+
+    df_temp = df_results.groupby(['model_name', 'sample_idx']).agg(
+        {'max_energy': ['min']}).reset_index()
+
+    data = [df_temp[df_temp.model_name ==
+                    name].max_energy.values.flatten() for name in metadata['gnm_rules']]
+
+    fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(16, 12))
+
+    axes.set_xticklabels(metadata['gnm_rules'])
+
+    axes.boxplot(data)
+    fig.savefig(config['plot_path'] + 'boxplots.png')
+
+
+def plot_landscape(df_results, metadata, config):
+    """
+    For every model type draws the energy landscapes for all parameter 
+    combinations
     """
 
     # energy landscape
@@ -45,19 +66,29 @@ def plot_landscape(df_results, metadata):
     axes[-2].set_visible(False)
     fig.tight_layout()
     fig.colorbar(im, ax=axes.ravel().tolist(), shrink=0.5)
-    fig.savefig('./plots/landscape.png')
+    fig.savefig(config['plot_path'] + 'landscape.png')
 
 
-def summary_table(df_results):
+def summary_table(df_results, config):
     """
-
+    For every sample and model get the best energy value and parameter comb
+    Then for every model across all samples compute summary statistics
     """
-    df_summary = df_results.groupby('model_name').agg(
-        {'max_energy': ['mean', 'min', 'max']}).reset_index()
-    df_summary.to_csv('./results/results.csv')
+    idx = df_results.groupby(['model_name', 'sample_idx'])[
+        'max_energy'].idxmin().values
+
+    df_temp = df_results.loc[idx]
+
+    df_summary = df_temp.groupby('model_name').agg(
+        {
+            'max_energy': ['mean', 'min', 'max', 'std'],
+            'eta': ['mean', 'min', 'max', 'std'],
+            'gamma': ['mean', 'min', 'max', 'std']
+        },).reset_index()
+    df_summary.to_csv(config['results_path'] + 'results.csv')
 
 
-def main():
+def main(config):
     """
     Analyzes the results from the generative model runs
     """
@@ -77,11 +108,12 @@ def main():
                                'max_energy': np.ravel(K_max_all)
                                })
 
-    plot_landscape(df_results, metadata)
-    summary_table(df_results)
+    summary_table(df_results, config)
+    plot_landscape(df_results, metadata, config)
+    plot_boxplots(df_results, metadata, config)
 
     return 0
 
 
 config = params_from_json("./config.json")
-main()
+main(config)
