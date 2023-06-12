@@ -4,15 +4,215 @@
 #include <numpy/arrayobject.h>
 #include <math.h>
 #include <iostream>
+#include <vector>
+
+// GNM rules
+// 0: 'spatial',
+// 1: 'neighbors',
+// 2: 'matching',
+// 3: 'clu-avg',
+// 4: 'clu-min',
+// 5: 'clu-max',
+// 6: 'clu-dist',
+// 7: 'clu-prod',
+// 8: 'deg-avg',
+// 9: 'deg-min',
+// 10: 'deg-max',
+// 11: 'deg-dist',
+// 12: 'deg-prod'
 
 class GNMClass
 {
 private:
-    // int myPrivateVariable;
+    double **A_current, **K_current;
+    double *k_current; // stores the nodal degree
 
-    void myPrivateFunction()
+    void reset_A_current()
     {
-        std::cout << "This is a private function." << std::endl;
+        // Initialize a copy of A_init to work on
+        A_current = new double *[n_nodes];
+        for (int i = 0; i < n_nodes; ++i)
+        {
+            A_current[i] = new double[n_nodes];
+            for (int j = 0; j < n_nodes; ++j)
+            {
+                A_current[i][j] = A_init[i][j];
+            }
+        }
+    }
+
+    void init_K()
+    // Initialize the value matrix
+    {
+        if (model == 0) // if spatial model
+        {
+            K_current = new double *[n_nodes];
+            for (int i = 0; i < n_nodes; ++i)
+            {
+                K_current[i] = new double[n_nodes];
+                for (int j = 0; j < n_nodes; ++j)
+                {
+                    K_current[i][j] = 1.0;
+                }
+            }
+        }
+    }
+
+    std::vector<int> update_stat(int uu, int vv)
+    {
+        if (model == 0) // if spatial model
+        {
+            std::vector<int> bth;
+            bth.push_back(uu);
+            bth.push_back(vv);
+            return bth;
+        }
+
+        return std::vector<int>();
+    }
+
+    void update_K(int *bth)
+    {
+        if (model == 0) // if spatial model
+        {
+            return;
+        }
+    };
+
+    void run_param_comb(int i_pcomb)
+    // main function for the generative network build
+    {
+        // get the params
+        double eta = params[i_pcomb][0];
+        double gamma = params[i_pcomb][1];
+
+        // compute the inital value matrix
+        init_K();
+
+        // initiate cost and value matrices
+        double **Fd = new double *[n_nodes];
+        double **Fk = new double *[n_nodes];
+        double **Ff = new double *[n_nodes];
+
+        for (int i = 0; i < n_nodes; ++i)
+        {
+            Fd[i] = new double[n_nodes];
+            Fk[i] = new double[n_nodes];
+            Ff[i] = new double[n_nodes];
+
+            for (int j = 0; j < n_nodes; ++j)
+            {
+                Fd[i][j] = pow(D[i][j], eta);
+                Fk[i][j] = pow(K_current[i][j], gamma);
+                Ff[i][j] = Fd[i][j] * Fk[i][j] * (A_current[i][j] == 0);
+            }
+        }
+
+        // initiate the degree of each node
+        k_current = new double[n_nodes];
+        for (int i = 0; i < n_nodes; ++i)
+        {
+            k_current[i] = 0.0;
+            for (int j = 0; j < n_nodes; ++j)
+            {
+                k_current[i] += A_current[i][j];
+            }
+        }
+
+        // get the indices of the upper triangle of P (denoted u and v)
+        int *u = new int[n_nodes * (n_nodes - 1) / 2];
+        int *v = new int[n_nodes * (n_nodes - 1) / 2];
+        int upper_tri_index = 0;
+
+        for (int i = 0; i < n_nodes; ++i)
+        {
+            for (int j = i + 1; j < n_nodes; ++j)
+            {
+                u[upper_tri_index] = i;
+                v[upper_tri_index] = j;
+                upper_tri_index++;
+            }
+        }
+
+        // initiate P
+        double *P = new double[upper_tri_index];
+        for (int i = 0; i < upper_tri_index; ++i)
+        {
+            P[i] = Ff[u[i]][v[i]];
+        }
+
+        // Number of connections we start with
+        int m_seed = 0;
+        for (int i = 0; i < upper_tri_index; ++i)
+        {
+            if (A_current[u[i]][v[i]] != 0)
+            {
+                m_seed++;
+            }
+        }
+
+        // main loop adding new connections to adjacency matrix
+        for (int i = m_seed + 1; i <= m; ++i)
+        {
+            // compute the cumulative sum of the probabilities
+            double *C = new double[upper_tri_index + 1];
+            C[0] = 0;
+            for (int j = 0; j < upper_tri_index; ++j)
+            {
+                C[j + 1] = C[j] + P[j];
+            }
+
+            // select an element
+            double r = std::rand() / (RAND_MAX + 1.0) * C[upper_tri_index];
+            int selected = 0;
+            while (selected < upper_tri_index && r >= C[selected + 1])
+            {
+                selected++;
+            }
+            int uu = u[selected];
+            int vv = v[selected];
+
+            // update the node degree array
+            k_current[uu] += 1;
+            k_current[vv] += 1;
+
+            // update the adjacency matrix
+            A_current[uu][vv] = 1;
+            A_current[vv][uu] = 1;
+
+            // update the statistic
+            std::vector<int> bth = update_stat(uu, vv);
+
+            // z
+            for (int i = 0; i < bth.size(); ++i)
+            {
+                int bth_i = bth[i];
+                for (int j = 0; j < n_nodes; ++j)
+                {
+                    Ff[bth_i][j] = Fd[bth_i][j] * pow(K_current[bth_i][j], gamma) * (A_current[bth_i][j] == 0);
+                    Ff[j][bth_i] = Fd[j][bth_i] * pow(K_current[j][bth_i], gamma) * (A_current[j][bth_i] == 0);
+                }
+            }
+
+            // update p
+            // TODO: This currently just updates every position
+            for (int i = 0; i < upper_tri_index; ++i)
+            {
+                P[i] = Ff[u[i]][v[i]];
+            }
+        }
+
+        // update b with the result
+        int nth_edge = 0;
+        for (int i = 0; i < upper_tri_index; ++i)
+        {
+            if (A_current[u[i]][v[i]])
+            {
+                int temp = (u[i] + 1) * pow(10, ceil(log10(v[i] + 1))) + v[i];
+                b[nth_edge][i_pcomb] = temp;
+                nth_edge = nth_edge + 1;
+            }
+        }
     }
 
 public:
@@ -23,6 +223,8 @@ public:
     int m;
     int model;
     int n_p_combs;
+    int n_nodes;
+    double epsilon = 1e-5;
 
     // define the constructor
     GNMClass(double **A_init_,
@@ -31,7 +233,8 @@ public:
              double **b_,
              int m_,
              int model_,
-             int n_p_combs_)
+             int n_p_combs_,
+             int n_nodes_)
     {
         A_init = A_init_;
         D = D_;
@@ -40,17 +243,16 @@ public:
         m = m_;
         model = model_;
         n_p_combs = n_p_combs_;
+        n_nodes = n_nodes_;
     }
 
-    void runModel()
+    void generateModels()
+    // Initiates the network generation leveraging the different rules
     {
-
-        for (int i = 0; i < m; i++)
+        for (int i_pcomb = 0; i_pcomb < n_p_combs; i_pcomb++)
         {
-            for (int j = 0; j < n_p_combs; j++)
-            {
-                b[i][j] = 0;
-            }
+            reset_A_current();
+            run_param_comb(i_pcomb);
         }
     }
 };
@@ -121,8 +323,9 @@ static PyObject *hello(PyObject *self, PyObject *args)
                  b_data,
                  m,
                  model,
-                 n_p_combs);
-    obj.runModel();
+                 n_p_combs,
+                 n_nodes);
+    obj.generateModels();
 
     return PyArray_Return(b);
 }

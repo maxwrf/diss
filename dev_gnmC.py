@@ -17,19 +17,7 @@ from utils.config import params_from_json
 from utils.graph import Graph
 
 gnm_rules = [
-    'spatial',
-    'neighbors',
-    'matching',
-    'clu-avg',
-    'clu-min',
-    'clu-max',
-    'clu-dist',
-    'clu-prod',
-    'deg-avg',
-    'deg-min',
-    'deg-max',
-    'deg-dist',
-    'deg-prod'
+    'spatial'
 ]
 
 
@@ -105,8 +93,6 @@ def main(A_init: np.ndarray,
                 params,
                 int(m),
                 int(j_model))
-            print(b)
-
     end_time = time.time()
     execution_time = end_time - start_time
     print("Execution Time:", execution_time, "seconds")
@@ -121,4 +107,4 @@ A, D, A_Ys = get_seed_network(config,
                               prop=.2,
                               get_connections=True
                               )
-main(A, D, A_Ys, n_runs=5, n_samples=2, store=False)
+main(A, D, A_Ys, n_runs=1000, n_samples=2, store=False)
