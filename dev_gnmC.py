@@ -121,4 +121,4 @@ A, D, A_Ys = get_seed_network(config,
                               prop=.2,
                               get_connections=True
                               )
-main(A, D, A_Ys, n_runs=10, n_samples=2, store=False)
+main(A, D, A_Ys, n_runs=5, n_samples=2, store=False)

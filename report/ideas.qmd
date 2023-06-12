@@ -17,7 +17,7 @@ bibliography: ref.bib
 jupyter: python3
 ---
 
-# Brain Formation
+# Brain Formation and structure
 ## Parsimonious principles
 These reach back very far to as Ramon y Cajal (1899).
 
@@ -42,8 +42,10 @@ Not part of Cajal's initial principal's, but metabolic cost of running the brain
     \item The cost attributable to maintenance of electrochemical gradients across membranes
     \item Cost increases in overall neuronal membrane size as well as axonal length and diameter, this controlling length also limits energy requirements
     \item Limitation: Networks often functionally configured to be less expensive than possible within the anatomical constraints (network formation), e.g., through sparse coding
-
 \end{itemize}
+
+## Topological characteristics
+asdasda
 
 # Generative network models
 These models were first developed and applied to connectome data by @betzel_generative_2016.
