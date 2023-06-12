@@ -85,7 +85,8 @@ class G2C_data():
 
         # fist number times 200, 9 - second number times 200
         self.electrode_pos = np.array([
-            np.array([int(str(e[-1]))*200, (9-int(e[-2]))*200]) for e in self.electrodes])
+            np.array([int(str(e[-1]))*200,
+                      (9-int(e[-2]))*200]) for e in self.electrodes])
 
         self.D = cdist(self.electrode_pos,
                        self.electrode_pos, metric='euclidean')

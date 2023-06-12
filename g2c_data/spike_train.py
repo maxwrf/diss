@@ -1,7 +1,6 @@
 import numpy as np
 import h5py
 import random
-import sttc.import_sttc_C  # adds path for .so
 from STTC import tiling
 
 

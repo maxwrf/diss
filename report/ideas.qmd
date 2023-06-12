@@ -1,0 +1,60 @@
+---
+title: "Dissertation: Background and Literature"
+subtitle: "Author: mw894"
+format:
+  pdf:
+    documentclass: article
+    highlight-style: atom-one
+    numbersections: true
+    fontsize: 10pt
+    toc: false
+    colorlinks: true
+    geometry:
+      - top=30mm
+      - left=20mm
+      - right=20mm
+bibliography: ref.bib
+jupyter: python3
+---
+
+# Generative network models
+These models were first developed and applied to connectome data by @betzel_generative_2016.
+
+## Evaluation
+$$
+E = max(KS_{k}, KS_{c}, KS_{b}, KS_{e})
+$$
+to quantify the difference between the synthetic and observed data using the Kolmogorov-Smirnov statistic.
+The corresponding statistic is computed for every vertex, and then the distributions are compared.
+\begin{itemize}
+    \item $KS_{K}$ Nodal degree = Number of edges that are incident to a vertex
+    \item $KS_{C}$ Clustering (coefficient) = Measure of the degree to which nodes in a graph tend to cluster together, proportion of possible connections realized among the neighbors of a vertex (Where the neighbor of a vertex are all the other connected vertices)
+    \item $KS_{b}$ Betweenness centrality = Measures the centrality of a vertex by investigating the number of shortest paths that pass through the vertex (For every pair of vertices there exists a shortest path between them minimizing either the number of edges or the summed weights of the edges)
+    \item $KS_{e}$ Edge length = Sum off al the edge length that are incident to a vertex 
+\end{itemize}
+
+## Optimization
+
+## Rules
+### Geometric
+\begin{itemize}
+    \item Promotion of low cost connections is promoted, but forming only the shortest connections, produces lack of long distance connections, which increases path length, and reduces efficiency
+    \item Problems in reproducing clustering and edge length distributions simultaneously ($KS_{c}, KS_{e}$), this is because strong distance penalty required to make high clustering but then lacking long distance connections 
+\end{itemize}
+### Degree
+### Clustering
+### Homophilic
+#### Matching index
+\begin{itemize}
+    \item Normalized measure of the overlap in two vertexes neighborhoods
+    \item that eta and gamma seem to trade offer with each other, such that a connectome is either shaped by geometry or non-geometric constraints
+\end{itemize}
+
+# Graphs
+## Rich clubs
+\begin{itemize}
+    \item Measure the extent by which well connected nodes are connected to each other
+    \item Networks of high rich-club coefficients have many connections between nodes of high degree
+\end{itemize}
+
+# References
