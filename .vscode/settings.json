@@ -5,6 +5,8 @@
         "sttc.C": "cpp",
         "tiling.C": "cpp",
         "random": "cpp",
-        "ratio": "cpp"
+        "ratio": "cpp",
+        "gnm.C": "cpp",
+        "gnmc.C": "cpp"
     }
 }

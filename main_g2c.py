@@ -16,7 +16,7 @@ if __name__ == "__main__":
     g2c = G2C_data(mea_data_dir)
     # ages: 7, 10, 11, 14, 17, 18, 21, 24, 25, 28
     # regions: 'ctx', 'hpc'
-    ages = [7]
+    ages = [7, 10, 11, 14]
     regions = ['ctx']
     dset_name = 'g2c' + regions[0] + 'div' + str(ages[0])
     g2c.create_spike_data(ages=ages, regions=regions)

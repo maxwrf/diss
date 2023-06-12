@@ -3,5 +3,6 @@
     "results_path": "/Users/maxwuerfek/code/diss/results/",
     "plot_path": "/Users/maxwuerfek/code/diss/plots/",
     "sttc_build": "/Users/maxwuerfek/code/diss/sttc/build/lib.macosx-11.1-arm64-cpython-38",
+    "gnm_build": "/Users/maxwuerfek/code/diss/gnm/build/lib.macosx-11.1-arm64-cpython-38",
     "cores": 4
 }

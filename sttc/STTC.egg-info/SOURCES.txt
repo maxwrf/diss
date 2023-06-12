@@ -1,6 +1,0 @@
-setup.py
-sttc.C
-STTC.egg-info/PKG-INFO
-STTC.egg-info/SOURCES.txt
-STTC.egg-info/dependency_links.txt
-STTC.egg-info/top_level.txt

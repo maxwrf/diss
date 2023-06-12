@@ -17,6 +17,34 @@ bibliography: ref.bib
 jupyter: python3
 ---
 
+# Brain Formation
+## Parsimonious principles
+These reach back very far to as Ramon y Cajal (1899).
+
+### Network wiring cost
+There is overvelwheling evidence in favor of this hypothesis [@bullmore_economy_2012]:
+\begin{itemize}
+    \item Cost of building and maintaining axonal connections and speed of transmission increase in wiring volume which is proportional to length (D)
+    \item White matter grows faster than grey-matter as function of brain size, driven by increase in axonal diameter and number synapses per neuron
+    \item Fraction of grey matter neurons that send myelinated axons into white matter slowly reduces with brain size
+    \item The probability distribution of connection distances is skewed towards short distances that will be relatively parsimonious in wiring cost
+\end{itemize}
+Factors which potentially explain the deviations from this simple wiring principle [@bullmore_economy_2012]:
+\begin{itemize}
+    \item Volume exclusions = Due to the limited size of the brain, axonal projections must perturbate from the straight line connection
+    \item Functional properties = Example: Monosynaptic vs. Polysynaptic nerves, when you need low latency you would build a high cost long axonal connection
+\end{itemize}
+
+### Network running cost
+Not part of Cajal's initial principal's, but metabolic cost of running the brain has become an increasingly important principle for network formation.
+\begin{itemize}
+    \item Bigger brains are metabolically more expensive, with a rate increasing faster than overall body oxygen increase as function of weight
+    \item The cost attributable to maintenance of electrochemical gradients across membranes
+    \item Cost increases in overall neuronal membrane size as well as axonal length and diameter, this controlling length also limits energy requirements
+    \item Limitation: Networks often functionally configured to be less expensive than possible within the anatomical constraints (network formation), e.g., through sparse coding
+
+\end{itemize}
+
 # Generative network models
 These models were first developed and applied to connectome data by @betzel_generative_2016.
 
@@ -55,6 +83,15 @@ The corresponding statistic is computed for every vertex, and then the distribut
 \begin{itemize}
     \item Measure the extent by which well connected nodes are connected to each other
     \item Networks of high rich-club coefficients have many connections between nodes of high degree
+\end{itemize}
+
+# Random dictionary
+\begin{itemize}
+    \item Gray matter = Composed of the neurons (appears darker due ot higher levels of melanin)
+    \item White matter = Mainly made up of myelinated axons also called tracts (light appearance through the lipid content of myelin)
+    \item Monosynaptic reflex = There is only one synapse between the afferent nerve and the efferent nerve (slow latency)
+    \item Polysnaptic reflex = There are more than one synapse between the nerves, such that there is higher latency
+    \item Sparse coding = Neural coding that represents the information by activation of small subset of the available neurons
 \end{itemize}
 
 # References
