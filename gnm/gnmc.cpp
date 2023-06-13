@@ -44,9 +44,11 @@ private:
 
     void init_K()
     // Initialize the value matrix
+    // TODO: You can probably speed this up by only iterating over the upper triangle
     {
-        if (model == 0) // if spatial model
+        switch (model)
         {
+        case 0: // spatial
             K_current = new double *[n_nodes];
             for (int i = 0; i < n_nodes; ++i)
             {
@@ -56,9 +58,9 @@ private:
                     K_current[i][j] = 1.0;
                 }
             }
-        }
-        else if (model == 8) // degree average
-        {
+            break;
+
+        case 8: // deg-avg
             K_current = new double *[n_nodes];
             for (int i = 0; i < n_nodes; ++i)
             {
@@ -68,30 +70,41 @@ private:
                     K_current[i][j] = ((k_current[i] + k_current[j]) / 2) + epsilon;
                 }
             }
+            break;
+
+        case 9: // deg-min
+            K_current = new double *[n_nodes];
+            for (int i = 0; i < n_nodes; ++i)
+            {
+                K_current[i] = new double[n_nodes];
+                for (int j = 0; j < n_nodes; ++j)
+                {
+                    K_current[i][j] = ((k_current[i] > k_current[j]) ? k_current[j] : k_current[i]) + epsilon;
+                }
+            }
+            break;
         }
     }
 
     std::vector<int> update_stat(int uu, int vv)
     {
-        if ((model == 0) || (model == 8)) // if spatial model
+        switch (model)
         {
+        // all degree models, spatial model
+        default:
             std::vector<int> bth;
             bth.push_back(uu);
             bth.push_back(vv);
             return bth;
+            break;
         }
-
-        return std::vector<int>();
     }
 
     void update_K(std::vector<int> bth)
     {
-        if (model == 0) // if spatial
+        switch (model)
         {
-            return;
-        }
-        else if (model == 8) // if degree average
-        {
+        case 8: // deg-avg
             for (int bth_i = 0; bth_i < bth.size(); ++bth_i)
             {
                 int i = bth[bth_i];
@@ -100,7 +113,22 @@ private:
                     K_current[i][j] = K_current[j][i] = ((k_current[i] + k_current[j]) / 2) + epsilon;
                 }
             }
-        };
+            break;
+
+        case 9: // deg-min
+            for (int bth_i = 0; bth_i < bth.size(); ++bth_i)
+            {
+                int i = bth[bth_i];
+                for (int j = 0; j < n_nodes; ++j)
+                {
+                    K_current[i][j] = K_current[j][i] = ((k_current[i] > k_current[j]) ? k_current[j] : k_current[i]) + epsilon;
+                }
+            }
+            break;
+
+        default: // spatial
+            break;
+        }
     }
 
     void run_param_comb(int i_pcomb)

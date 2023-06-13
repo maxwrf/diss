@@ -20,7 +20,8 @@ from utils.gnm_utils import ks_test
 
 gnm_rules = [
     'spatial',
-    'deg-avg'
+    'deg-avg',
+    'deg-min'
 ]
 
 gnm_loopkup = {
