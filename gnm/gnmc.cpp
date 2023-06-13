@@ -208,8 +208,7 @@ private:
         {
             if (A_current[u[i]][v[i]])
             {
-                int temp = (u[i] + 1) * pow(10, ceil(log10(v[i] + 1))) + v[i];
-                b[nth_edge][i_pcomb] = temp;
+                b[nth_edge][i_pcomb] = (u[i] + 1) * pow(10, ceil(log10(v[i] + 1))) + v[i];
                 nth_edge = nth_edge + 1;
             }
         }
@@ -219,7 +218,7 @@ public:
     double **A_init;
     double **D;
     double **params;
-    double **b;
+    int **b;
     int m;
     int model;
     int n_p_combs;
@@ -230,7 +229,7 @@ public:
     GNMClass(double **A_init_,
              double **D_,
              double **params_,
-             double **b_,
+             int **b_,
              int m_,
              int model_,
              int n_p_combs_,
@@ -308,13 +307,13 @@ static PyObject *hello(PyObject *self, PyObject *args)
                          [1] = n_p_combs};
     PyArrayObject *b = (PyArrayObject *)PyArray_SimpleNew(2,
                                                           b_dims,
-                                                          NPY_DOUBLE);
-    double **b_data;
+                                                          NPY_INT);
+    int **b_data;
     PyArray_AsCArray((PyObject **)&b,
                      &b_data,
                      b_dims,
                      2,
-                     PyArray_DescrFromType(NPY_DOUBLE));
+                     PyArray_DescrFromType(NPY_INT));
 
     // call the C native code
     GNMClass obj(A_init_data,
