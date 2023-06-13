@@ -21,6 +21,10 @@ from utils.gnm_utils import ks_test
 gnm_rules = [
     'spatial',
     'clu-avg',
+    'clu-min',
+    'clu-max',
+    'clu-dist',
+    'clu-prod',
     'deg-avg',
     'deg-min',
     'deg-max',

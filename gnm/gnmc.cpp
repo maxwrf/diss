@@ -150,10 +150,8 @@ private:
     void reset_A_current()
     {
         // Initialize a copy of A_init to work on
-        A_current = new double *[n_nodes];
         for (int i = 0; i < n_nodes; ++i)
         {
-            A_current[i] = new double[n_nodes];
             for (int j = 0; j < n_nodes; ++j)
             {
                 A_current[i][j] = A_init[i][j];
@@ -187,6 +185,54 @@ private:
                 for (int j = 0; j < n_nodes; ++j)
                 {
                     K_current[i][j] = ((clu_coeff_current[i] + clu_coeff_current[j]) / 2) + epsilon;
+                }
+            }
+            break;
+
+        case 4: // clu-min
+            compute_clustering_coeff();
+            for (int i = 0; i < n_nodes; ++i)
+            {
+                K_current[i] = new double[n_nodes];
+                for (int j = 0; j < n_nodes; ++j)
+                {
+                    K_current[i][j] = ((clu_coeff_current[i] > clu_coeff_current[j]) ? clu_coeff_current[j] : clu_coeff_current[i]) + epsilon;
+                }
+            }
+            break;
+
+        case 5: // clu-max
+            compute_clustering_coeff();
+            for (int i = 0; i < n_nodes; ++i)
+            {
+                K_current[i] = new double[n_nodes];
+                for (int j = 0; j < n_nodes; ++j)
+                {
+                    K_current[i][j] = ((clu_coeff_current[i] > clu_coeff_current[j]) ? clu_coeff_current[i] : clu_coeff_current[j]) + epsilon;
+                }
+            }
+            break;
+
+        case 6: // clu-dist
+            compute_clustering_coeff();
+            for (int i = 0; i < n_nodes; ++i)
+            {
+                K_current[i] = new double[n_nodes];
+                for (int j = 0; j < n_nodes; ++j)
+                {
+                    K_current[i][j] = fabs(clu_coeff_current[i] - clu_coeff_current[j]) + epsilon;
+                }
+            }
+            break;
+
+        case 7: // clu-prod
+            compute_clustering_coeff();
+            for (int i = 0; i < n_nodes; ++i)
+            {
+                K_current[i] = new double[n_nodes];
+                for (int j = 0; j < n_nodes; ++j)
+                {
+                    K_current[i][j] = clu_coeff_current[i] * clu_coeff_current[j] + epsilon;
                 }
             }
             break;
@@ -262,6 +308,51 @@ private:
                 }
             }
             break;
+
+        case 4: // clu-min
+            for (int bth_i = 0; bth_i < bth.size(); ++bth_i)
+            {
+                int i = bth[bth_i];
+                for (int j = 0; j < n_nodes; ++j)
+                {
+                    K_current[i][j] = K_current[j][i] = ((clu_coeff_current[i] > clu_coeff_current[j]) ? clu_coeff_current[j] : clu_coeff_current[i]) + epsilon;
+                }
+            }
+            break;
+
+        case 5: // clu-max
+            for (int bth_i = 0; bth_i < bth.size(); ++bth_i)
+            {
+                int i = bth[bth_i];
+                for (int j = 0; j < n_nodes; ++j)
+                {
+                    K_current[i][j] = K_current[j][i] = ((clu_coeff_current[i] > clu_coeff_current[j]) ? clu_coeff_current[i] : clu_coeff_current[j]) + epsilon;
+                }
+            }
+            break;
+
+        case 6: // clu-dist
+            for (int bth_i = 0; bth_i < bth.size(); ++bth_i)
+            {
+                int i = bth[bth_i];
+                for (int j = 0; j < n_nodes; ++j)
+                {
+                    K_current[i][j] = K_current[j][i] = fabs(clu_coeff_current[i] - clu_coeff_current[j]) + epsilon;
+                }
+            }
+            break;
+
+        case 7: // clu-prod
+            for (int bth_i = 0; bth_i < bth.size(); ++bth_i)
+            {
+                int i = bth[bth_i];
+                for (int j = 0; j < n_nodes; ++j)
+                {
+                    K_current[i][j] = K_current[j][i] = clu_coeff_current[i] * clu_coeff_current[j] + epsilon;
+                }
+            }
+            break;
+
         case 8: // deg-avg
             for (int bth_i = 0; bth_i < bth.size(); ++bth_i)
             {
@@ -343,16 +434,12 @@ private:
         init_K();
 
         // initiate cost and value matrices
-        double **Fd = new double *[n_nodes];
-        double **Fk = new double *[n_nodes];
-        double **Ff = new double *[n_nodes];
+        std::vector<std::vector<double> > Fd(n_nodes, std::vector<double>(n_nodes));
+        std::vector<std::vector<double> > Fk(n_nodes, std::vector<double>(n_nodes));
+        std::vector<std::vector<double> > Ff(n_nodes, std::vector<double>(n_nodes));
 
         for (int i = 0; i < n_nodes; ++i)
         {
-            Fd[i] = new double[n_nodes];
-            Fk[i] = new double[n_nodes];
-            Ff[i] = new double[n_nodes];
-
             for (int j = 0; j < n_nodes; ++j)
             {
                 Fd[i][j] = pow(D[i][j], eta);
@@ -377,7 +464,7 @@ private:
         }
 
         // initiate P
-        double *P = new double[upper_tri_index];
+        std::vector<double> P(upper_tri_index);
         for (int i = 0; i < upper_tri_index; ++i)
         {
             P[i] = Ff[u[i]][v[i]];
@@ -393,12 +480,14 @@ private:
             }
         }
 
+        // prep C
+        std::vector<double> C(upper_tri_index + 1);
+        C[0] = 0;
+
         // main loop adding new connections to adjacency matrix
         for (int i = m_seed + 1; i <= m; ++i)
         {
             // compute the cumulative sum of the probabilities
-            double *C = new double[upper_tri_index + 1];
-            C[0] = 0;
             for (int j = 0; j < upper_tri_index; ++j)
             {
                 C[j + 1] = C[j] + P[j];
@@ -423,7 +512,7 @@ private:
 
             // get the node indices for update
             std::vector<int> bth;
-            if ((model > 2) && (model < 8))
+            if ((model > 2) && (model < 8)) // if cluster model
             {
                 bth = update_clustering_coeff(uu, vv);
             }
@@ -496,6 +585,13 @@ public:
     void generateModels()
     // Initiates the network generation leveraging the different rules
     {
+        // Allocate memory for A
+        A_current = new double *[n_nodes];
+        for (int i = 0; i < n_nodes; ++i)
+        {
+            A_current[i] = new double[n_nodes];
+        }
+
         for (int i_pcomb = 0; i_pcomb < n_p_combs; i_pcomb++)
         {
             reset_A_current();
