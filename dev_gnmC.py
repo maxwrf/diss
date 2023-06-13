@@ -10,15 +10,27 @@ sys.path.append(config['gnm_build'])  # noqa
 from GNMC import hello
 
 import time
+import datetime
 import h5py
 import numpy as np
 from utils.seed_network import get_seed_network
 from utils.config import params_from_json
 from utils.graph import Graph
+from utils.gnm_utils import ks_test
 
 gnm_rules = [
     'spatial'
 ]
+
+
+def reconstruct_A(b: np.array, param_idx: int, n_nodes: int):
+    A = np.zeros((n_nodes, n_nodes))
+
+    power_ten = 10**(np.ceil(np.log10(b[:, param_idx])+1) // 2)
+    idx_x = (b[:, param_idx] // power_ten - 1).astype(int)
+    idx_y = (b[:, param_idx] % power_ten).astype(int)
+    A[idx_x, idx_y] = 1
+    return A+A.T
 
 
 def generate_param_space(n_runs: int = 100,
@@ -43,7 +55,8 @@ def main(A_init: np.ndarray,
          gamma_limits=[-7, 7],
          n_runs=2,
          n_samples=None,
-         store=False
+         store=False,
+         dset_name=""
          ):
 
     start_time = time.time()
@@ -68,9 +81,9 @@ def main(A_init: np.ndarray,
                           params.shape[0]))
 
     # for each data sample
-    for i_sample in range(A_Ys.shape[0]):
+    for sample_idx in range(A_Ys.shape[0]):
 
-        A_Y = A_Ys[i_sample, ...]
+        A_Y = A_Ys[sample_idx, ...]
 
         # number of target connections
         m = np.count_nonzero(A_Y) // 2
@@ -93,6 +106,45 @@ def main(A_init: np.ndarray,
                 params,
                 int(m),
                 int(j_model))
+
+            K = np.zeros((params.shape[0], 4))
+            n_nodes = A_init.shape[0]
+
+            # over generated graphs from all parameter combinations
+            for param_idx in range(params.shape[0]):
+                # reconstructs the adjacency matrix from the indices
+                A_Y_head = reconstruct_A(b, param_idx, n_nodes)
+
+                # compute energy states
+                y = np.zeros((n, 4))
+                y[:, 0] = np.sum(A_Y_head, axis=0)
+                y[:, 1] = Graph.clustering_coeff(A_Y_head, n)
+                y[:, 2] = Graph.betweenness_centrality(A_Y_head, n)
+                y[:, 3] = Graph.euclidean_edge_length(A_Y_head, D)
+
+                # compute the states
+                K[param_idx, ...] = np.array(
+                    [ks_test(x[..., l], y[..., l]) for l in range(4)])
+
+                # store the results
+                K_all[sample_idx, j_model, param_idx, :] = K[param_idx, :]
+                K_max_all[sample_idx, j_model,
+                          param_idx] = np.max(K[param_idx, :])
+
+    if store:
+        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        with h5py.File(
+                config['results_path'] + timestamp + "_" + dset_name + ".h5", 'w') as f:
+            f.create_dataset('K_all', data=K_all)
+            f.create_dataset('K_max_all', data=K_max_all)
+            f.attrs['n_samples'] = A_Ys.shape[0]
+            f.attrs['gnm_rules'] = gnm_rules
+            f.attrs['n_runs'] = n_runs
+            f.attrs['eta_limits'] = eta_limits
+            f.attrs['gamma_limits'] = gamma_limits
+            f.attrs['eta'] = params[:, 0]
+            f.attrs['gamma'] = params[:, 1]
+
     end_time = time.time()
     execution_time = end_time - start_time
     print("Execution Time:", execution_time, "seconds")
@@ -107,4 +159,10 @@ A, D, A_Ys = get_seed_network(config,
                               prop=.2,
                               get_connections=True
                               )
-main(A, D, A_Ys, n_runs=1000, n_samples=2, store=False)
+main(A,
+     D,
+     A_Ys,
+     n_runs=1000,
+     n_samples=2,
+     store=True,
+     dset_name='synthetic')
