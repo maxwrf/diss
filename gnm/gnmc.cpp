@@ -24,16 +24,15 @@
 class GNMClass
 {
 private:
-    double **A_current, **K_current;
-    int *k_current; // stores the nodal degree
+    std::vector<std::vector<double> > A_current;
+    std::vector<std::vector<double> > K_current;
+    std::vector<int> k_current;
+    std::vector<double> clu_coeff_current;
     double epsilon = 1e-5;
-    double *clu_coeff_current;
 
     void compute_clustering_coeff()
     {
         // This implementation is only correct for undirected graphs
-
-        clu_coeff_current = new double[n_nodes];
         for (int i_node = 0; i_node < n_nodes; ++i_node)
         {
             if (k_current[i_node] > 1) // only if there are more than one neighbors
@@ -163,13 +162,11 @@ private:
     // Initialize the value matrix
     // TODO: You can probably speed this up by only iterating over the upper triangle
     {
-        K_current = new double *[n_nodes];
         switch (model)
         {
         case 0: // spatial
             for (int i = 0; i < n_nodes; ++i)
             {
-                K_current[i] = new double[n_nodes];
                 for (int j = 0; j < n_nodes; ++j)
                 {
                     K_current[i][j] = 1.0;
@@ -181,7 +178,6 @@ private:
             compute_clustering_coeff();
             for (int i = 0; i < n_nodes; ++i)
             {
-                K_current[i] = new double[n_nodes];
                 for (int j = 0; j < n_nodes; ++j)
                 {
                     K_current[i][j] = ((clu_coeff_current[i] + clu_coeff_current[j]) / 2) + epsilon;
@@ -193,7 +189,6 @@ private:
             compute_clustering_coeff();
             for (int i = 0; i < n_nodes; ++i)
             {
-                K_current[i] = new double[n_nodes];
                 for (int j = 0; j < n_nodes; ++j)
                 {
                     K_current[i][j] = ((clu_coeff_current[i] > clu_coeff_current[j]) ? clu_coeff_current[j] : clu_coeff_current[i]) + epsilon;
@@ -205,7 +200,6 @@ private:
             compute_clustering_coeff();
             for (int i = 0; i < n_nodes; ++i)
             {
-                K_current[i] = new double[n_nodes];
                 for (int j = 0; j < n_nodes; ++j)
                 {
                     K_current[i][j] = ((clu_coeff_current[i] > clu_coeff_current[j]) ? clu_coeff_current[i] : clu_coeff_current[j]) + epsilon;
@@ -217,7 +211,6 @@ private:
             compute_clustering_coeff();
             for (int i = 0; i < n_nodes; ++i)
             {
-                K_current[i] = new double[n_nodes];
                 for (int j = 0; j < n_nodes; ++j)
                 {
                     K_current[i][j] = fabs(clu_coeff_current[i] - clu_coeff_current[j]) + epsilon;
@@ -229,7 +222,6 @@ private:
             compute_clustering_coeff();
             for (int i = 0; i < n_nodes; ++i)
             {
-                K_current[i] = new double[n_nodes];
                 for (int j = 0; j < n_nodes; ++j)
                 {
                     K_current[i][j] = clu_coeff_current[i] * clu_coeff_current[j] + epsilon;
@@ -240,7 +232,6 @@ private:
         case 8: // deg-avg
             for (int i = 0; i < n_nodes; ++i)
             {
-                K_current[i] = new double[n_nodes];
                 for (int j = 0; j < n_nodes; ++j)
                 {
                     K_current[i][j] = ((k_current[i] + k_current[j]) / 2) + epsilon;
@@ -251,7 +242,6 @@ private:
         case 9: // deg-min
             for (int i = 0; i < n_nodes; ++i)
             {
-                K_current[i] = new double[n_nodes];
                 for (int j = 0; j < n_nodes; ++j)
                 {
                     K_current[i][j] = ((k_current[i] > k_current[j]) ? k_current[j] : k_current[i]) + epsilon;
@@ -262,7 +252,6 @@ private:
         case 10: // deg-max
             for (int i = 0; i < n_nodes; ++i)
             {
-                K_current[i] = new double[n_nodes];
                 for (int j = 0; j < n_nodes; ++j)
                 {
                     K_current[i][j] = ((k_current[i] > k_current[j]) ? k_current[i] : k_current[j]) + epsilon;
@@ -273,7 +262,6 @@ private:
         case 11: // deg-dist
             for (int i = 0; i < n_nodes; ++i)
             {
-                K_current[i] = new double[n_nodes];
                 for (int j = 0; j < n_nodes; ++j)
                 {
                     K_current[i][j] = fabs(k_current[i] - k_current[j]) + epsilon;
@@ -284,7 +272,6 @@ private:
         case 12: // deg-prod
             for (int i = 0; i < n_nodes; ++i)
             {
-                K_current[i] = new double[n_nodes];
                 for (int j = 0; j < n_nodes; ++j)
                 {
                     K_current[i][j] = k_current[i] * k_current[j] + epsilon;
@@ -421,7 +408,6 @@ private:
         double gamma = params[i_pcomb][1];
 
         // initiate the degree of each node
-        k_current = new int[n_nodes];
         for (int i = 0; i < n_nodes; ++i)
         {
             k_current[i] = 0;
@@ -449,8 +435,8 @@ private:
         }
 
         // get the indices of the upper triangle of P (denoted u and v)
-        int *u = new int[n_nodes * (n_nodes - 1) / 2];
-        int *v = new int[n_nodes * (n_nodes - 1) / 2];
+        std::vector<int> u(n_nodes * (n_nodes - 1) / 2);
+        std::vector<int> v(n_nodes * (n_nodes - 1) / 2);
         int upper_tri_index = 0;
 
         for (int i = 0; i < n_nodes; ++i)
@@ -580,18 +566,17 @@ public:
         model = model_;
         n_p_combs = n_p_combs_;
         n_nodes = n_nodes_;
+
+        A_current.resize(n_nodes, std::vector<double>(n_nodes));
+        K_current.resize(n_nodes, std::vector<double>(n_nodes));
+        k_current.resize(n_nodes);
+        clu_coeff_current.resize(n_nodes);
     }
 
     void generateModels()
     // Initiates the network generation leveraging the different rules
     {
         // Allocate memory for A
-        A_current = new double *[n_nodes];
-        for (int i = 0; i < n_nodes; ++i)
-        {
-            A_current[i] = new double[n_nodes];
-        }
-
         for (int i_pcomb = 0; i_pcomb < n_p_combs; i_pcomb++)
         {
             reset_A_current();
