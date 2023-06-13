@@ -18,7 +18,7 @@ jupyter: python3
 ---
 
 # Brain Formation and structure
-## Parsimonious principles
+## Parsimonious (wiring) principles
 These reach back very far to as Ramon y Cajal (1899).
 
 ### Network wiring cost
@@ -44,8 +44,25 @@ Not part of Cajal's initial principal's, but metabolic cost of running the brain
     \item Limitation: Networks often functionally configured to be less expensive than possible within the anatomical constraints (network formation), e.g., through sparse coding
 \end{itemize}
 
-## Topological characteristics
-asdasda
+## Network topology - Small-world architecture
+\begin{itemize}
+    \item Watts and Strogatz analyses nervous system of C. Elegans as binary graph and found both high clustering and short path-length
+    \item Brains posses the small-world properties of high clustering and global efficiency, a modular community structure and a heavy tailed degree distribution, that indicate high connected nodes or hubs
+    \item High clustering and efficiency is attractive to allow for segregation of process (e.g., visual analysis) and integration (distributed process, executive functions)
+    \item IQ negatively correlated with paht lengths, which supports workspace theory, that effortful tasks depend on oscillations in ensembles of anatomically distributed regions
+    \item Topological modularity might also be helpful to evolution, making it more robust to rewiring
+\end{itemize}
+
+## Combining Parsimonious principle and Topological characteristics
+This is to investigate how the physical embedding is constraint or constraints network topologies. How do the two concepts relate.
+\begin{itemize}
+    \item Molecular gradients of attractive and repulsive guidance cues determine the trajectories of growing nerve fibres
+    \item The spatial distribution of molecules that are involved neural development and physical constraints limit range of many connections, which could result in a bias towards high clustering
+    \item Topological characteristics that favour segregation are also parsimonious in wiring cost
+    \item Long distance connections preferentially link to hub regions, and they arew costly but reduce path length for information transfer
+    \item Evidence: In C. Elegans, wiring cost is not strictly minimized but the networks show similarities to networks that achieve cost constrained spatial embeddings of topologically complex networks
+    \item Issue in MEG networks: Usually stationary picture of networks, but when studied under stimuli, MEG networks with high efficiency emerge under high effort tasks and vice versa
+\end{itemize}
 
 # Generative network models
 These models were first developed and applied to connectome data by @betzel_generative_2016.
@@ -94,6 +111,9 @@ The corresponding statistic is computed for every vertex, and then the distribut
     \item Monosynaptic reflex = There is only one synapse between the afferent nerve and the efferent nerve (slow latency)
     \item Polysnaptic reflex = There are more than one synapse between the nerves, such that there is higher latency
     \item Sparse coding = Neural coding that represents the information by activation of small subset of the available neurons
+    \item Small-world = Combine random and regular topological properties, i.e., high efficiency (short path length) and high clustering
+    \item Community structure = Sub-global organization of a complex network, an example is modular organization
+    \item Heavy-tailed degree distributions = Proportion of high degree nodes is larger than in random graphs (so that they can be hubs)
 \end{itemize}
 
 # References

@@ -26,6 +26,7 @@ class GNMClass
 private:
     double **A_current, **K_current;
     double *k_current; // stores the nodal degree
+    double epsilon = 1e-5;
 
     void reset_A_current()
     {
@@ -56,11 +57,23 @@ private:
                 }
             }
         }
+        else if (model == 8) // degree average
+        {
+            K_current = new double *[n_nodes];
+            for (int i = 0; i < n_nodes; ++i)
+            {
+                K_current[i] = new double[n_nodes];
+                for (int j = 0; j < n_nodes; ++j)
+                {
+                    K_current[i][j] = ((k_current[i] + k_current[j]) / 2) + epsilon;
+                }
+            }
+        }
     }
 
     std::vector<int> update_stat(int uu, int vv)
     {
-        if (model == 0) // if spatial model
+        if ((model == 0) || (model == 8)) // if spatial model
         {
             std::vector<int> bth;
             bth.push_back(uu);
@@ -71,13 +84,24 @@ private:
         return std::vector<int>();
     }
 
-    void update_K(int *bth)
+    void update_K(std::vector<int> bth)
     {
-        if (model == 0) // if spatial model
+        if (model == 0) // if spatial
         {
             return;
         }
-    };
+        else if (model == 8) // if degree average
+        {
+            for (int bth_i = 0; bth_i < bth.size(); ++bth_i)
+            {
+                int i = bth[bth_i];
+                for (int j = 0; j < n_nodes; ++j)
+                {
+                    K_current[i][j] = K_current[j][i] = ((k_current[i] + k_current[j]) / 2) + epsilon;
+                }
+            }
+        };
+    }
 
     void run_param_comb(int i_pcomb)
     // main function for the generative network build
@@ -85,6 +109,17 @@ private:
         // get the params
         double eta = params[i_pcomb][0];
         double gamma = params[i_pcomb][1];
+
+        // initiate the degree of each node
+        k_current = new double[n_nodes];
+        for (int i = 0; i < n_nodes; ++i)
+        {
+            k_current[i] = 0.0;
+            for (int j = 0; j < n_nodes; ++j)
+            {
+                k_current[i] += A_current[i][j];
+            }
+        }
 
         // compute the inital value matrix
         init_K();
@@ -105,17 +140,6 @@ private:
                 Fd[i][j] = pow(D[i][j], eta);
                 Fk[i][j] = pow(K_current[i][j], gamma);
                 Ff[i][j] = Fd[i][j] * Fk[i][j] * (A_current[i][j] == 0);
-            }
-        }
-
-        // initiate the degree of each node
-        k_current = new double[n_nodes];
-        for (int i = 0; i < n_nodes; ++i)
-        {
-            k_current[i] = 0.0;
-            for (int j = 0; j < n_nodes; ++j)
-            {
-                k_current[i] += A_current[i][j];
             }
         }
 
@@ -177,20 +201,21 @@ private:
             k_current[vv] += 1;
 
             // update the adjacency matrix
-            A_current[uu][vv] = 1;
-            A_current[vv][uu] = 1;
+            A_current[uu][vv] = A_current[vv][uu] = 1;
 
             // update the statistic
             std::vector<int> bth = update_stat(uu, vv);
 
-            // z
-            for (int i = 0; i < bth.size(); ++i)
+            // update K matrix
+            update_K(bth);
+
+            // update Ff matrix (probabilities)
+            for (int bth_i = 0; bth_i < bth.size(); ++bth_i)
             {
-                int bth_i = bth[i];
+                int i = bth[bth_i];
                 for (int j = 0; j < n_nodes; ++j)
                 {
-                    Ff[bth_i][j] = Fd[bth_i][j] * pow(K_current[bth_i][j], gamma) * (A_current[bth_i][j] == 0);
-                    Ff[j][bth_i] = Fd[j][bth_i] * pow(K_current[j][bth_i], gamma) * (A_current[j][bth_i] == 0);
+                    Ff[i][j] = Ff[j][i] = Fd[i][j] * pow(K_current[i][j], gamma) * (A_current[i][j] == 0);
                 }
             }
 
@@ -223,7 +248,6 @@ public:
     int model;
     int n_p_combs;
     int n_nodes;
-    double epsilon = 1e-5;
 
     // define the constructor
     GNMClass(double **A_init_,
