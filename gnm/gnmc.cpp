@@ -3,7 +3,6 @@
 #include <Python.h>
 #include <numpy/arrayobject.h>
 #include <math.h>
-#include <iostream>
 #include <vector>
 
 // GNM rules
@@ -174,6 +173,26 @@ private:
             }
             break;
 
+        case 1: // neighbors
+            for (int i = 0; i < n_nodes; ++i)
+            {
+                for (int j = 0; j < n_nodes; ++j)
+                {
+                    K_current[i][j] = 0;
+
+                    if (!(i == j))
+                    {
+                        for (int l = 0; l < n_nodes; ++l)
+                        {
+                            K_current[i][j] += A_current[i][l] * A_current[j][l];
+                        }
+                    }
+
+                    K_current[i][j] += epsilon;
+                }
+            }
+            break;
+
         case 3: // clu-avg
             compute_clustering_coeff();
             for (int i = 0; i < n_nodes; ++i)
@@ -285,6 +304,25 @@ private:
     {
         switch (model)
         {
+
+        case 1: // neighbors
+            for (int i = 0; i < n_nodes; i++)
+            {
+                if ((i != bth[0]) && (i != bth[1]))
+                {
+                    if (A_current[bth[1]][i])
+                    {
+                        K_current[bth[0]][i] = K_current[i][bth[0]] = K_current[i][bth[0]] + 1;
+                    }
+
+                    if (A_current[bth[0]][i])
+                    {
+                        K_current[bth[1]][i] = K_current[i][bth[1]] = K_current[i][bth[1]] + 1;
+                    }
+                }
+            }
+            break;
+
         case 3: // clu-avg
             for (int bth_i = 0; bth_i < bth.size(); ++bth_i)
             {
