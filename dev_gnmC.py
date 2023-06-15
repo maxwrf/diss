@@ -20,7 +20,8 @@ from utils.gnm_utils import ks_test
 
 gnm_rules = [
     # 'spatial',
-    'neighbors',
+    # 'neighbors',
+    'matching',
     # 'clu-avg',
     # 'clu-min',
     # 'clu-max',

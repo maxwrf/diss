@@ -166,9 +166,9 @@ private:
         case 0: // spatial
             for (int i = 0; i < n_nodes; ++i)
             {
-                for (int j = 0; j < n_nodes; ++j)
+                for (int j = i; j < n_nodes; ++j)
                 {
-                    K_current[i][j] = 1.0;
+                    K_current[i][j] = K_current[j][i] = 1.0;
                 }
             }
             break;
@@ -176,19 +176,39 @@ private:
         case 1: // neighbors
             for (int i = 0; i < n_nodes; ++i)
             {
-                for (int j = 0; j < n_nodes; ++j)
+                for (int j = i; j < n_nodes; ++j)
                 {
-                    K_current[i][j] = 0;
+                    K_current[i][j] = K_current[j][i] = 0;
 
                     if (!(i == j))
                     {
                         for (int l = 0; l < n_nodes; ++l)
                         {
-                            K_current[i][j] += A_current[i][l] * A_current[j][l];
+                            K_current[i][j] = K_current[j][i] += A_current[i][l] * A_current[j][l];
                         }
                     }
 
-                    K_current[i][j] += epsilon;
+                    K_current[i][j] = K_current[j][i] += epsilon;
+                }
+            }
+            break;
+
+        case 2: // matching
+            for (int i = 0; i < n_nodes; ++i)
+            {
+                for (int j = i; j < n_nodes; ++j)
+                {
+                    // get the common neighbors, the intersection
+                    double intersect_connects = 0;
+                    for (int l = 0; l < n_nodes; ++l)
+                    {
+                        intersect_connects += A_current[i][l] * A_current[j][l];
+                    }
+
+                    // get the possible common neighbors
+                    double union_connects = k_current[i] + k_current[j] - 2 * A_current[i][j];
+
+                    K_current[i][j] = K_current[j][i] = intersect_connects > 0 ? ((intersect_connects * 2) / union_connects) + epsilon : epsilon;
                 }
             }
             break;
@@ -197,9 +217,9 @@ private:
             compute_clustering_coeff();
             for (int i = 0; i < n_nodes; ++i)
             {
-                for (int j = 0; j < n_nodes; ++j)
+                for (int j = i; j < n_nodes; ++j)
                 {
-                    K_current[i][j] = ((clu_coeff_current[i] + clu_coeff_current[j]) / 2) + epsilon;
+                    K_current[i][j] = K_current[j][i] = ((clu_coeff_current[i] + clu_coeff_current[j]) / 2) + epsilon;
                 }
             }
             break;
@@ -208,9 +228,9 @@ private:
             compute_clustering_coeff();
             for (int i = 0; i < n_nodes; ++i)
             {
-                for (int j = 0; j < n_nodes; ++j)
+                for (int j = i; j < n_nodes; ++j)
                 {
-                    K_current[i][j] = ((clu_coeff_current[i] > clu_coeff_current[j]) ? clu_coeff_current[j] : clu_coeff_current[i]) + epsilon;
+                    K_current[i][j] = K_current[j][i] = ((clu_coeff_current[i] > clu_coeff_current[j]) ? clu_coeff_current[j] : clu_coeff_current[i]) + epsilon;
                 }
             }
             break;
@@ -219,9 +239,9 @@ private:
             compute_clustering_coeff();
             for (int i = 0; i < n_nodes; ++i)
             {
-                for (int j = 0; j < n_nodes; ++j)
+                for (int j = i; j < n_nodes; ++j)
                 {
-                    K_current[i][j] = ((clu_coeff_current[i] > clu_coeff_current[j]) ? clu_coeff_current[i] : clu_coeff_current[j]) + epsilon;
+                    K_current[i][j] = K_current[j][i] = ((clu_coeff_current[i] > clu_coeff_current[j]) ? clu_coeff_current[i] : clu_coeff_current[j]) + epsilon;
                 }
             }
             break;
@@ -230,9 +250,9 @@ private:
             compute_clustering_coeff();
             for (int i = 0; i < n_nodes; ++i)
             {
-                for (int j = 0; j < n_nodes; ++j)
+                for (int j = i; j < n_nodes; ++j)
                 {
-                    K_current[i][j] = fabs(clu_coeff_current[i] - clu_coeff_current[j]) + epsilon;
+                    K_current[i][j] = K_current[j][i] = fabs(clu_coeff_current[i] - clu_coeff_current[j]) + epsilon;
                 }
             }
             break;
@@ -241,9 +261,9 @@ private:
             compute_clustering_coeff();
             for (int i = 0; i < n_nodes; ++i)
             {
-                for (int j = 0; j < n_nodes; ++j)
+                for (int j = i; j < n_nodes; ++j)
                 {
-                    K_current[i][j] = clu_coeff_current[i] * clu_coeff_current[j] + epsilon;
+                    K_current[i][j] = K_current[j][i] = clu_coeff_current[i] * clu_coeff_current[j] + epsilon;
                 }
             }
             break;
@@ -251,9 +271,9 @@ private:
         case 8: // deg-avg
             for (int i = 0; i < n_nodes; ++i)
             {
-                for (int j = 0; j < n_nodes; ++j)
+                for (int j = i; j < n_nodes; ++j)
                 {
-                    K_current[i][j] = ((k_current[i] + k_current[j]) / 2) + epsilon;
+                    K_current[i][j] = K_current[j][i] = ((k_current[i] + k_current[j]) / 2) + epsilon;
                 }
             }
             break;
@@ -261,9 +281,9 @@ private:
         case 9: // deg-min
             for (int i = 0; i < n_nodes; ++i)
             {
-                for (int j = 0; j < n_nodes; ++j)
+                for (int j = i; j < n_nodes; ++j)
                 {
-                    K_current[i][j] = ((k_current[i] > k_current[j]) ? k_current[j] : k_current[i]) + epsilon;
+                    K_current[i][j] = K_current[j][i] = ((k_current[i] > k_current[j]) ? k_current[j] : k_current[i]) + epsilon;
                 }
             }
             break;
@@ -271,9 +291,9 @@ private:
         case 10: // deg-max
             for (int i = 0; i < n_nodes; ++i)
             {
-                for (int j = 0; j < n_nodes; ++j)
+                for (int j = i; j < n_nodes; ++j)
                 {
-                    K_current[i][j] = ((k_current[i] > k_current[j]) ? k_current[i] : k_current[j]) + epsilon;
+                    K_current[i][j] = K_current[j][i] = ((k_current[i] > k_current[j]) ? k_current[i] : k_current[j]) + epsilon;
                 }
             }
             break;
@@ -281,9 +301,9 @@ private:
         case 11: // deg-dist
             for (int i = 0; i < n_nodes; ++i)
             {
-                for (int j = 0; j < n_nodes; ++j)
+                for (int j = i; j < n_nodes; ++j)
                 {
-                    K_current[i][j] = fabs(k_current[i] - k_current[j]) + epsilon;
+                    K_current[i][j] = K_current[j][i] = fabs(k_current[i] - k_current[j]) + epsilon;
                 }
             }
             break;
@@ -291,9 +311,9 @@ private:
         case 12: // deg-prod
             for (int i = 0; i < n_nodes; ++i)
             {
-                for (int j = 0; j < n_nodes; ++j)
+                for (int j = i; j < n_nodes; ++j)
                 {
-                    K_current[i][j] = k_current[i] * k_current[j] + epsilon;
+                    K_current[i][j] = K_current[j][i] = k_current[i] * k_current[j] + epsilon;
                 }
             }
             break;
@@ -318,6 +338,70 @@ private:
                     if (A_current[bth[0]][i])
                     {
                         K_current[bth[1]][i] = K_current[i][bth[1]] = K_current[i][bth[1]] + 1;
+                    }
+                }
+            }
+            break;
+
+        case 2:                               // matching
+            for (int i = 0; i < n_nodes; ++i) // for each node check...
+            {
+                // ...does the current node (i) have a common neighbor with uu or vv
+                bool update = false;
+                for (int j = i; j < n_nodes; j++)
+                {
+                    // for nodes that have common neighbors with uu
+                    if ((j != bth[1]) && (A_current[bth[0]][j] * A_current[i][j]))
+                    {
+                        // get the common neighbors, the intersection
+                        double intersect_connects = 0;
+                        for (int l = 0; l < n_nodes; ++l)
+                        {
+                            intersect_connects += A_current[i][l] * A_current[bth[0]][l];
+                        }
+
+                        // get the possible common neighbors
+                        double union_connects = k_current[i] + k_current[bth[0]] - 2 * A_current[i][bth[0]];
+
+                        K_current[i][bth[0]] = K_current[bth[0]][i] = intersect_connects > 0 ? ((intersect_connects * 2) / union_connects) + epsilon : epsilon;
+
+         
+                    }
+
+                    // for nodes that have common neighbors with vv
+                    if ((j != bth[0]) && (A_current[bth[1]][j] * A_current[i][j]))
+                    {
+                        // get the common neighbors, the intersection
+                        double intersect_connects = 0;
+                        for (int l = 0; l < n_nodes; ++l)
+                        {
+                            intersect_connects += A_current[i][l] * A_current[bth[1]][l];
+                        }
+
+                        // get the possible common neighbors
+                        double union_connects = k_current[i] + k_current[bth[1]] - 2 * A_current[i][bth[1]];
+
+                        K_current[i][bth[1]] = K_current[bth[1]][i] = intersect_connects > 0 ? ((intersect_connects * 2) / union_connects) + epsilon : epsilon;
+
+
+                    }
+                }
+
+                if (update)
+                {
+                    for (int j = 0; j < n_nodes; ++j)
+                    {
+                        // get the common neighbors, the intersection
+                        double intersect_connects = 0;
+                        for (int l = 0; l < n_nodes; ++l)
+                        {
+                            intersect_connects += A_current[i][l] * A_current[j][l];
+                        }
+
+                        // get the possible common neighbors
+                        double union_connects = k_current[i] + k_current[j] - 2 * A_current[i][j];
+
+                        K_current[i][j] = intersect_connects > 0 ? ((intersect_connects * 2) / union_connects) + epsilon : epsilon;
                     }
                 }
             }
@@ -454,6 +538,7 @@ private:
                 k_current[i] += A_current[i][j];
             }
         }
+
         // compute the inital value matrix
         init_K();
 
