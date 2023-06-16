@@ -1,6 +1,38 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+gnm_rules = [
+    'spatial',
+    'neighbors',
+    'matching',
+    'clu-avg',
+    'clu-min',
+    'clu-max',
+    'clu-dist',
+    'clu-prod',
+    'deg-avg',
+    'deg-min',
+    'deg-max',
+    'deg-dist',
+    'deg-prod'
+]
+
+gnm_loopkup = {
+    'spatial': 0,
+    'neighbors': 1,
+    'matching': 2,
+    'clu-avg': 3,
+    'clu-min': 4,
+    'clu-max': 5,
+    'clu-dist': 6,
+    'clu-prod': 7,
+    'deg-avg': 8,
+    'deg-min': 9,
+    'deg-max': 10,
+    'deg-dist': 11,
+    'deg-prod': 12
+}
+
 
 def plot_edge_freqs(b: np.array, n_largest: int = 20):
     """
@@ -48,3 +80,28 @@ def ks_test(x, y):
     ks_statistic = np.max(diff_cdf)
 
     return ks_statistic
+
+
+def reconstruct_A(b: np.array, param_idx: int, n_nodes: int):
+    A = np.zeros((n_nodes, n_nodes))
+
+    power_ten = 10**(np.ceil(np.log10(b[:, param_idx])+1) // 2)
+    idx_x = (b[:, param_idx] // power_ten - 1).astype(int)
+    idx_y = (b[:, param_idx] % power_ten).astype(int)
+    A[idx_x, idx_y] = 1
+    return A+A.T
+
+
+def generate_param_space(n_runs: int = 100,
+                         eta_limts: np.array = [-7, 7],
+                         gamma_limits: np.array = [-7, 7]) -> np.array:
+    """
+        Createas a linear parameter space defined by the eta and gamma bounds
+        for the desired number of runs
+        """
+    p, q = np.meshgrid(np.linspace(
+        eta_limts[0], eta_limts[1], int(np.sqrt(n_runs))),
+        np.linspace(
+        gamma_limits[0], gamma_limits[1], int(np.sqrt(n_runs))))
+
+    return np.unique(np.vstack((p.flatten(), q.flatten())).T, axis=0)

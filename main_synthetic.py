@@ -22,6 +22,6 @@ main(A_init,
      A_Ys,
      config,
      dset_name='synthetic',
-     n_runs=64,
-     n_samples=4,
-     store=False)
+     n_runs=1000,
+     n_samples=2,
+     store=True)

@@ -343,69 +343,63 @@ private:
             }
             break;
 
-        case 2:                               // matching
-            for (int i = 0; i < n_nodes; ++i) // for each node check...
+        case 2:
+        {
+            int uu = bth[0];
+            int vv = bth[1];
+
+            std::vector<int> update_uu;
+            std::vector<int> update_vv;
+
+            for (int i = 0; i < n_nodes; ++i)
             {
-                // ...does the current node (i) have a common neighbor with uu or vv
-                bool update = false;
-                for (int j = i; j < n_nodes; j++)
+                // find the nodes that have a common neighbor with uu and vv
+                bool check_uu = true;
+                bool check_vv = true;
+                for (int j = 0; j < n_nodes; ++j)
                 {
-                    // for nodes that have common neighbors with uu
-                    if ((j != bth[1]) && (A_current[bth[0]][j] * A_current[i][j]))
+                    if (check_uu && (A_current[uu][j] * A_current[i][j]) && (i != uu))
                     {
-                        // get the common neighbors, the intersection
-                        double intersect_connects = 0;
-                        for (int l = 0; l < n_nodes; ++l)
-                        {
-                            intersect_connects += A_current[i][l] * A_current[bth[0]][l];
-                        }
-
-                        // get the possible common neighbors
-                        double union_connects = k_current[i] + k_current[bth[0]] - 2 * A_current[i][bth[0]];
-
-                        K_current[i][bth[0]] = K_current[bth[0]][i] = intersect_connects > 0 ? ((intersect_connects * 2) / union_connects) + epsilon : epsilon;
-
-         
+                        update_uu.push_back(i);
+                        check_uu = false;
                     }
-
-                    // for nodes that have common neighbors with vv
-                    if ((j != bth[0]) && (A_current[bth[1]][j] * A_current[i][j]))
+                    if (check_vv && (A_current[vv][j] * A_current[vv][j]) && (i != vv))
                     {
-                        // get the common neighbors, the intersection
-                        double intersect_connects = 0;
-                        for (int l = 0; l < n_nodes; ++l)
-                        {
-                            intersect_connects += A_current[i][l] * A_current[bth[1]][l];
-                        }
-
-                        // get the possible common neighbors
-                        double union_connects = k_current[i] + k_current[bth[1]] - 2 * A_current[i][bth[1]];
-
-                        K_current[i][bth[1]] = K_current[bth[1]][i] = intersect_connects > 0 ? ((intersect_connects * 2) / union_connects) + epsilon : epsilon;
-
-
-                    }
-                }
-
-                if (update)
-                {
-                    for (int j = 0; j < n_nodes; ++j)
-                    {
-                        // get the common neighbors, the intersection
-                        double intersect_connects = 0;
-                        for (int l = 0; l < n_nodes; ++l)
-                        {
-                            intersect_connects += A_current[i][l] * A_current[j][l];
-                        }
-
-                        // get the possible common neighbors
-                        double union_connects = k_current[i] + k_current[j] - 2 * A_current[i][j];
-
-                        K_current[i][j] = intersect_connects > 0 ? ((intersect_connects * 2) / union_connects) + epsilon : epsilon;
+                        update_vv.push_back(i);
+                        check_vv = false;
                     }
                 }
             }
-            break;
+
+            // update the matching scores for any node with common neighbor with uu
+            for (int j : update_uu)
+            {
+                double intersect_c = 0;
+                for (int l = 0; l < n_nodes; ++l)
+                {
+                    intersect_c += A_current[j][l] * A_current[uu][l];
+                }
+
+                double union_c = k_current[uu] + k_current[j] - 2 * A_current[uu][j];
+
+                K_current[j][uu] = K_current[uu][j] = (intersect_c > 0) ? ((intersect_c * 2) / union_c) : epsilon;
+            }
+
+            // update the matching scores for any node with common neighbor with vv
+            for (int j : update_vv)
+            {
+                double intersect_c = 0;
+                for (int l = 0; l < n_nodes; ++l)
+                {
+                    intersect_c += A_current[j][l] * A_current[vv][l];
+                }
+
+                double union_c = k_current[vv] + k_current[j] - 2 * A_current[vv][j];
+
+                K_current[j][vv] = K_current[vv][j] = (intersect_c > 0) ? ((intersect_c * 2) / union_c) : epsilon;
+            }
+        }
+        break;
 
         case 3: // clu-avg
             for (int bth_i = 0; bth_i < bth.size(); ++bth_i)
@@ -522,7 +516,8 @@ private:
         }
     }
 
-    void run_param_comb(int i_pcomb)
+    void
+    run_param_comb(int i_pcomb)
     // main function for the generative network build
     {
         // get the params

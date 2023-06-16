@@ -8,18 +8,36 @@ sys.path.append(config['sttc_build'])  # noqa
 import numpy as np
 from g2c_data.g2c_data import G2C_data
 from run_gnms import main
-
+import argparse
 
 if __name__ == "__main__":
     mea_data_dir = config['data_path'] + 'g2c_data/'
 
-    g2c = G2C_data(mea_data_dir)
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-r", "--region", help="brain region to use", default="ctx", nargs='?')
+    parser.add_argument(
+        "-div", "--div", help="days in vitro to use", type=int, default=28, nargs='?')
+    parser.add_argument(
+        "-nruns", "--nruns", help="number of runs over param space", type=int, default=64, nargs='?')
+    parser.add_argument(
+        "-nsamples", "--nsamples", help="number of samples to use (-1 is all samples)", type=int, default=2, nargs='?')
+
+    args = parser.parse_args()
+    args = vars(args)
+
+    region = args["region"]
+    div = args["div"]
+    nruns = args["nruns"]
+    nsamples = args["nsamples"]
+    print("Region:", region, "\nDIV:", div,
+          "\nNruns:", nruns, "\nNsamples:", nsamples)
+
     # ages: 7, 10, 11, 14, 17, 18, 21, 24, 25, 28
     # regions: 'ctx', 'hpc'
-    ages = [7, 10, 11, 14]
-    regions = ['ctx']
-    dset_name = 'g2c' + regions[0] + 'div' + str(ages[0])
-    g2c.create_spike_data(ages=ages, regions=regions)
+    g2c = G2C_data(mea_data_dir)
+    dset_name = 'g2c' + region + 'div' + str(div)
+    g2c.create_spike_data(ages=[div], regions=[region])
 
     # compute sttc and construct the adjacency matrices
     corr_cuttoff = 0.2
@@ -41,7 +59,6 @@ if __name__ == "__main__":
          A_Ys,
          config,
          dset_name=dset_name,
-         n_runs=64,
-         n_samples=2,
-         store=True,
-         debug=False)
+         n_runs=nruns,
+         n_samples=nsamples,
+         store=True)

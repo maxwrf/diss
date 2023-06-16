@@ -39,7 +39,7 @@ if __name__ == "__main__":
         # "20230612004715_gnm_g2chpcdiv7.h5",
         # "20230612000122_gnm_g2chpcdiv28.h5",
         # "20230612000623_gnm_g2cctxdiv28.h5",
-        "20230615231328_synthetic.h5",
+        "20230616115254_synthetic.h5",
     ]
 
     for dset in dset_names:
