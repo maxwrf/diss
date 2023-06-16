@@ -703,7 +703,7 @@ public:
     }
 };
 
-static PyObject *hello(PyObject *self, PyObject *args)
+static PyObject *get_gnms(PyObject *self, PyObject *args)
 {
 
     PyArrayObject *A_init, *D, *params;
@@ -783,7 +783,7 @@ static PyObject *version(PyObject *self)
 }
 
 static PyMethodDef methods[] = {
-    {"hello", hello, METH_VARARGS, "Desc"},
+    {"get_gnms", get_gnms, METH_VARARGS, "Desc"},
     {"version", (PyCFunction)version, METH_NOARGS, "Desc"},
     {NULL, NULL, 0, NULL}};
 

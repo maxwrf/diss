@@ -7,7 +7,7 @@ from utils.config import params_from_json
 config = params_from_json("./config.json")  # noqa # noqa
 sys.path.append(config['gnm_build'])  # noqa
 
-from GNMC import hello
+from GNMC import get_gnms
 
 import time
 import datetime
@@ -74,7 +74,7 @@ def main(A_init: np.ndarray,
         # Run the generative models for this sample
         for j_model in range(len(gnm_rules)):
             model_num = gnm_loopkup[gnm_rules[j_model]]
-            b = hello(
+            b = get_gnms(
                 A_init[sample_idx, ...],
                 D,
                 params,
