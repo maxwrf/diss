@@ -111,13 +111,13 @@ def main(A_init: np.ndarray,
                 config['results_path'] + timestamp + "_" + dset_name + ".h5", 'w') as f:
             f.create_dataset('K_all', data=K_all)
             f.create_dataset('K_max_all', data=K_max_all)
+            f.create_dataset('eta', data=params[:, 0])
+            f.create_dataset('gamma', data=params[:, 1])
             f.attrs['n_samples'] = A_Ys.shape[0]
             f.attrs['gnm_rules'] = gnm_rules
             f.attrs['n_runs'] = n_runs
             f.attrs['eta_limits'] = eta_limits
             f.attrs['gamma_limits'] = gamma_limits
-            f.attrs['eta'] = params[:, 0]
-            f.attrs['gamma'] = params[:, 1]
 
     end_time = time.time()
     execution_time = end_time - start_time

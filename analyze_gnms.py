@@ -13,6 +13,8 @@ def analyze(config, f, dset_name):
     with h5py.File(f, 'r') as f:
         K_all = np.array(f['K_all'])
         K_max_all = np.array(f['K_max_all'])
+        eta = np.array(f['eta'])
+        gamma = np.array(f['gamma'])
         metadata = {key: value for key, value in f.attrs.items()}
 
     # make table with results
@@ -21,8 +23,8 @@ def analyze(config, f, dset_name):
                                'model_idx':  idx[:, 1],
                                'param_idx':  idx[:, 2],
                                'model_name': np.array(metadata['gnm_rules'])[idx[:, 1]],
-                               'eta': metadata['eta'][idx[:, 2]],
-                               'gamma': metadata['gamma'][idx[:, 2]],
+                               'eta': eta[idx[:, 2]],
+                               'gamma': gamma[idx[:, 2]],
                                'max_energy': np.ravel(K_max_all)
                                })
 
@@ -39,7 +41,7 @@ if __name__ == "__main__":
         # "20230612004715_gnm_g2chpcdiv7.h5",
         # "20230612000122_gnm_g2chpcdiv28.h5",
         # "20230612000623_gnm_g2cctxdiv28.h5",
-        "20230616115254_synthetic.h5",
+        "20230617115458_synthetic.h5",
     ]
 
     for dset in dset_names:
