@@ -47,17 +47,23 @@ class Graph:
         # as long as there are still shortest paths of the current length d
         while np.any(NSPd):
             d += 1
+            print(d)
             # Computes the number of paths connecting i & j of length d
             NPd = np.dot(NPd, A)
+
             # if no connection between edges yet, this is the shortest path
             NSPd = NPd * (L == 0)
             # Add the new shortest path entries (in L multiply with length)
             NSP += NSPd
             L += (d * (NSPd != 0))
 
+            print(NSP[14, :])
+
         L[L == 0] = np.inf      # L for disconnected vertices is inf
         L[np.where(eye)] = 0    # no loops
         NSP[NSP == 0] = 1  # NSP for disconnected vertices is 1
+
+        print(np.allclose(NSP, NSP.T))
 
         # BACKWARD PASS
         # dependecy number of shortest paths from i to any other vertex that
@@ -73,7 +79,7 @@ class Graph:
                 ((L == (d - 1)) * NSP)
             DP += DPd1
 
-        return np.sum(DP, axis=0)
+        return np.sum(DP, axis=0) / 2
 
     @staticmethod
     def euclidean_edge_length(A: np.array, W: np.array) -> np.array:
@@ -82,4 +88,40 @@ class Graph:
         A = adjacency matrix
         W = edge weight matrix
         """
-        return (W * np.triu(A, k=1)).sum(0)
+        return (W * A).sum(1)
+
+
+# Graph.betweenness_centrality(np.array([
+#     [0, 0, 1, 0, 0, 0, 0],
+#     [0, 0, 1, 0, 0, 0, 0],
+#     [1, 1, 0, 1, 0, 0, 0],
+#     [0, 0, 1, 0, 1, 0, 0],
+#     [0, 0, 0, 1, 0, 1, 1],
+#     [0, 0, 0, 0, 1, 0, 1],
+#     [0, 0, 0, 0, 1, 1, 0]
+# ], dtype=float), 7)
+
+
+A = np.array([
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0],
+    [0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1],
+    [0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 1],
+    [0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0],
+    [0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0],
+    [0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0],
+    [0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0],
+    [0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1],
+    [0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0],
+    [0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0],
+    [0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1],
+    [0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0],
+    [1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0],
+    [0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1],
+    [0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0],
+    [1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+    [1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0],
+    [0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1],
+    [0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1],
+    [0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0]], dtype=float)
+
+Graph.betweenness_centrality(A, 20)

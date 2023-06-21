@@ -5,6 +5,7 @@
             "label": "C/C++: clang++ build active file",
             "command": "/usr/bin/clang++",
             "args": [
+                "-std=c++17",
                 "-I/Users/maxwuerfek/code/diss/diss-env/include/python3.8",
                 "-I/Users/maxwuerfek/code/diss/diss-env/lib/python3.8/site-packages/numpy/core/include",
                 "-fcolor-diagnostics",

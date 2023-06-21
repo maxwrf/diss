@@ -49,9 +49,9 @@ def plot_landscape(df_results, metadata, config, dset_name):
             landscape, cmap=plt.colormaps['viridis'], vmin=0, vmax=1)
 
         axes[i_model].set_xticks(
-            np.arange(len(np.unique(data[:, 0]))), labels=np.unique(data[:, 0]))
+            np.arange(len(np.unique(data[:, 0]))), labels=np.unique(data[:, 0]).round(0))
         axes[i_model].set_yticks(
-            np.arange(len(np.unique(data[:, 1]))), labels=np.unique(data[:, 1]))
+            np.arange(len(np.unique(data[:, 1]))), labels=np.unique(data[:, 1]).round(0))
 
         axes[i_model].xaxis.set_major_locator(plt.MaxNLocator(3))
         axes[i_model].yaxis.set_major_locator(plt.MaxNLocator(3))

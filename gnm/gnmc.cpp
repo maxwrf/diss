@@ -4,6 +4,7 @@
 #include <numpy/arrayobject.h>
 #include <math.h>
 #include <vector>
+#include <iostream>
 
 // GNM rules
 // 0: 'spatial',
@@ -23,13 +24,227 @@
 class GNMClass
 {
 private:
+    std::vector<std::vector<double> > A_Y;
     std::vector<std::vector<double> > A_current;
     std::vector<std::vector<double> > K_current;
     std::vector<int> k_current;
     std::vector<double> clu_coeff_current;
     double epsilon = 1e-5;
 
-    void compute_clustering_coeff()
+    static double ksTest(const std::vector<double> &x, const std::vector<double> &y)
+    {
+        std::vector<double> xSorted = x;
+        std::vector<double> ySorted = y;
+
+        std::sort(xSorted.begin(), xSorted.end());
+        std::sort(ySorted.begin(), ySorted.end());
+
+        std::vector<double> combinedData;
+        combinedData.insert(combinedData.end(), xSorted.begin(), xSorted.end());
+        combinedData.insert(combinedData.end(), ySorted.begin(), ySorted.end());
+
+        std::sort(combinedData.begin(), combinedData.end());
+
+        std::vector<double> sortedCombined = combinedData;
+
+        std::sort(sortedCombined.begin(), sortedCombined.end());
+
+        std::vector<double> cdf_x(sortedCombined.size());
+        std::vector<double> cdf_y(sortedCombined.size());
+
+        for (size_t i = 0; i < sortedCombined.size(); ++i)
+        {
+            size_t count_x = std::lower_bound(xSorted.begin(), xSorted.end(), sortedCombined[i]) - xSorted.begin();
+            size_t count_y = std::lower_bound(ySorted.begin(), ySorted.end(), sortedCombined[i]) - ySorted.begin();
+            cdf_x[i] = static_cast<double>(count_x) / x.size();
+            cdf_y[i] = static_cast<double>(count_y) / y.size();
+        }
+
+        std::vector<double> diff_cdf(cdf_x.size());
+        for (size_t i = 0; i < cdf_x.size(); ++i)
+        {
+            diff_cdf[i] = std::abs(cdf_x[i] - cdf_y[i]);
+        }
+
+        return *std::max_element(diff_cdf.begin(), diff_cdf.end());
+    }
+
+    static std::vector<double> compute_betweennes_centrality(
+        std::vector<std::vector<double> > &A,
+        int n)
+    {
+        // FORWARD PASS
+        std::vector<std::vector<double> > eye(n, std::vector<double>(n, 0.0)); // identity matrix
+        for (int i = 0; i < n; i++)
+        {
+            eye[i][i] = 1.0;
+        }
+        double d = 1.0;                            // path length
+        std::vector<std::vector<double> > NPd = A;  // number of paths of length |d|
+        std::vector<std::vector<double> > NSPd = A; // number of shortest paths of length |d|
+        std::vector<std::vector<double> > NSP = A;  // number of shortest paths of any length
+        std::vector<std::vector<double> > L = A;    // length of shortest paths
+
+        // shortest paths of length 1 are only those of node with itself
+        for (int i = 0; i < n; i++)
+        {
+            NSP[i][i] = 1.0;
+            L[i][i] = 1.0;
+        }
+
+        // as long as there are still shortest paths of the current length d
+        while (true)
+        {
+            ++d;
+            bool hasNSPd = false;
+
+            for (int i = 0; i < n; ++i)
+            {
+                std::vector<double> NPd_row_update(n);
+                for (int j = i; j < n; ++j)
+                {
+                    // Compute the number of paths connecting i & j of length d
+
+                    double npd = 0.0;
+                    for (int k = 0; k < n; ++k)
+                    {
+                        npd += NPd[i][k] * A[k][j];
+                    }
+                    NPd_row_update[j] = npd;
+
+                    // If there is such path and no shorter entry, add d to the L matrix
+                    if (npd > 0.0 && L[i][j] == 0.0)
+                    {
+                        hasNSPd = true;
+                        NSPd[i][j] = NSPd[j][i] = npd;
+                        NSP[i][j] = NSP[j][i] = npd;
+                        L[i][j] = L[j][i] = d;
+                    }
+                }
+                NPd[i] = NPd_row_update;
+            }
+
+            // break out of the loop if none of the nodes i has a shortest path of the length d
+            if (!hasNSPd)
+            {
+                break;
+            }
+        }
+
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = 0; j < n; j++)
+            {
+                if (L[i][j] == 0.0)
+                {
+                    L[i][j] = INFINITY;
+                }
+                if (eye[i][j] != 0.0)
+                {
+                    L[i][j] = 0.0;
+                }
+                if (NSP[i][j] == 0.0)
+                {
+                    NSP[i][j] = 1.0;
+                }
+            }
+        }
+
+        // BACKWARD PASS
+        std::vector<std::vector<double> > DP(n, std::vector<double>(n, 0.0)); // vertex on vertex dependency
+        double diam = d - 1.0;                                               // the maximum distance between any two nodes
+
+        // iterate from longest shortest path to shortest
+        for (double currentD = diam; currentD > 1.0; currentD--)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    double sum = 0.0;
+                    for (int k = 0; k < n; k++)
+                    {
+                        sum += ((L[i][k] == currentD) * (1 + DP[i][k]) / NSP[i][k]) * A[j][k];
+                    }
+                    DP[i][j] += sum * ((L[i][j] == (currentD - 1)) * NSP[i][j]);
+                }
+            }
+        }
+
+        std::vector<double> result(n, 0.0);
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = 0; j < n; j++)
+            {
+                result[j] += DP[i][j] / 2.0;
+            }
+        }
+
+        return result;
+    }
+
+    static std::vector<double> compute_edge_length(
+        std::vector<std::vector<double> > &A,
+        double **D,
+        int n_nodes)
+    {
+        std::vector<double> result(n_nodes, 0.0);
+
+        for (int i = 0; i < n_nodes; ++i)
+        {
+            for (int j = i + 1; j < n_nodes; ++j)
+            {
+                result[i] += A[i][j] * D[i][j];
+                result[j] += A[i][j] * D[i][j];
+            }
+        }
+
+        return result;
+    }
+
+    static std::vector<double> compute_clustering_coeff(
+        std::vector<std::vector<double> > &A,
+        int n_nodes,
+        std::vector<double> &k)
+    {
+        std::vector<double> result(n_nodes);
+        for (int i_node = 0; i_node < n_nodes; ++i_node)
+        {
+            if (k[i_node] > 1) // only if there are more than one neighbors
+            {
+                // get the neighbors
+                int neighbors[int(k[i_node])];
+                int n_neighbors = 0;
+                for (int j = 0; j < n_nodes; ++j)
+                {
+                    if (A[i_node][j])
+                    {
+                        neighbors[n_neighbors] = j;
+                        n_neighbors++;
+                    }
+                }
+
+                // get the connections across neighbors
+                int sum_S = 0;
+                for (int i = 0; i < n_neighbors; ++i)
+                {
+                    for (int j = i + 1; j < n_neighbors; ++j)
+                    {
+                        sum_S += A[neighbors[i]][neighbors[j]];
+                    }
+                }
+
+                result[i_node] = (double)(2 * sum_S) / (double)(k[i_node] * (k[i_node] - 1));
+            }
+            else
+            {
+                result[i_node] = 0;
+            }
+        }
+        return result;
+    }
+
+    void init_clustering_coeff()
     {
         // This implementation is only correct for undirected graphs
         for (int i_node = 0; i_node < n_nodes; ++i_node)
@@ -214,7 +429,7 @@ private:
             break;
 
         case 3: // clu-avg
-            compute_clustering_coeff();
+            init_clustering_coeff();
             for (int i = 0; i < n_nodes; ++i)
             {
                 for (int j = i; j < n_nodes; ++j)
@@ -225,7 +440,7 @@ private:
             break;
 
         case 4: // clu-min
-            compute_clustering_coeff();
+            init_clustering_coeff();
             for (int i = 0; i < n_nodes; ++i)
             {
                 for (int j = i; j < n_nodes; ++j)
@@ -236,7 +451,7 @@ private:
             break;
 
         case 5: // clu-max
-            compute_clustering_coeff();
+            init_clustering_coeff();
             for (int i = 0; i < n_nodes; ++i)
             {
                 for (int j = i; j < n_nodes; ++j)
@@ -247,7 +462,7 @@ private:
             break;
 
         case 6: // clu-dist
-            compute_clustering_coeff();
+            init_clustering_coeff();
             for (int i = 0; i < n_nodes; ++i)
             {
                 for (int j = i; j < n_nodes; ++j)
@@ -258,7 +473,7 @@ private:
             break;
 
         case 7: // clu-prod
-            compute_clustering_coeff();
+            init_clustering_coeff();
             for (int i = 0; i < n_nodes; ++i)
             {
                 for (int j = i; j < n_nodes; ++j)
@@ -516,8 +731,7 @@ private:
         }
     }
 
-    void
-    run_param_comb(int i_pcomb)
+    void run_param_comb(int i_pcomb)
     // main function for the generative network build
     {
         // get the params
@@ -661,16 +875,19 @@ public:
     double **D;
     double **params;
     int **b;
+    double **K;
     int m;
     int model;
     int n_p_combs;
     int n_nodes;
 
     // define the constructor
-    GNMClass(double **A_init_,
+    GNMClass(double **A_Y_,
+             double **A_init_,
              double **D_,
              double **params_,
              int **b_,
+             double **K_,
              int m_,
              int model_,
              int n_p_combs_,
@@ -680,25 +897,89 @@ public:
         D = D_;
         params = params_;
         b = b_;
+        K = K_;
         m = m_;
         model = model_;
         n_p_combs = n_p_combs_;
         n_nodes = n_nodes_;
 
+        // resize the private variables
+        A_Y.resize(n_nodes, std::vector<double>(n_nodes));
         A_current.resize(n_nodes, std::vector<double>(n_nodes));
         K_current.resize(n_nodes, std::vector<double>(n_nodes));
         k_current.resize(n_nodes);
         clu_coeff_current.resize(n_nodes);
+
+        // Initialize a copy of A_Y as cpp vector
+        for (int i = 0; i < n_nodes; ++i)
+        {
+            for (int j = 0; j < n_nodes; ++j)
+            {
+                A_Y[i][j] = A_Y_[i][j];
+            }
+        }
     }
 
     void generateModels()
     // Initiates the network generation leveraging the different rules
     {
-        // Allocate memory for A
+        // Prep scores for A_Y
+        std::vector<std::vector<double> > energy_Y(4, std::vector<double>(n_nodes, 0.0));
+
+        // 1. nodal degree
+        for (int i = 0; i < n_nodes; ++i)
+        {
+            for (int j = 0; j < n_nodes; ++j)
+            {
+                energy_Y[0][i] += A_Y[i][j];
+            }
+        }
+
+        // 2. clustering coefficient
+        energy_Y[1] = compute_clustering_coeff(A_Y, n_nodes, energy_Y[0]);
+
+        // 3. betweens centrality
+        energy_Y[2] = compute_betweennes_centrality(A_Y, n_nodes);
+
+        // 4. edge length
+        energy_Y[3] = compute_edge_length(A_Y, D, n_nodes);
+
+        // print energy_Y
+        for (int i = 0; i < n_nodes; i++)
+        {
+            std::cout << energy_Y[2][i] << " ";
+        }
+        std::cout << std::endl;
+        
+
         for (int i_pcomb = 0; i_pcomb < n_p_combs; i_pcomb++)
         {
+            // compute the adjacency matrix for the param combination
             reset_A_current();
             run_param_comb(i_pcomb);
+
+            // evaluate
+            std::vector<std::vector<double> > energy(4, std::vector<double>(n_nodes, 0.0));
+
+            // // 1. nodal degree
+            for (int i = 0; i < n_nodes; i++)
+            {
+                energy[0][i] = k_current[i];
+            }
+
+            // 2. clustering coefficient
+            energy[1] = compute_clustering_coeff(A_current, n_nodes, energy[0]);
+
+            // 3. betweens centrality
+            energy[2] = compute_betweennes_centrality(A_current, n_nodes);
+
+            // 4. edge length
+            energy[3] = compute_edge_length(A_current, D, n_nodes);
+
+            K[0][i_pcomb] = ksTest(energy_Y[0], energy[0]);
+            K[1][i_pcomb] = ksTest(energy_Y[1], energy[1]);
+            K[2][i_pcomb] = ksTest(energy_Y[2], energy[2]);
+            K[3][i_pcomb] = ksTest(energy_Y[3], energy[3]);
         }
     }
 };
@@ -706,29 +987,35 @@ public:
 static PyObject *get_gnms(PyObject *self, PyObject *args)
 {
 
-    PyArrayObject *A_init, *D, *params;
+    PyArrayObject *A_Y, *A_init, *D, *params;
     int m, model;
 
-    if (!PyArg_ParseTuple(args, "OOOii", &A_init, &D, &params, &m, &model))
+    if (!PyArg_ParseTuple(args, "OOOOii", &A_Y, &A_init, &D, &params, &m, &model))
     {
         return NULL;
     }
 
     // Check that args are numpy arrays
-    if (!PyArray_Check(A_init) || !PyArray_Check(D) || !PyArray_Check(params))
+    if (!PyArray_Check(A_Y) || !PyArray_Check(A_init) || !PyArray_Check(D) || !PyArray_Check(params))
     {
         PyErr_SetString(PyExc_TypeError,
                         "spike trains and time need to be np arrays of doubles");
     };
 
-    // prepare A_init and D as C objects
+    // prepare A, A_init and D as C objects
     int n_nodes = sqrt(PyArray_SIZE(A_init));
     int n_p_combs = PyArray_SIZE(params) / 2;
-    double **A_init_data, **D_data, **params_data;
+    double **A_Y_data, **A_init_data, **D_data, **params_data;
 
     npy_intp A_init_dims[] = {[0] = n_nodes, [1] = n_nodes};
     npy_intp D_dims[] = {[0] = n_nodes, [1] = n_nodes};
     npy_intp params_dims[] = {[0] = n_p_combs, [1] = 2};
+
+    PyArray_AsCArray((PyObject **)&A_Y,
+                     &A_Y_data,
+                     A_init_dims,
+                     2,
+                     PyArray_DescrFromType(NPY_DOUBLE));
 
     PyArray_AsCArray((PyObject **)&A_init,
                      &A_init_data,
@@ -749,24 +1036,41 @@ static PyObject *get_gnms(PyObject *self, PyObject *args)
                      PyArray_DescrFromType(NPY_DOUBLE));
 
     // construct b the results matrix
-    // TODO: This is very bad and slow
+    // TODO: Is this the best way to do this?
+    int **b_data;
     npy_intp b_dims[] = {[0] = m,
                          [1] = n_p_combs};
     PyArrayObject *b = (PyArrayObject *)PyArray_SimpleNew(2,
                                                           b_dims,
                                                           NPY_INT);
-    int **b_data;
+
     PyArray_AsCArray((PyObject **)&b,
                      &b_data,
                      b_dims,
                      2,
                      PyArray_DescrFromType(NPY_INT));
 
+    // construct K results matrix
+    double **K_data;
+    npy_intp K_dims[] = {[0] = 4,
+                         [1] = n_p_combs};
+    PyArrayObject *K = (PyArrayObject *)PyArray_SimpleNew(2,
+                                                          K_dims,
+                                                          NPY_DOUBLE);
+
+    PyArray_AsCArray((PyObject **)&K,
+                     &K_data,
+                     K_dims,
+                     2,
+                     PyArray_DescrFromType(NPY_DOUBLE));
+
     // call the C native code
-    GNMClass obj(A_init_data,
+    GNMClass obj(A_Y_data,
+                 A_init_data,
                  D_data,
                  params_data,
                  b_data,
+                 K_data,
                  m,
                  model,
                  n_p_combs,
@@ -774,7 +1078,12 @@ static PyObject *get_gnms(PyObject *self, PyObject *args)
 
     obj.generateModels();
 
-    return PyArray_Return(b);
+    // prepare tuple to return
+    PyObject *result = PyTuple_New(2);
+    PyTuple_SetItem(result, 0, PyArray_Return(b));
+    PyTuple_SetItem(result, 1, PyArray_Return(K));
+
+    return result;
 }
 
 static PyObject *version(PyObject *self)

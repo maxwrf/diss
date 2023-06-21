@@ -37,11 +37,10 @@ def analyze(config, f, dset_name):
 
 if __name__ == "__main__":
     dset_names = [
-        # "20230611231729_gnm_g2cctxdiv7.h5",
-        # "20230612004715_gnm_g2chpcdiv7.h5",
-        # "20230612000122_gnm_g2chpcdiv28.h5",
-        # "20230612000623_gnm_g2cctxdiv28.h5",
-        "20230617115458_synthetic.h5",
+        "20230618170112_g2chpcdiv28.h5",
+        "20230617202310_g2cctxdiv7.h5",
+        "20230619084717_g2cctxdiv14.h5",
+        "20230618170456_g2cctxdiv28.h5"
     ]
 
     for dset in dset_names:
