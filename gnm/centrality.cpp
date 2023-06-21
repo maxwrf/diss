@@ -31,29 +31,21 @@ std::vector<double> betweenness_centrality(std::vector<std::vector<double>> &A, 
 
         bool hasNSPd = false;
 
-        std::vector<std::vector<double>> temp(n, std::vector<double>(n, 0.0));
+        std::vector<std::vector<double>> temp = NPd;
         for (int i = 0; i < n; ++i)
         {
-            std::vector<double> NPd_row_update(n);
             for (int j = i; j < n; ++j)
             {
-                if (i == 14 && j == 16)
-                {
-                    continue;
-                }
-
                 // Compute the number of paths connecting i & j of length d
-                double npd = 0.0;
                 for (int k = 0; k < n; ++k)
                 {
-                    npd += NPd[i][k] * A[k][j];
+                    temp[i][j] = temp[j][i] += NPd[i][k] * A[k][j];
                 }
-                temp[i][j] = temp[j][i] = npd;
 
                 // If there is such path and no shorter entry, add d to the L matrix
-                if (npd > 0.0 && L[i][j] == 0.0)
+                if (temp[i][j] > 0.0 && L[i][j] == 0.0)
                 {
-                    NSPd[i][j] = NSPd[j][i] = npd;
+                    NSPd[i][j] = NSPd[j][i] = temp[i][j];
                     NSP[i][j] = NSP[j][i] += NSPd[i][j];
                     L[i][j] = L[j][i] = d;
                     hasNSPd = true;
