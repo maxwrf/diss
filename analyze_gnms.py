@@ -37,7 +37,7 @@ def analyze(config, f, dset_name):
 
 if __name__ == "__main__":
     dset_names = [
-        "20230622192926_synthetic.h5"
+        "20230623002258_synthetic.h5"
     ]
 
     for dset in dset_names:

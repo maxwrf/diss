@@ -64,6 +64,7 @@ std::vector<double> betweenness_centrality(std::vector<std::vector<double>> &A, 
     }
 
     // BACKWARD PASS
+    std::vector<double> result(n, 0.0);
     std::vector<std::vector<double>> DP(n, std::vector<double>(n, 0.0)); // vertex on vertex dependency
     double diam = d - 1.0;                                               // the maximum distance between any two nodes
 
@@ -80,16 +81,8 @@ std::vector<double> betweenness_centrality(std::vector<std::vector<double>> &A, 
                     sum += ((L[i][k] == currentD) * (1 + DP[i][k]) / NSP[i][k]) * A[j][k];
                 }
                 DP[i][j] += sum * ((L[i][j] == (currentD - 1)) * NSP[i][j]);
+                result[j] += sum * ((L[i][j] == (currentD - 1)) * NSP[i][j]) / 2;
             }
-        }
-    }
-
-    std::vector<double> result(n, 0.0);
-    for (int i = 0; i < n; i++)
-    {
-        for (int j = 0; j < n; j++)
-        {
-            result[j] += DP[i][j] / 2.0;
         }
     }
 
@@ -98,15 +91,6 @@ std::vector<double> betweenness_centrality(std::vector<std::vector<double>> &A, 
 
 int main()
 {
-    // Example usage
-    // std::vector<std::vector<double>> A = {{0, 0, 1, 0, 0, 0, 0},
-    //                                       {0, 0, 1, 0, 0, 0, 0},
-    //                                       {1, 1, 0, 1, 0, 0, 0},
-    //                                       {0, 0, 1, 0, 1, 0, 0},
-    //                                       {0, 0, 0, 1, 0, 1, 1},
-    //                                       {0, 0, 0, 0, 1, 0, 1},
-    //                                       {0, 0, 0, 0, 1, 1, 0}};
-
     std::vector<std::vector<double>> A =
         {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0},
          {0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1},
