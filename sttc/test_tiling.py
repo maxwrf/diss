@@ -7,7 +7,6 @@ sys.path.insert(0, os.path.dirname(current_path))  # noqa
 import numpy as np
 from utils.config import params_from_json
 from g2c_data.g2c_data import G2C_data
-import sttc.import_sttc_C  # adds path for .so
 from STTC import sttc, tiling
 
 # setup

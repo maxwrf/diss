@@ -13,8 +13,7 @@ from utils.seed_network import get_seed_network
 config = params_from_json("./config.json")
 A_init, D, A_Ys = get_seed_network(config,
                                    prop=.2,
-                                   get_connections=True
-                                   )
+                                   get_connections=True)
 
 A_init = np.repeat(A_init[np.newaxis, ...], A_Ys.shape[0], axis=0)
 main(A_init,
@@ -22,6 +21,6 @@ main(A_init,
      A_Ys,
      config,
      dset_name='synthetic',
-     n_runs=64,
+     n_runs=1000,
      n_samples=2,
-     store=False)
+     store=True)

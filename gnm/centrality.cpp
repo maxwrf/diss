@@ -5,16 +5,10 @@
 std::vector<double> betweenness_centrality(std::vector<std::vector<double>> &A, int n)
 {
     // FORWARD PASS
-    std::vector<std::vector<double>> eye(n, std::vector<double>(n, 0.0)); // identity matrix
-    for (int i = 0; i < n; i++)
-    {
-        eye[i][i] = 1.0;
-    }
-    double d = 1.0;                            // path length
-    std::vector<std::vector<double>> NPd = A;  // number of paths of length |d|
-    std::vector<std::vector<double>> NSPd = A; // number of shortest paths of length |d|
-    std::vector<std::vector<double>> NSP = A;  // number of shortest paths of any length
-    std::vector<std::vector<double>> L = A;    // length of shortest paths
+    double d = 1.0;                           // path length
+    std::vector<std::vector<double>> NPd = A; // number of paths of length |d|
+    std::vector<std::vector<double>> NSP = A; // number of shortest paths of any length
+    std::vector<std::vector<double>> L = A;   // length of shortest paths
 
     // shortest paths of length 1 are only those of node with itself
     for (int i = 0; i < n; i++)
@@ -24,12 +18,12 @@ std::vector<double> betweenness_centrality(std::vector<std::vector<double>> &A, 
     }
 
     // as long as there are still shortest paths of the current length d
-    while (true)
+    // break out of the loop if none of the nodes i has a shortest path of the length d
+    bool hasNSPd = true;
+    while (hasNSPd)
     {
+        hasNSPd = false;
         ++d;
-        std::cout << d << std::endl;
-
-        bool hasNSPd = false;
 
         std::vector<std::vector<double>> temp = NPd;
         for (int i = 0; i < n; ++i)
@@ -45,44 +39,26 @@ std::vector<double> betweenness_centrality(std::vector<std::vector<double>> &A, 
                 // If there is such path and no shorter entry, add d to the L matrix
                 if (temp[i][j] > 0.0 && L[i][j] == 0.0)
                 {
-                    NSPd[i][j] = NSPd[j][i] = temp[i][j];
-                    NSP[i][j] = NSP[j][i] += NSPd[i][j];
+                    NSP[i][j] = NSP[j][i] += temp[i][j];
                     L[i][j] = L[j][i] = d;
                     hasNSPd = true;
                 }
             }
         }
         NPd = temp;
-
-        std::cout << "new" << std::endl;
-        for (int j = 0; j < n; ++j)
-        {
-            std::cout << NSP[14][j] << " ";
-        }
-        std::cout << std::endl;
-
-        // break out of the loop if none of the nodes i has a shortest path of the length d
-        if (!hasNSPd)
-        {
-            break;
-        }
     }
 
     for (int i = 0; i < n; i++)
     {
-        for (int j = 0; j < n; j++)
+        for (int j = i; j < n; j++)
         {
             if (L[i][j] == 0.0)
             {
-                L[i][j] = INFINITY;
-            }
-            if (eye[i][j] != 0.0)
-            {
-                L[i][j] = 0.0;
+                L[i][j] = L[j][i] = INFINITY;
             }
             if (NSP[i][j] == 0.0)
             {
-                NSP[i][j] = 1.0;
+                NSP[i][j] = NSP[j][i] = 1.0;
             }
         }
     }

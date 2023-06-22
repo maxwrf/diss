@@ -1,10 +1,3 @@
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-
-#include <Python.h>
-#include <numpy/arrayobject.h>
-#include <math.h>
-#include <vector>
-
 // GNM rules
 // 0: 'spatial',
 // 1: 'neighbors',
@@ -20,12 +13,15 @@
 // 11: 'deg-dist',
 // 12: 'deg-prod'
 
-class GNMClass
+#include <math.h>
+#include <vector>
+
+class GNM
 {
 private:
-    std::vector<std::vector<double> > A_Y;
-    std::vector<std::vector<double> > A_current;
-    std::vector<std::vector<double> > K_current;
+    std::vector<std::vector<double>> A_Y;
+    std::vector<std::vector<double>> A_current;
+    std::vector<std::vector<double>> K_current;
     std::vector<double> k_current;
     std::vector<double> clu_coeff_current;
     double epsilon = 1e-5;
@@ -68,13 +64,13 @@ private:
         return *std::max_element(diff_cdf.begin(), diff_cdf.end());
     }
 
-    static std::vector<double> compute_betweennes_centrality(std::vector<std::vector<double> > &A, int n)
+    static std::vector<double> compute_betweennes_centrality(std::vector<std::vector<double>> &A, int n)
     {
         // FORWARD PASS
         double d = 1.0;                           // path length
-        std::vector<std::vector<double> > NPd = A; // number of paths of length |d|
-        std::vector<std::vector<double> > NSP = A; // number of shortest paths of any length
-        std::vector<std::vector<double> > L = A;   // length of shortest paths
+        std::vector<std::vector<double>> NPd = A; // number of paths of length |d|
+        std::vector<std::vector<double>> NSP = A; // number of shortest paths of any length
+        std::vector<std::vector<double>> L = A;   // length of shortest paths
 
         // shortest paths of length 1 are only those of node with itself
         for (int i = 0; i < n; i++)
@@ -90,7 +86,7 @@ private:
         {
             hasNSPd = false;
             ++d;
-            std::vector<std::vector<double> > temp = NPd;
+            std::vector<std::vector<double>> temp = NPd;
 
             for (int i = 0; i < n; ++i)
             {
@@ -130,7 +126,7 @@ private:
         }
 
         // BACKWARD PASS
-        std::vector<std::vector<double> > DP(n, std::vector<double>(n, 0.0)); // vertex on vertex dependency
+        std::vector<std::vector<double>> DP(n, std::vector<double>(n, 0.0)); // vertex on vertex dependency
         double diam = d - 1.0;                                               // the maximum distance between any two nodes
 
         // iterate from longest shortest path to shortest
@@ -163,7 +159,7 @@ private:
     }
 
     static std::vector<double> compute_edge_length(
-        std::vector<std::vector<double> > &A,
+        std::vector<std::vector<double>> &A,
         double **D,
         int n_nodes)
     {
@@ -182,7 +178,7 @@ private:
     }
 
     static std::vector<double> compute_clustering_coeff(
-        std::vector<std::vector<double> > &A,
+        std::vector<std::vector<double>> &A,
         int n_nodes,
         std::vector<double> &k)
     {
@@ -226,11 +222,11 @@ private:
     std::vector<int> update_clustering_coeff(int uu, int vv)
     {
         // get the neighbors at row node (uu)
-        int uu_neighbors[(int) k_current[uu]];
+        int uu_neighbors[(int)k_current[uu]];
         int uu_n_neighbors = 0;
 
         // get the neighbors at col node (vv)
-        int vv_neighbors[(int) k_current[vv]];
+        int vv_neighbors[(int)k_current[vv]];
         int vv_n_neighbors = 0;
 
         // get common neighbor at row and col nodes
@@ -693,9 +689,9 @@ private:
         init_K();
 
         // initiate cost and value matrices
-        std::vector<std::vector<double> > Fd(n_nodes, std::vector<double>(n_nodes));
-        std::vector<std::vector<double> > Fk(n_nodes, std::vector<double>(n_nodes));
-        std::vector<std::vector<double> > Ff(n_nodes, std::vector<double>(n_nodes));
+        std::vector<std::vector<double>> Fd(n_nodes, std::vector<double>(n_nodes));
+        std::vector<std::vector<double>> Fk(n_nodes, std::vector<double>(n_nodes));
+        std::vector<std::vector<double>> Ff(n_nodes, std::vector<double>(n_nodes));
 
         for (int i = 0; i < n_nodes; ++i)
         {
@@ -865,7 +861,7 @@ public:
     // Initiates the network generation leveraging the different rules
     {
         // Prep scores for A_Y
-        std::vector<std::vector<double> > energy_Y(4, std::vector<double>(n_nodes, 0.0));
+        std::vector<std::vector<double>> energy_Y(4, std::vector<double>(n_nodes, 0.0));
 
         // 1. nodal degree
         for (int i = 0; i < n_nodes; ++i)
@@ -892,7 +888,7 @@ public:
             run_param_comb(i_pcomb);
 
             // evaluate
-            std::vector<std::vector<double> > energy(4, std::vector<double>(n_nodes, 0.0));
+            std::vector<std::vector<double>> energy(4, std::vector<double>(n_nodes, 0.0));
 
             // // 1. nodal degree
             for (int i = 0; i < n_nodes; i++)
@@ -915,131 +911,4 @@ public:
             K[3][i_pcomb] = ksTest(energy_Y[3], energy[3]);
         }
     }
-};
-
-static PyObject *get_gnms(PyObject *self, PyObject *args)
-{
-
-    PyArrayObject *A_Y, *A_init, *D, *params;
-    int m, model;
-
-    if (!PyArg_ParseTuple(args, "OOOOii", &A_Y, &A_init, &D, &params, &m, &model))
-    {
-        return NULL;
-    }
-
-    // Check that args are numpy arrays
-    if (!PyArray_Check(A_Y) || !PyArray_Check(A_init) || !PyArray_Check(D) || !PyArray_Check(params))
-    {
-        PyErr_SetString(PyExc_TypeError,
-                        "spike trains and time need to be np arrays of doubles");
-    };
-
-    // prepare A, A_init and D as C objects
-    int n_nodes = sqrt(PyArray_SIZE(A_init));
-    int n_p_combs = PyArray_SIZE(params) / 2;
-    double **A_Y_data, **A_init_data, **D_data, **params_data;
-
-    npy_intp A_init_dims[] = {[0] = n_nodes, [1] = n_nodes};
-    npy_intp D_dims[] = {[0] = n_nodes, [1] = n_nodes};
-    npy_intp params_dims[] = {[0] = n_p_combs, [1] = 2};
-
-    PyArray_AsCArray((PyObject **)&A_Y,
-                     &A_Y_data,
-                     A_init_dims,
-                     2,
-                     PyArray_DescrFromType(NPY_DOUBLE));
-
-    PyArray_AsCArray((PyObject **)&A_init,
-                     &A_init_data,
-                     A_init_dims,
-                     2,
-                     PyArray_DescrFromType(NPY_DOUBLE));
-
-    PyArray_AsCArray((PyObject **)&D,
-                     &D_data,
-                     D_dims,
-                     2,
-                     PyArray_DescrFromType(NPY_DOUBLE));
-
-    PyArray_AsCArray((PyObject **)&params,
-                     &params_data,
-                     params_dims,
-                     2,
-                     PyArray_DescrFromType(NPY_DOUBLE));
-
-    // construct b the results matrix
-    // TODO: Is this the best way to do this?
-    int **b_data;
-    npy_intp b_dims[] = {[0] = m,
-                         [1] = n_p_combs};
-    PyArrayObject *b = (PyArrayObject *)PyArray_SimpleNew(2,
-                                                          b_dims,
-                                                          NPY_INT);
-
-    PyArray_AsCArray((PyObject **)&b,
-                     &b_data,
-                     b_dims,
-                     2,
-                     PyArray_DescrFromType(NPY_INT));
-
-    // construct K results matrix
-    double **K_data;
-    npy_intp K_dims[] = {[0] = 4,
-                         [1] = n_p_combs};
-    PyArrayObject *K = (PyArrayObject *)PyArray_SimpleNew(2,
-                                                          K_dims,
-                                                          NPY_DOUBLE);
-
-    PyArray_AsCArray((PyObject **)&K,
-                     &K_data,
-                     K_dims,
-                     2,
-                     PyArray_DescrFromType(NPY_DOUBLE));
-
-    // call the C native code
-    GNMClass obj(A_Y_data,
-                 A_init_data,
-                 D_data,
-                 params_data,
-                 b_data,
-                 K_data,
-                 m,
-                 model,
-                 n_p_combs,
-                 n_nodes);
-
-    obj.generateModels();
-
-    // prepare tuple to return
-    PyObject *result = PyTuple_New(2);
-    PyTuple_SetItem(result, 0, PyArray_Return(b));
-    PyTuple_SetItem(result, 1, PyArray_Return(K));
-
-    return result;
-}
-
-static PyObject *version(PyObject *self)
-{
-    return Py_BuildValue("s", "Version 0.1");
-}
-
-static PyMethodDef methods[] = {
-    {"get_gnms", get_gnms, METH_VARARGS, "Desc"},
-    {"version", (PyCFunction)version, METH_NOARGS, "Desc"},
-    {NULL, NULL, 0, NULL}};
-
-static struct PyModuleDef GNMC = {
-    PyModuleDef_HEAD_INIT,
-    "GNMC",
-    "gnm Module",
-    -1,
-    methods};
-
-// Initializer
-PyMODINIT_FUNC PyInit_GNMC(void)
-{
-    PyObject *mod = PyModule_Create(&GNMC);
-    import_array();
-    return mod;
 };

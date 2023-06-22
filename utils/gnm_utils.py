@@ -105,7 +105,3 @@ def generate_param_space(n_runs: int = 100,
         gamma_limits[0], gamma_limits[1], int(np.sqrt(n_runs))))
 
     return np.unique(np.vstack((p.flatten(), q.flatten())).T, axis=0)
-
-
-x = [1.2, 2.5, 3.7, 4.1, 5.6]
-y = [1.0, 2.2, 3.6, 4.4, 5.8]
