@@ -9,6 +9,7 @@ import numpy as np
 from g2c_data.g2c_data import G2C_data
 from run_gnms import main
 import argparse
+import os
 
 if __name__ == "__main__":
     mea_data_dir = config['data_path'] + 'g2c_data/'
@@ -45,20 +46,16 @@ if __name__ == "__main__":
     A_inits = np.zeros((len(g2c.spikes), g2c.D.shape[0], g2c.D.shape[1]))
     A_Ys = np.zeros_like(A_inits)
 
+    # make a directory to store the temp data files
+    temp_dir = config['slurm_dir'] + f'temp_g2c{region}{div}/'
+    if not os.path.exists(temp_dir):
+        os.makedirs(temp_dir)
+
     for i_sample, spike in enumerate(g2c.spikes):
         spike.get_sttc(dt=0.05)
         spike.get_A(g2c.electrodes, sttc_cutoff=corr_cuttoff)
         spike.get_A_init_rand()
 
-        A_inits[i_sample, ...] = spike.A_init
-        A_Ys[i_sample, ...] = spike.A_Y
-
-    # running the generative models
-    main(A_inits,
-         g2c.D,
-         A_Ys,
-         config,
-         dset_name=dset_name,
-         n_runs=nruns,
-         n_samples=nsamples,
-         store=True)
+        np.savez(temp_dir+f'spike_{i_sample}.npz',
+                 array1=spike.A_init, array2=spike.A_Y)
+        1

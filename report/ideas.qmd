@@ -7,7 +7,7 @@ format:
     highlight-style: atom-one
     numbersections: true
     fontsize: 10pt
-    toc: false
+    toc: true
     colorlinks: true
     geometry:
       - top=30mm
@@ -66,6 +66,7 @@ This is to investigate how the physical embedding is constraint or constraints n
 
 # Generative network models
 These models were first developed and applied to connectome data by @betzel_generative_2016.
+Can be considered as an extensions to the economic trade-off principle, which states that configuration of the brain can be accounted for by economic balancing of wiring cost minimization and topological efficiency maximization.
 
 ## Evaluation
 $$
@@ -91,11 +92,69 @@ The corresponding statistic is computed for every vertex, and then the distribut
 ### Degree
 ### Clustering
 ### Homophilic
+Prioritize wiring of nodes with with overlapping connectivity patterns.
+These principles are often interpreted as manifestation of Hebbian learning, when two unconnected nodes share multiple neighbors, they will likely showcase similar firing behavior.
+Consequently, they are also more likely to connect with each other in the future.
+
+#### Neighbors
+For any combination of nodes get the number of common neighbors 
+$$
+\sum_{l}{A_{il} A_{jl}}
+$$ {#eq-neigbors}
+
 #### Matching index
+Intersection of i's and j's neighbors except each other over the union of i's and j's neighbors. 
+$$
+\frac{|N_{i/j} \cap N_{j/i}|}{|N_{i/j} \cup N_{j/i}|}
+$$ {#eq-matching-index}
 \begin{itemize}
     \item Normalized measure of the overlap in two vertexes neighborhoods
     \item that eta and gamma seem to trade offer with each other, such that a connectome is either shaped by geometry or non-geometric constraints
 \end{itemize}
+
+# Computational developmental models
+Computational developmental models can generally be divided into those focusing on **cognitive development**, that is they try to perform tasks inspired by neurobiological principles, vs. those that focus on **neurobiological development**, which are models that try to capture neurobiological development.
+Cognitive models are fit to cognitive data with learning inspired by neurobiology, thereby trying to capture trajectories of change [@astle_toward_2023].
+These include: 
+\begin{itemize}
+    \item Cascade correlation models
+    \item Knowledge-based cascade correlations
+    \item Neuroconstructivist representation learning  
+    \item Spatially embedded recurrent neural networks
+\end{itemize}
+On the other hand, neurobiological development models are fit to neurobiolgical data and try to capture trajectories in physiological development.
+The models include:
+\begin{itemize}
+    \item Generative network models
+    \item Synaptic pruning in development 
+    \item Growth cone chemotaxis 
+\end{itemize}w
+
+## Cascade correlation neural network (CC)
+\begin{itemize}
+    \item Classical input output networks are trained to solve a supervised problem
+    \item At some point, the model will struggle to improve performance given the limited computational capacity (restricted number of neurons / layers)
+    \item A new unit is then added as hidden layers (?) which has been trained independently as to maximize the correlation with the error (a pool of candidates are trained)
+    \item This arguably reassembles neurogenesis as it can solve a particular computation which could not have been solved previously (this is done iteratively)
+    \item Different to regular neuronal networks, the architecture of this network does not require an a priori guess
+    \item Criticism: Will fail to use prior knowledge to learn because they do not have any
+\end{itemize}
+
+## Knowledge based cascade correlations (KNCC)
+\begin{itemize}
+    \item An extension to the CCs, models that can recruit an entire sub-network based on a previously learned task
+\end{itemize}
+
+## Spatially embedded recurrent neural networks (seRNNs)
+\begin{itemize}
+    \item One of the only models, that merges biophysical principles with task-solving
+    \item Exist in a 3D space, where connection weights are penalized as a function of their lengths
+    \item seRNNS are limited in their communication via direct and indirect connections
+    \item These constraints are placed into a single optimization problem
+    \item The networks embody modularity and small-worldness, both of which are crucial development principles
+    \item As they are trained, neurons within the seRNNs become increasingly specialized to distinct aspects, so we can observed a functional specialization that is spatially patterned 
+\end{itemize}
+
 
 # Graphs
 ## Rich clubs
@@ -114,6 +173,7 @@ The corresponding statistic is computed for every vertex, and then the distribut
     \item Small-world = Combine random and regular topological properties, i.e., high efficiency (short path length) and high clustering
     \item Community structure = Sub-global organization of a complex network, an example is modular organization
     \item Heavy-tailed degree distributions = Proportion of high degree nodes is larger than in random graphs (so that they can be hubs)
+    \item Computational neuroconstructivism = Computationally formalize neuroconstructivist principles by parameterized interactions between populations over time
 \end{itemize}
 
 # References

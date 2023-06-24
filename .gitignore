@@ -2,3 +2,4 @@ __pycache__/
 diss-env/
 data/
 results/
+slurm/
