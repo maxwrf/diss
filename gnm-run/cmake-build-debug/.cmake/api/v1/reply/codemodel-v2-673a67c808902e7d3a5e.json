@@ -1,0 +1,96 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.25"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "gnm-run",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "main::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-main-Debug-d8a2fe3d0d10e49314a5.json",
+					"name" : "main",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "spikeSetTest::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-spikeSetTest-Debug-a1958fd830c46d1c826b.json",
+					"name" : "spikeSetTest",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "spikeTrainTest::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-spikeTrainTest-Debug-afb9c3b8a040c233a732.json",
+					"name" : "spikeTrainTest",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "sttcTest::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-sttcTest-Debug-5249c3557b2d447e21e1.json",
+					"name" : "sttcTest",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "syntheticTest::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-syntheticTest-Debug-48e2e4dd6d349bb7caa0.json",
+					"name" : "syntheticTest",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/Users/maxwuerfek/code/diss/gnm-run/cmake-build-debug",
+		"source" : "/Users/maxwuerfek/code/diss/gnm-run"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 4
+	}
+}
