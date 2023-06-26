@@ -10,7 +10,7 @@ class SpikeTrain():
         Given the path to an mea file, returns a Spike Train object
         """
         with h5py.File(file_path, 'r') as file:
-            self.file = str(file['meta/age'][()])
+            self.file = file_path
             self.age = file['meta/age'][()][0]
             self.region = file['meta/region'][()][0]
             self.recording_time = file['recordingtime'][()]

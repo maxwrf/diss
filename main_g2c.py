@@ -15,11 +15,11 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-r", "--region", help="brain region to use", default="ctx", nargs='?')
+        "-r", "--region", help="brain region to use", default="hpc", nargs='?')
     parser.add_argument(
-        "-div", "--div", help="days in vitro to use", type=int, default=28, nargs='?')
+        "-div", "--div", help="days in vitro to use", type=int, default=14, nargs='?')
     parser.add_argument(
-        "-nruns", "--nruns", help="number of runs over param space", type=int, default=64, nargs='?')
+        "-nruns", "--nruns", help="number of runs over param space", type=int, default=10, nargs='?')
     parser.add_argument(
         "-nsamples", "--nsamples", help="number of samples to use (-1 is all samples)", type=int, default=2, nargs='?')
 

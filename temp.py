@@ -14,14 +14,12 @@ from g2c_data.g2c_data import G2C_data
 from STTC import sttc, tiling
 
 # setup
-config = params_from_json("../config.json")
+config = params_from_json("./config.json")
 mea_data_dir = config['data_path'] + 'g2c_data/'
 
 g2c = G2C_data(mea_data_dir)
 g2c.create_spike_data(ages=[28],
                       regions=['ctx'])
-
-# C57_CTX_G2CEPHYS3_TC21_DIV28_D
 
 # compute using tiling
 res_tiling = tiling(

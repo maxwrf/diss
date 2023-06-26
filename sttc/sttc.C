@@ -238,14 +238,14 @@ static PyObject *tiling(PyObject *self, PyObject *args)
         // retrieve spike train 1 indices
         int sp1_offset = *(spike_count_data + i);
         double *st1_ptr = (spike_data + sp1_offset);
-        int n1 = *(spike_count_data + i + 1) - *(spike_count_data + i) - 1;
+        int n1 = *(spike_count_data + i + 1) - *(spike_count_data + i);
 
         for (j = 0; j < n_electrodes; j++)
         {
             // retrieve spike train 2 indices
             int sp2_offset = *(spike_count_data + j);
             double *st2_ptr = (spike_data + sp2_offset);
-            int n2 = *(spike_count_data + j + 1) - *(spike_count_data + j) - 1;
+            int n2 = *(spike_count_data + j + 1) - *(spike_count_data + j);
 
             // compute sttc
             double temp = Csttc(st1_ptr,
