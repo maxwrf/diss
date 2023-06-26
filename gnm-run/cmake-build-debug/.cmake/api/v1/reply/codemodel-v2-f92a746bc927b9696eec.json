@@ -19,7 +19,9 @@
 						1,
 						2,
 						3,
-						4
+						4,
+						5,
+						6
 					]
 				}
 			],
@@ -38,7 +40,9 @@
 						1,
 						2,
 						3,
-						4
+						4,
+						5,
+						6
 					]
 				}
 			],
@@ -47,21 +51,35 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "main::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-main-Debug-d8a2fe3d0d10e49314a5.json",
+					"jsonFile" : "target-main-Debug-d731bee241d71ecbae55.json",
 					"name" : "main",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 0,
+					"id" : "slurmPrep::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-slurmPrep-Debug-a65f9c725e889989dc92.json",
+					"name" : "slurmPrep",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "slurmRun::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-slurmRun-Debug-fcdc3e0a068fd0335c57.json",
+					"name" : "slurmRun",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
 					"id" : "spikeSetTest::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-spikeSetTest-Debug-a1958fd830c46d1c826b.json",
+					"jsonFile" : "target-spikeSetTest-Debug-763dab4d3c6154a5a256.json",
 					"name" : "spikeSetTest",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 0,
 					"id" : "spikeTrainTest::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-spikeTrainTest-Debug-afb9c3b8a040c233a732.json",
+					"jsonFile" : "target-spikeTrainTest-Debug-1630241e8b5056f09fac.json",
 					"name" : "spikeTrainTest",
 					"projectIndex" : 0
 				},
@@ -75,7 +93,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "syntheticTest::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-syntheticTest-Debug-48e2e4dd6d349bb7caa0.json",
+					"jsonFile" : "target-syntheticTest-Debug-26baf1b339408754085f.json",
 					"name" : "syntheticTest",
 					"projectIndex" : 0
 				}
