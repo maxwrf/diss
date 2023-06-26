@@ -1,7 +1,5 @@
-#include <iostream>
 #include "SpikeSet.h"
 #include "GNM.h"
-#include <H5Cpp.h>
 
 int main() {
     // Read in the spike data
@@ -64,17 +62,6 @@ int main() {
 
     // Store the results
     std::string pOut = "/Users/maxwuerfek/code/diss/results/";
-    H5::H5File file(pOut + "Kall.h5", H5F_ACC_TRUNC);
-    hsize_t dims[4] = {
-            spikeData.spikeTrains.size(),
-            rules.size(),
-            paramSpace.size(),
-            4
-    };
-    H5::DataSpace dataspace(4, dims);
-    H5::DataSet dataset = file.createDataSet("Kall", H5::PredType::NATIVE_DOUBLE, dataspace);
-    dataset.write(Kall.data(), H5::PredType::NATIVE_DOUBLE);
-    file.close();
-    dataset.close();
+    GNM::saveResults(pOut, Kall, paramSpace);
     return 0;
 }

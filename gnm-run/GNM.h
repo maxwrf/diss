@@ -62,6 +62,10 @@ public:
                                                                std::vector<double> eta_limits = {-7, 7},
                                                                std::vector<double> gamma_limits = {-7, 7});
 
+    static void saveResults(std::string &p,
+                            std::vector<std::vector<std::vector<std::vector<double>>>> &Kall,
+                            std::vector<std::vector<double>> &paramSpace
+    );
 
     static std::vector<std::string> getRules();
 

@@ -17,8 +17,8 @@ void getSyntheticData(
         int n1, int n2, int n3
 ) {
 
-    std::string pData = "/Users/maxwuerfek/code/gnm/testData/syntheticData.h5";
-    std::string pDist = "/Users/maxwuerfek/code/gnm/testData/syntheticDataDistances.h5";
+    std::string pData = "/Users/maxwuerfek/code/diss/gnm-run/testData/syntheticData.h5";
+    std::string pDist = "/Users/maxwuerfek/code/diss/gnm-run/testData/syntheticDataDistances.h5";
 
     // Load the connectomes
     std::vector<double> temp = SpikeTrain::readDoubleDataset(pData,
@@ -85,7 +85,7 @@ int main() {
     std::vector<std::vector<double>> paramSpace = GNM::generateParamSpace(nRuns,
                                                                           etaLimits,
                                                                           gammaLimits);
-    
+
     // Initialize Kall
     std::vector<std::string> rules = GNM::getRules();
     std::vector<std::vector<std::vector<std::vector<double>>>> Kall(
@@ -131,19 +131,7 @@ int main() {
     }
 
     // Store the results
-    std::string pOut = "/Users/maxwuerfek/code/gnm/testData/testKall.h5";
-    H5::H5File file(pOut, H5F_ACC_TRUNC);
-    hsize_t dims[4] = {
-            static_cast<hsize_t>(nSamples),
-            rules.size(),
-            paramSpace.size(),
-            4
-    };
-    H5::DataSpace dataspace(4, dims);
-    H5::DataSet dataset = file.createDataSet("Kall", H5::PredType::NATIVE_DOUBLE, dataspace);
-    dataset.write(Kall.data(), H5::PredType::NATIVE_DOUBLE);
-    file.close();
-    dataset.close();
-
+    std::string pOut = "/Users/maxwuerfek/code/diss/gnm-run/testData/testKall.h5";
+    GNM::saveResults(pOut, Kall, paramSpace);
     return 0;
 }

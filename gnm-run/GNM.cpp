@@ -5,6 +5,7 @@
 #include "GNM.h"
 #include <cmath>
 #include <string>
+#include <H5Cpp.h>
 
 
 std::vector<std::string> GNM::getRules() {
@@ -23,6 +24,55 @@ std::vector<std::string> GNM::getRules() {
                                       "deg-prod"
     };
     return rules;
+};
+
+
+void GNM::saveResults(std::string &p,
+                      std::vector<std::vector<std::vector<std::vector<double>>>> &Kall,
+                      std::vector<std::vector<double>> &paramSpace
+) {
+    H5::H5File file(p, H5F_ACC_TRUNC);
+    hsize_t dims[4] = {
+            Kall.size(),
+            Kall[0].size(),
+            paramSpace.size(),
+            4
+    };
+    H5::DataSpace dataSpace(4, dims);
+    H5::DataSet dataset = file.createDataSet("Kall", H5::PredType::NATIVE_DOUBLE, dataSpace);
+    auto *KallData = new double[Kall.size() * Kall[0].size() * Kall[0][0].size() * Kall[0][0][0].size()];
+    for (size_t i = 0; i < Kall.size(); ++i) {
+        for (size_t j = 0; j < Kall[i].size(); ++j) {
+            for (size_t k = 0; k < Kall[i][j].size(); ++k) {
+                for (size_t l = 0; l < Kall[i][j][k].size(); ++l) {
+                    KallData[i * Kall[0].size() * Kall[0][0].size() * Kall[0][0][0].size() +
+                             j * Kall[0][0].size() * Kall[0][0][0].size() +
+                             k * Kall[0][0][0].size() +
+                             l] = Kall[i][j][k][l];
+                }
+            }
+        }
+    }
+    dataset.write(KallData, H5::PredType::NATIVE_DOUBLE);
+
+
+    hsize_t dims2[2] = {
+            paramSpace.size(),
+            2
+    };
+    H5::DataSpace dataSpace2(2, dims2);
+    H5::DataSet dataset2 = file.createDataSet("paramSpace", H5::PredType::NATIVE_DOUBLE, dataSpace2);
+    double *paramSpaceData = new double[paramSpace.size() * paramSpace[0].size()];
+    for (size_t i = 0; i < paramSpace.size(); ++i) {
+        for (size_t j = 0; j < paramSpace[i].size(); ++j) {
+            paramSpaceData[i * paramSpace[0].size() + j] = paramSpace[i][j];
+        }
+    }
+    dataset2.write(paramSpaceData, H5::PredType::NATIVE_DOUBLE);
+
+    file.close();
+    dataset.close();
+    dataset2.close();
 };
 
 
