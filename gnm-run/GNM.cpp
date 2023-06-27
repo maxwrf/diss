@@ -6,6 +6,7 @@
 #include <cmath>
 #include <string>
 #include <H5Cpp.h>
+#include <algorithm>
 
 
 std::vector<std::string> GNM::getRules() {

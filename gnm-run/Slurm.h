@@ -6,6 +6,7 @@
 #define GNM_RUN_SLURM_H
 
 #include <string>
+#include <vector>
 
 class Slurm {
 public:
