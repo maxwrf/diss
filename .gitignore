@@ -1,7 +1,6 @@
 __pycache__/
 diss-env/
 data/*
-slurm/*
+gnm-run/slurm/*
 gnm-analyze/__pycache__/
 
-!slurm/*.sh

@@ -7,7 +7,7 @@
 #include <vector>
 
 int main() {
-    std::string inDirPath = "/Users/maxwuerfek/code/diss/slurm";
+    std::string inDirPath = "/Users/maxwuerfek/code/diss/gnm-run/slurm";
     std::vector<std::vector<std::vector<std::vector<double>>>> Kall;
     std::vector<std::vector<double>> paramSpace;
     std::vector<std::string> groupIds;

@@ -9,18 +9,23 @@
 #include <string>
 
 class SpikeTrain {
+private:
+    void getGroupId();
+
 public:
     std::string FILE_NAME;
-    int div;
-    int numActiveElectrodes;
-    double sttcCutoff;
-    std::vector<int> activeElectrodes;
-    std::string region;
     std::string groupId;
 
+    int numActiveElectrodes;
+    double sttcCutoff;
+
+    // To be read from HD5
+    std::vector<int> activeElectrodes;
     std::vector<double> spikes;
     std::vector<double> spikeCounts;
     std::vector<double> recordingTime;
+
+    // To be computed
     std::vector<std::vector<double>> activeElectrodePos;
     std::vector<std::vector<double>> sttc;
     std::vector<std::vector<double>> A_Y;
