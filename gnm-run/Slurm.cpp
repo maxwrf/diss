@@ -9,6 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <map>
 
 void Slurm::generateInputs(std::string &inDirPath,
                            std::string &outDirPath,
@@ -39,6 +40,10 @@ void Slurm::generateInputs(std::string &inDirPath,
             return;
         }
 
+        // Write the group string size
+        size_t groupIdSize = spikeData.spikeTrains[iSample].groupId.size();
+        file.write(reinterpret_cast<const char *>(&groupIdSize), sizeof(groupIdSize));
+
         // Write the vector sizes
         size_t sizeA_Y = spikeData.spikeTrains[iSample].A_Y.size();
         file.write(reinterpret_cast<const char *>(&sizeA_Y), sizeof(sizeA_Y));
@@ -53,6 +58,8 @@ void Slurm::generateInputs(std::string &inDirPath,
         file.write(reinterpret_cast<const char *>(&sizeParamSpace), sizeof(sizeParamSpace));
 
         // Write the data
+        file.write(spikeData.spikeTrains[iSample].groupId.c_str(), groupIdSize);
+
         for (const auto &innerVec: spikeData.spikeTrains[iSample].A_Y) {
             file.write(reinterpret_cast<const char *>(innerVec.data()),
                        innerVec.size() * sizeof(double));
@@ -79,8 +86,8 @@ void Slurm::readDatFile(std::string &inPath,
                         std::vector<std::vector<double>> &A_Y,
                         std::vector<std::vector<double>> &A_init,
                         std::vector<std::vector<double>> &D,
-                        std::vector<std::vector<double>> &paramSpace
-
+                        std::vector<std::vector<double>> &paramSpace,
+                        std::string &groupId
 ) {
     // Open the file
     std::ifstream file(inPath, std::ios::binary);
@@ -88,6 +95,11 @@ void Slurm::readDatFile(std::string &inPath,
         std::cerr << "Failed to open file for loading vectors." << std::endl;
         return;
     }
+
+    // Read group ID string size
+    size_t groupIdSize;
+    file.read(reinterpret_cast<char *>(&groupIdSize), sizeof(groupIdSize));
+    groupId.resize(groupIdSize);
 
     // Read the sizes of the vectors and reshape
     size_t sizeA_Y;
@@ -107,6 +119,8 @@ void Slurm::readDatFile(std::string &inPath,
     paramSpace.resize(sizeParamSpace);
 
     // Read in the data
+    file.read(&groupId[0], groupIdSize);
+
     for (auto &row: A_Y) {
         size_t sizeRow = sizeA_Y; //square
         row.resize(sizeRow);
@@ -134,7 +148,8 @@ void Slurm::readDatFile(std::string &inPath,
 
 void Slurm::saveResFile(std::string &outDirPath,
                         std::vector<std::vector<std::vector<double>>> &Kall,
-                        std::vector<std::vector<double>> &paramSpace) {
+                        std::vector<std::vector<double>> &paramSpace,
+                        std::string &groupId) {
     // Open the file
     std::ofstream file(outDirPath, std::ios::binary);
     if (!file.is_open()) {
@@ -142,7 +157,11 @@ void Slurm::saveResFile(std::string &outDirPath,
         return;
     }
 
-    // Write the vector sizes
+    // Write the group string size
+    size_t groupIdSize = groupId.size();
+    file.write(reinterpret_cast<const char *>(&groupIdSize), sizeof(groupIdSize));
+
+    // Write the K all vector sizes
     size_t size1Kall = Kall.size();
     size_t size2Kall = Kall[0].size();
     size_t size3Kall = Kall[0][0].size();
@@ -151,21 +170,28 @@ void Slurm::saveResFile(std::string &outDirPath,
     file.write(reinterpret_cast<const char *>(&size2Kall), sizeof(size_t));
     file.write(reinterpret_cast<const char *>(&size3Kall), sizeof(size_t));
 
+    // Write the param Space vector size
     size_t size1paramSpace = paramSpace.size();
     size_t size2paramSpace = paramSpace[0].size();
 
     file.write(reinterpret_cast<const char *>(&size1paramSpace), sizeof(size_t));
     file.write(reinterpret_cast<const char *>(&size2paramSpace), sizeof(size_t));
 
-    // Write the data
+    // Write the groupId
+    file.write(groupId.c_str(), groupIdSize);
+
+    // Write the KAll data
     for (size_t i = 0; i < size1Kall; i++) {
         for (size_t j = 0; j < size2Kall; j++) {
-            file.write(reinterpret_cast<const char *>(Kall[i][j].data()), size3Kall * sizeof(double));
+            file.write(reinterpret_cast<const char *>(Kall[i][j].data()),
+                       size3Kall * sizeof(double));
         }
     }
 
+    // Write the paramSpace data
     for (size_t i = 0; i < size1paramSpace; i++) {
-        file.write(reinterpret_cast<const char *>(paramSpace[i].data()), size2paramSpace * sizeof(double));
+        file.write(reinterpret_cast<const char *>(paramSpace[i].data()),
+                   size2paramSpace * sizeof(double));
     }
 
     file.close();
@@ -173,7 +199,8 @@ void Slurm::saveResFile(std::string &outDirPath,
 
 void Slurm::combineResFiles(std::string &inDirPath,
                             std::vector<std::vector<std::vector<std::vector<double>>>> &Kall,
-                            std::vector<std::vector<double>> &paramSpace) {
+                            std::vector<std::vector<double>> &paramSpace,
+                            std::vector<std::string> &groupIds) {
     // read in the files
     int filesRead = 0;
     for (const auto &entry: std::filesystem::directory_iterator(inDirPath)) {
@@ -185,6 +212,12 @@ void Slurm::combineResFiles(std::string &inDirPath,
 
                 // Prepare
                 std::vector<std::vector<std::vector<double>>> KallSample;
+                std::string groupId;
+
+                // Read in group Id size and resize
+                size_t groupIdSize;
+                file.read(reinterpret_cast<char *>(&groupIdSize), sizeof(groupIdSize));
+                groupId.resize(groupIdSize);
 
                 // Read in Kall dimensions and resize the vector
                 size_t size1Kall, size2Kall, size3Kall;
@@ -203,25 +236,55 @@ void Slurm::combineResFiles(std::string &inDirPath,
 
                 paramSpace.resize(size1paramSpace, std::vector<double>(size2paramSpace));
 
+                // Read in the group ID
+                file.read(&groupId[0], groupIdSize);
 
                 // Read in the Kall data
                 for (size_t i = 0; i < size1Kall; i++) {
                     for (size_t j = 0; j < size2Kall; j++) {
-                        file.read(reinterpret_cast<char *>(KallSample[i][j].data()), size3Kall * sizeof(double));
+                        file.read(reinterpret_cast<char *>(KallSample[i][j].data()),
+                                  size3Kall * sizeof(double));
                     }
                 }
 
                 // Read in the ParamSpace
                 if (filesRead == 0) {
                     for (size_t i = 0; i < size1paramSpace; i++) {
-                        file.read(reinterpret_cast<char *>(paramSpace[i].data()), size2paramSpace * sizeof(double));
+                        file.read(reinterpret_cast<char *>(paramSpace[i].data()),
+                                  size2paramSpace * sizeof(double));
                     }
                 }
 
                 file.close();
                 Kall.push_back(KallSample);
+                groupIds.push_back(groupId);
                 filesRead++;
             }
         }
     }
 };
+
+void Slurm::writeGroupsHDF5(std::vector<std::string> &groupIds,
+                            std::vector<std::vector<std::vector<std::vector<double>>>> &Kall,
+                            std::vector<std::vector<double>> &paramSpace,
+                            std::string &outDirPath) {
+    // Get the unique IDs
+    std::map<std::string, std::vector<size_t>> idMap;
+    for (size_t i = 0; i < groupIds.size(); ++i) {
+        idMap[groupIds[i]].push_back(i);
+    }
+
+    for (const auto &[id, indices]: idMap) {
+        std::cout << "Group: " << id << std::endl;
+
+        // Subset the Kall vector for this group
+        std::vector<std::vector<std::vector<std::vector<double>>>> KallGroup;
+        for (const auto &index: indices) {
+            KallGroup.push_back(Kall[index]);
+        }
+
+        // Write the results
+        std::string outFile = outDirPath + "/results_" + id + ".h5";
+        GNM::saveResults(outFile, KallGroup, paramSpace);
+    }
+}

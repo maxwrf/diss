@@ -17,7 +17,8 @@ int main(int argc, char *argv[]) {
     }
 
     std::vector<std::vector<double>> A_Y, A_init, D, paramSpace;
-    Slurm::readDatFile(inPath, A_Y, A_init, D, paramSpace);
+    std::string groupId;
+    Slurm::readDatFile(inPath, A_Y, A_init, D, paramSpace, (std::string &) groupId);
 
     // Compute m
     int m = 0;
@@ -64,7 +65,7 @@ int main(int argc, char *argv[]) {
     // Save the result
     size_t dotPos = inPath.find_last_of('.');
     std::string outPath = inPath.substr(0, dotPos) + ".res";
-    Slurm::saveResFile(outPath, Kall, paramSpace);
+    Slurm::saveResFile(outPath, Kall, paramSpace, (std::string &) groupId);
 
     return 0;
 };

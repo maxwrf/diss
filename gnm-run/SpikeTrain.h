@@ -15,7 +15,8 @@ public:
     int numActiveElectrodes;
     double sttcCutoff;
     std::vector<int> activeElectrodes;
-    // std::string region;
+    std::string region;
+    std::string groupId;
 
     std::vector<double> spikes;
     std::vector<double> spikeCounts;
@@ -29,8 +30,8 @@ public:
     static std::vector<double> readDoubleDataset(std::string file_name,
                                                  std::string dataset_name);
 
-    static std::vector<std::string> readByteStringDataset(std::string file_name,
-                                                          std::string dataset_name);
+    static std::string readByteString(std::string file_name,
+                                      std::string dataset_name);
 
     SpikeTrain(std::string FILE_NAME,
                std::vector<std::vector<double>> &electrodePos,

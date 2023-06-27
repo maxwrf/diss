@@ -24,7 +24,8 @@ SpikeTrain::SpikeTrain(std::string FILE_NAME_,
     numActiveElectrodes = spikeCounts.size();
     recordingTime = readDoubleDataset(FILE_NAME, "recordingtime");
     div = (int) readDoubleDataset(FILE_NAME, "meta/age")[0];
-    // region = readByteStringDataset(FILE_NAME, "meta/region")[0];
+    region = readByteString(FILE_NAME, "meta/region");
+    groupId = region + std::to_string(div);
 
     // Get the electrode Positions
     std::vector<double> temp = readDoubleDataset(FILE_NAME, "epos");
@@ -107,41 +108,41 @@ std::vector<double> SpikeTrain::readDoubleDataset(std::string file_name,
     return data;
 }
 
-std::vector<std::string> SpikeTrain::readByteStringDataset(std::string file_name,
-                                                           std::string dataset_name) {
+std::string SpikeTrain::readByteString(std::string file_name,
+                                       std::string dataset_name) {
     /**
      * This member function reads a byte string dataset from the HDF5 file.
      */
-    // Open the HDF5 file & dataset
+
+    // Open the dataspace
     H5::H5File file(file_name, H5F_ACC_RDONLY);
     H5::DataSet dataset = file.openDataSet(dataset_name);
 
-    // Get the dataspace of the dataset
+    // Check for the dimensions
     H5::DataSpace dataspace = dataset.getSpace();
-    hsize_t numElements = dataspace.getSimpleExtentNpoints();
+    hsize_t dims_out[2];
+    auto n = dataspace.getSimpleExtentDims(dims_out, nullptr);
+    assert(n == 1);
 
-    hsize_t dims[3];
-    dataspace.getSimpleExtentDims(dims, NULL);
-    std::cout << dims[0] << dims[1] << dims[2] << std::endl;
+    // Get the datatype and the size of the string
+    auto data_type = dataset.getDataType();
+    auto type_class = data_type.getClass();
+    auto data_size = data_type.getSize();
 
-    // Define the datatype for the byte string
-    H5::StrType dataType(H5::PredType::C_S1, 3);
+    // prepare a buffer and read in
+    char *out = new char[n * data_size]();
+    dataset.read(out, data_type);
 
-    // Read the data from the dataset
-    std::vector<char *> data(numElements);
-    dataset.read(data.data(), dataType);
-
-    // Convert char* to std::string
-    std::vector<std::string> byteStrings(numElements);
-    for (hsize_t i = 0; i < numElements; ++i) {
-        byteStrings[i] = std::string(data[i]);
-        delete[] data[i];  // Release memory allocated by HDF5 library
+    // Convert to std::string
+    std::string *strs = new std::string[n];
+    for (auto i = 0u; i < n; ++i) {
+        auto len = data_size;
+        auto c_str = out + data_size * i;
+        for (auto p = c_str + len - 1; p != c_str && !*p; --p) --len;
+        strs[i].assign(c_str, len);
     }
 
-    dataset.close();
-    file.close();
-
-    return byteStrings;
+    return *strs;
 }
 
 

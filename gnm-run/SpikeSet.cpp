@@ -84,6 +84,6 @@ void SpikeSet::getDistanceMatrix() {
 
 //int main() {
 //    std::string p = "/Users/maxwuerfek/code/diss/data/g2c_data";
-//    SpikeSet spike_data(p);
+//    SpikeSet spike_data(p, 1);
 //    return 0;
 //};
