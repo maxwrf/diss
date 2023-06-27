@@ -1,0 +1,508 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="gnm-run"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="main">
+				<Option output="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/main" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/opt/homebrew/include"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 main"/>
+					<CompileFile command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="main/fast">
+				<Option output="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/main" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/opt/homebrew/include"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 main/fast"/>
+					<CompileFile command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="spikeTrainTest">
+				<Option output="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/spikeTrainTest" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/opt/homebrew/include"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 spikeTrainTest"/>
+					<CompileFile command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="spikeTrainTest/fast">
+				<Option output="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/spikeTrainTest" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/opt/homebrew/include"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 spikeTrainTest/fast"/>
+					<CompileFile command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="spikeSetTest">
+				<Option output="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/spikeSetTest" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/opt/homebrew/include"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 spikeSetTest"/>
+					<CompileFile command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="spikeSetTest/fast">
+				<Option output="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/spikeSetTest" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/opt/homebrew/include"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 spikeSetTest/fast"/>
+					<CompileFile command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="sttcTest">
+				<Option output="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/sttcTest" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 sttcTest"/>
+					<CompileFile command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="sttcTest/fast">
+				<Option output="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/sttcTest" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 sttcTest/fast"/>
+					<CompileFile command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="syntheticTest">
+				<Option output="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/syntheticTest" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/opt/homebrew/include"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 syntheticTest"/>
+					<CompileFile command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="syntheticTest/fast">
+				<Option output="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/syntheticTest" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/opt/homebrew/include"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 syntheticTest/fast"/>
+					<CompileFile command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="slurmPrep">
+				<Option output="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/slurmPrep" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/opt/homebrew/include"/>
+					<Add directory="/home/mw894/hdf/CMake-hdf5-1.8.23/build/HDF5-1.8.23-Linux/HDF_Group/HDF5/1.8.23/include"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 slurmPrep"/>
+					<CompileFile command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="slurmPrep/fast">
+				<Option output="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/slurmPrep" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/opt/homebrew/include"/>
+					<Add directory="/home/mw894/hdf/CMake-hdf5-1.8.23/build/HDF5-1.8.23-Linux/HDF_Group/HDF5/1.8.23/include"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 slurmPrep/fast"/>
+					<CompileFile command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="slurmRun">
+				<Option output="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/slurmRun" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/opt/homebrew/include"/>
+					<Add directory="/home/mw894/hdf/CMake-hdf5-1.8.23/build/HDF5-1.8.23-Linux/HDF_Group/HDF5/1.8.23/include"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 slurmRun"/>
+					<CompileFile command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="slurmRun/fast">
+				<Option output="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/slurmRun" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/opt/homebrew/include"/>
+					<Add directory="/home/mw894/hdf/CMake-hdf5-1.8.23/build/HDF5-1.8.23-Linux/HDF_Group/HDF5/1.8.23/include"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 slurmRun/fast"/>
+					<CompileFile command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="slurmCombine">
+				<Option output="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/slurmCombine" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/opt/homebrew/include"/>
+					<Add directory="/home/mw894/hdf/CMake-hdf5-1.8.23/build/HDF5-1.8.23-Linux/HDF_Group/HDF5/1.8.23/include"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 slurmCombine"/>
+					<CompileFile command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="slurmCombine/fast">
+				<Option output="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/slurmCombine" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/opt/homebrew/include"/>
+					<Add directory="/home/mw894/hdf/CMake-hdf5-1.8.23/build/HDF5-1.8.23-Linux/HDF_Group/HDF5/1.8.23/include"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 slurmCombine/fast"/>
+					<CompileFile command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/bin/make -j64 -f &quot;/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/mhome/damtp/r/mw894/diss/gnm-run/GNM.cpp">
+			<Option target="main"/>
+			<Option target="syntheticTest"/>
+			<Option target="slurmPrep"/>
+			<Option target="slurmRun"/>
+			<Option target="slurmCombine"/>
+		</Unit>
+		<Unit filename="/mhome/damtp/r/mw894/diss/gnm-run/GNM.h">
+			<Option target="main"/>
+			<Option target="syntheticTest"/>
+			<Option target="slurmPrep"/>
+			<Option target="slurmRun"/>
+			<Option target="slurmCombine"/>
+		</Unit>
+		<Unit filename="/mhome/damtp/r/mw894/diss/gnm-run/STTC.cpp">
+			<Option target="main"/>
+			<Option target="spikeTrainTest"/>
+			<Option target="spikeSetTest"/>
+			<Option target="sttcTest"/>
+			<Option target="syntheticTest"/>
+			<Option target="slurmPrep"/>
+			<Option target="slurmRun"/>
+			<Option target="slurmCombine"/>
+		</Unit>
+		<Unit filename="/mhome/damtp/r/mw894/diss/gnm-run/STTC.h">
+			<Option target="main"/>
+			<Option target="spikeTrainTest"/>
+			<Option target="spikeSetTest"/>
+			<Option target="sttcTest"/>
+			<Option target="syntheticTest"/>
+			<Option target="slurmPrep"/>
+			<Option target="slurmRun"/>
+			<Option target="slurmCombine"/>
+		</Unit>
+		<Unit filename="/mhome/damtp/r/mw894/diss/gnm-run/Slurm.cpp">
+			<Option target="slurmPrep"/>
+			<Option target="slurmRun"/>
+			<Option target="slurmCombine"/>
+		</Unit>
+		<Unit filename="/mhome/damtp/r/mw894/diss/gnm-run/Slurm.h">
+			<Option target="slurmPrep"/>
+			<Option target="slurmRun"/>
+			<Option target="slurmCombine"/>
+		</Unit>
+		<Unit filename="/mhome/damtp/r/mw894/diss/gnm-run/SpikeSet.cpp">
+			<Option target="main"/>
+			<Option target="spikeSetTest"/>
+			<Option target="slurmPrep"/>
+			<Option target="slurmRun"/>
+			<Option target="slurmCombine"/>
+		</Unit>
+		<Unit filename="/mhome/damtp/r/mw894/diss/gnm-run/SpikeSet.h">
+			<Option target="main"/>
+			<Option target="spikeSetTest"/>
+			<Option target="slurmPrep"/>
+			<Option target="slurmRun"/>
+			<Option target="slurmCombine"/>
+		</Unit>
+		<Unit filename="/mhome/damtp/r/mw894/diss/gnm-run/SpikeTrain.cpp">
+			<Option target="main"/>
+			<Option target="spikeTrainTest"/>
+			<Option target="spikeSetTest"/>
+			<Option target="syntheticTest"/>
+			<Option target="slurmPrep"/>
+			<Option target="slurmRun"/>
+			<Option target="slurmCombine"/>
+		</Unit>
+		<Unit filename="/mhome/damtp/r/mw894/diss/gnm-run/SpikeTrain.h">
+			<Option target="main"/>
+			<Option target="spikeTrainTest"/>
+			<Option target="spikeSetTest"/>
+			<Option target="syntheticTest"/>
+			<Option target="slurmPrep"/>
+			<Option target="slurmRun"/>
+			<Option target="slurmCombine"/>
+		</Unit>
+		<Unit filename="/mhome/damtp/r/mw894/diss/gnm-run/main.cpp">
+			<Option target="main"/>
+		</Unit>
+		<Unit filename="/mhome/damtp/r/mw894/diss/gnm-run/mainSlurmCombine.cpp">
+			<Option target="slurmCombine"/>
+		</Unit>
+		<Unit filename="/mhome/damtp/r/mw894/diss/gnm-run/mainSlurmPrep.cpp">
+			<Option target="slurmPrep"/>
+		</Unit>
+		<Unit filename="/mhome/damtp/r/mw894/diss/gnm-run/mainSlurmRun.cpp">
+			<Option target="slurmRun"/>
+		</Unit>
+		<Unit filename="/mhome/damtp/r/mw894/diss/gnm-run/syntheticTest.cpp">
+			<Option target="syntheticTest"/>
+		</Unit>
+		<Unit filename="/mhome/damtp/r/mw894/diss/gnm-run/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>

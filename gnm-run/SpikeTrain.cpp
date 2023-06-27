@@ -40,12 +40,20 @@ SpikeTrain::SpikeTrain(std::string FILE_NAME_,
     }
 
     // Find the active electrodes
+    bool fix = false;
     for (int i = 0; i < numActiveElectrodes; ++i) {
         auto it = std::find(electrodePos.begin(), electrodePos.end(), activeElectrodePos[i]);
         if (it != electrodePos.end()) {
-            // TODO: Why would we ever hit the condition
             activeElectrodes.push_back(std::distance(electrodePos.begin(), it));
+        } else {
+            // TODO: Why would we ever hit the condition, this must be an error
+            fix = true;
         }
+    }
+
+    // TODO: This is only temp fix
+    if (fix) {
+        numActiveElectrodes--;
     }
 
     // Spike sorting

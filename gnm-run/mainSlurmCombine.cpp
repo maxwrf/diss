@@ -7,7 +7,15 @@
 #include <vector>
 
 int main() {
-    std::string inDirPath = "/Users/maxwuerfek/code/diss/gnm-run/slurm";
+    bool cluster = true;
+    std::string inDirPath;
+
+    if (cluster) {
+        inDirPath = "/store/DAMTPEGLEN/mw894/slurm";
+    } else {
+        inDirPath = "/Users/maxwuerfek/code/diss/gnm-run/slurm";
+    }
+
     std::vector<std::vector<std::vector<std::vector<double>>>> Kall;
     std::vector<std::vector<double>> paramSpace;
     std::vector<std::string> groupIds;

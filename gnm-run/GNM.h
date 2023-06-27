@@ -6,6 +6,7 @@
 #define REVOLUTION_GNM_H
 
 # include <vector>
+# include <string>
 
 class GNM {
 private:

@@ -17,7 +17,7 @@ int main() {
         outDirPath = "/store/DAMTPEGLEN/mw894/slurm";
         corrCutoff = 0.2;
         nSamples = -1;
-        nRuns = 10000;
+        nRuns = 10;
     } else {
         inDirPath = "/Users/maxwuerfek/code/diss/data/g2c_data";
         outDirPath = "/Users/maxwuerfek/code/diss/slurm";
