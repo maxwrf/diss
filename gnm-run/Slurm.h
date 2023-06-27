@@ -18,7 +18,17 @@ public:
     static void readDatFile(std::string &inPath,
                             std::vector<std::vector<double>> &A_Y,
                             std::vector<std::vector<double>> &A_init,
+                            std::vector<std::vector<double>> &D,
                             std::vector<std::vector<double>> &paramSpace);
+
+    static void saveResFile(std::string &outDirPath,
+                            std::vector<std::vector<std::vector<double>>> &Kall,
+                            std::vector<std::vector<double>> &paramSpace);
+
+    static void combineResFiles(std::string &inDirPath,
+                                std::vector<std::vector<std::vector<std::vector<double>>>> &Kall,
+                                std::vector<std::vector<double>> &paramSpace
+    );
 };
 
 

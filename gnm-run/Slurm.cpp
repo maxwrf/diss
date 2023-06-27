@@ -46,20 +46,31 @@ void Slurm::generateInputs(std::string &inDirPath,
         size_t sizeA_init = spikeData.spikeTrains[iSample].A_init.size();
         file.write(reinterpret_cast<const char *>(&sizeA_init), sizeof(sizeA_init));
 
+        size_t sizeD = spikeData.D.size();
+        file.write(reinterpret_cast<const char *>(&sizeD), sizeof(sizeD));
+
         size_t sizeParamSpace = paramSpace.size();
         file.write(reinterpret_cast<const char *>(&sizeParamSpace), sizeof(sizeParamSpace));
 
         // Write the data
         for (const auto &innerVec: spikeData.spikeTrains[iSample].A_Y) {
-            file.write(reinterpret_cast<const char *>(innerVec.data()), innerVec.size() * sizeof(double));
+            file.write(reinterpret_cast<const char *>(innerVec.data()),
+                       innerVec.size() * sizeof(double));
         }
 
         for (const auto &innerVec: spikeData.spikeTrains[iSample].A_init) {
-            file.write(reinterpret_cast<const char *>(innerVec.data()), innerVec.size() * sizeof(double));
+            file.write(reinterpret_cast<const char *>(innerVec.data()),
+                       innerVec.size() * sizeof(double));
+        }
+
+        for (const auto &innerVec: spikeData.D) {
+            file.write(reinterpret_cast<const char *>(innerVec.data()),
+                       innerVec.size() * sizeof(double));
         }
 
         for (const auto &innerVec: paramSpace) {
-            file.write(reinterpret_cast<const char *>(innerVec.data()), innerVec.size() * sizeof(double));
+            file.write(reinterpret_cast<const char *>(innerVec.data()),
+                       innerVec.size() * sizeof(double));
         }
     }
 };
@@ -67,6 +78,7 @@ void Slurm::generateInputs(std::string &inDirPath,
 void Slurm::readDatFile(std::string &inPath,
                         std::vector<std::vector<double>> &A_Y,
                         std::vector<std::vector<double>> &A_init,
+                        std::vector<std::vector<double>> &D,
                         std::vector<std::vector<double>> &paramSpace
 
 ) {
@@ -86,6 +98,10 @@ void Slurm::readDatFile(std::string &inPath,
     file.read(reinterpret_cast<char *>(&sizeA_init), sizeof(sizeA_init));
     A_init.resize(sizeA_init);
 
+    size_t sizeD;
+    file.read(reinterpret_cast<char *>(&sizeD), sizeof(sizeD));
+    D.resize(sizeD);
+
     size_t sizeParamSpace;
     file.read(reinterpret_cast<char *>(&sizeParamSpace), sizeof(sizeParamSpace));
     paramSpace.resize(sizeParamSpace);
@@ -103,9 +119,109 @@ void Slurm::readDatFile(std::string &inPath,
         file.read(reinterpret_cast<char *>(row.data()), sizeRow * sizeof(double));
     }
 
-    for (auto &row: paramSpace) {
-        size_t sizeRow = 2;
+    for (auto &row: D) {
+        size_t sizeRow = sizeD; //square
         row.resize(sizeRow);
         file.read(reinterpret_cast<char *>(row.data()), sizeRow * sizeof(double));
+    }
+
+    for (auto &row: paramSpace) {
+        size_t sizeRow = 2; // Fixed eta and gamma
+        row.resize(sizeRow);
+        file.read(reinterpret_cast<char *>(row.data()), sizeRow * sizeof(double));
+    }
+};
+
+void Slurm::saveResFile(std::string &outDirPath,
+                        std::vector<std::vector<std::vector<double>>> &Kall,
+                        std::vector<std::vector<double>> &paramSpace) {
+    // Open the file
+    std::ofstream file(outDirPath, std::ios::binary);
+    if (!file.is_open()) {
+        std::cout << "Failed to open file for saving vectors" << std::endl;
+        return;
+    }
+
+    // Write the vector sizes
+    size_t size1Kall = Kall.size();
+    size_t size2Kall = Kall[0].size();
+    size_t size3Kall = Kall[0][0].size();
+
+    file.write(reinterpret_cast<const char *>(&size1Kall), sizeof(size_t));
+    file.write(reinterpret_cast<const char *>(&size2Kall), sizeof(size_t));
+    file.write(reinterpret_cast<const char *>(&size3Kall), sizeof(size_t));
+
+    size_t size1paramSpace = paramSpace.size();
+    size_t size2paramSpace = paramSpace[0].size();
+
+    file.write(reinterpret_cast<const char *>(&size1paramSpace), sizeof(size_t));
+    file.write(reinterpret_cast<const char *>(&size2paramSpace), sizeof(size_t));
+
+    // Write the data
+    for (size_t i = 0; i < size1Kall; i++) {
+        for (size_t j = 0; j < size2Kall; j++) {
+            file.write(reinterpret_cast<const char *>(Kall[i][j].data()), size3Kall * sizeof(double));
+        }
+    }
+
+    for (size_t i = 0; i < size1paramSpace; i++) {
+        file.write(reinterpret_cast<const char *>(paramSpace[i].data()), size2paramSpace * sizeof(double));
+    }
+
+    file.close();
+}
+
+void Slurm::combineResFiles(std::string &inDirPath,
+                            std::vector<std::vector<std::vector<std::vector<double>>>> &Kall,
+                            std::vector<std::vector<double>> &paramSpace) {
+    // read in the files
+    int filesRead = 0;
+    for (const auto &entry: std::filesystem::directory_iterator(inDirPath)) {
+        if (std::filesystem::is_regular_file(entry.path())) {
+            std::string fName = entry.path().filename().string();
+            if (fName.substr(fName.find_last_of(".") + 1) == "res") {
+                // Open the file
+                std::ifstream file(inDirPath + "/" + fName, std::ios::binary);
+
+                // Prepare
+                std::vector<std::vector<std::vector<double>>> KallSample;
+
+                // Read in Kall dimensions and resize the vector
+                size_t size1Kall, size2Kall, size3Kall;
+                file.read(reinterpret_cast<char *>(&size1Kall), sizeof(size_t));
+                file.read(reinterpret_cast<char *>(&size2Kall), sizeof(size_t));
+                file.read(reinterpret_cast<char *>(&size3Kall), sizeof(size_t));
+
+                KallSample.resize(
+                        size1Kall, std::vector<std::vector<double>>(
+                                size2Kall, std::vector<double>(size3Kall)));
+
+                // Read in all param dimensions and resize the vector
+                size_t size1paramSpace, size2paramSpace;
+                file.read(reinterpret_cast<char *>(&size1paramSpace), sizeof(size_t));
+                file.read(reinterpret_cast<char *>(&size2paramSpace), sizeof(size_t));
+
+                paramSpace.resize(size1paramSpace, std::vector<double>(size2paramSpace));
+
+
+                // Read in the Kall data
+                for (size_t i = 0; i < size1Kall; i++) {
+                    for (size_t j = 0; j < size2Kall; j++) {
+                        file.read(reinterpret_cast<char *>(KallSample[i][j].data()), size3Kall * sizeof(double));
+                    }
+                }
+
+                // Read in the ParamSpace
+                if (filesRead == 0) {
+                    for (size_t i = 0; i < size1paramSpace; i++) {
+                        file.read(reinterpret_cast<char *>(paramSpace[i].data()), size2paramSpace * sizeof(double));
+                    }
+                }
+
+                file.close();
+                Kall.push_back(KallSample);
+                filesRead++;
+            }
+        }
     }
 };

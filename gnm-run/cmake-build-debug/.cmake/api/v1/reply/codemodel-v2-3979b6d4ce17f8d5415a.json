@@ -21,7 +21,8 @@
 						3,
 						4,
 						5,
-						6
+						6,
+						7
 					]
 				}
 			],
@@ -42,7 +43,8 @@
 						3,
 						4,
 						5,
-						6
+						6,
+						7
 					]
 				}
 			],
@@ -51,35 +53,42 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "main::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-main-Debug-d731bee241d71ecbae55.json",
+					"jsonFile" : "target-main-Debug-ee212d4b9f2709f21c1d.json",
 					"name" : "main",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 0,
+					"id" : "slurmCombine::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-slurmCombine-Debug-d9ae8bbdef71bedaa25c.json",
+					"name" : "slurmCombine",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
 					"id" : "slurmPrep::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-slurmPrep-Debug-a65f9c725e889989dc92.json",
+					"jsonFile" : "target-slurmPrep-Debug-266a6224636bfd96cef0.json",
 					"name" : "slurmPrep",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 0,
 					"id" : "slurmRun::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-slurmRun-Debug-fcdc3e0a068fd0335c57.json",
+					"jsonFile" : "target-slurmRun-Debug-6900eb4eecbb983b80e4.json",
 					"name" : "slurmRun",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 0,
 					"id" : "spikeSetTest::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-spikeSetTest-Debug-763dab4d3c6154a5a256.json",
+					"jsonFile" : "target-spikeSetTest-Debug-f32c49325179e19de5aa.json",
 					"name" : "spikeSetTest",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 0,
 					"id" : "spikeTrainTest::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-spikeTrainTest-Debug-1630241e8b5056f09fac.json",
+					"jsonFile" : "target-spikeTrainTest-Debug-9a4ac2c714a04a542a77.json",
 					"name" : "spikeTrainTest",
 					"projectIndex" : 0
 				},
@@ -93,7 +102,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "syntheticTest::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-syntheticTest-Debug-26baf1b339408754085f.json",
+					"jsonFile" : "target-syntheticTest-Debug-9a677ed5dfdfc3afacff.json",
 					"name" : "syntheticTest",
 					"projectIndex" : 0
 				}

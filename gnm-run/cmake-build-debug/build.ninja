@@ -415,6 +415,75 @@ build slurmRun: CXX_EXECUTABLE_LINKER__slurmRun_Debug CMakeFiles/slurmRun.dir/ma
   TARGET_FILE = slurmRun
   TARGET_PDB = slurmRun.dbg
 
+# =============================================================================
+# Object build statements for EXECUTABLE target slurmCombine
+
+
+#############################################
+# Order-only phony target for slurmCombine
+
+build cmake_object_order_depends_target_slurmCombine: phony || CMakeFiles/slurmCombine.dir
+
+build CMakeFiles/slurmCombine.dir/mainSlurmCombine.cpp.o: CXX_COMPILER__slurmCombine_Debug /Users/maxwuerfek/code/diss/gnm-run/mainSlurmCombine.cpp || cmake_object_order_depends_target_slurmCombine
+  DEP_FILE = CMakeFiles/slurmCombine.dir/mainSlurmCombine.cpp.o.d
+  FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.6 -fcolor-diagnostics -std=gnu++17
+  INCLUDES = -I/opt/homebrew/include
+  OBJECT_DIR = CMakeFiles/slurmCombine.dir
+  OBJECT_FILE_DIR = CMakeFiles/slurmCombine.dir
+
+build CMakeFiles/slurmCombine.dir/Slurm.cpp.o: CXX_COMPILER__slurmCombine_Debug /Users/maxwuerfek/code/diss/gnm-run/Slurm.cpp || cmake_object_order_depends_target_slurmCombine
+  DEP_FILE = CMakeFiles/slurmCombine.dir/Slurm.cpp.o.d
+  FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.6 -fcolor-diagnostics -std=gnu++17
+  INCLUDES = -I/opt/homebrew/include
+  OBJECT_DIR = CMakeFiles/slurmCombine.dir
+  OBJECT_FILE_DIR = CMakeFiles/slurmCombine.dir
+
+build CMakeFiles/slurmCombine.dir/GNM.cpp.o: CXX_COMPILER__slurmCombine_Debug /Users/maxwuerfek/code/diss/gnm-run/GNM.cpp || cmake_object_order_depends_target_slurmCombine
+  DEP_FILE = CMakeFiles/slurmCombine.dir/GNM.cpp.o.d
+  FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.6 -fcolor-diagnostics -std=gnu++17
+  INCLUDES = -I/opt/homebrew/include
+  OBJECT_DIR = CMakeFiles/slurmCombine.dir
+  OBJECT_FILE_DIR = CMakeFiles/slurmCombine.dir
+
+build CMakeFiles/slurmCombine.dir/SpikeSet.cpp.o: CXX_COMPILER__slurmCombine_Debug /Users/maxwuerfek/code/diss/gnm-run/SpikeSet.cpp || cmake_object_order_depends_target_slurmCombine
+  DEP_FILE = CMakeFiles/slurmCombine.dir/SpikeSet.cpp.o.d
+  FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.6 -fcolor-diagnostics -std=gnu++17
+  INCLUDES = -I/opt/homebrew/include
+  OBJECT_DIR = CMakeFiles/slurmCombine.dir
+  OBJECT_FILE_DIR = CMakeFiles/slurmCombine.dir
+
+build CMakeFiles/slurmCombine.dir/SpikeTrain.cpp.o: CXX_COMPILER__slurmCombine_Debug /Users/maxwuerfek/code/diss/gnm-run/SpikeTrain.cpp || cmake_object_order_depends_target_slurmCombine
+  DEP_FILE = CMakeFiles/slurmCombine.dir/SpikeTrain.cpp.o.d
+  FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.6 -fcolor-diagnostics -std=gnu++17
+  INCLUDES = -I/opt/homebrew/include
+  OBJECT_DIR = CMakeFiles/slurmCombine.dir
+  OBJECT_FILE_DIR = CMakeFiles/slurmCombine.dir
+
+build CMakeFiles/slurmCombine.dir/STTC.cpp.o: CXX_COMPILER__slurmCombine_Debug /Users/maxwuerfek/code/diss/gnm-run/STTC.cpp || cmake_object_order_depends_target_slurmCombine
+  DEP_FILE = CMakeFiles/slurmCombine.dir/STTC.cpp.o.d
+  FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.6 -fcolor-diagnostics -std=gnu++17
+  INCLUDES = -I/opt/homebrew/include
+  OBJECT_DIR = CMakeFiles/slurmCombine.dir
+  OBJECT_FILE_DIR = CMakeFiles/slurmCombine.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target slurmCombine
+
+
+#############################################
+# Link the executable slurmCombine
+
+build slurmCombine: CXX_EXECUTABLE_LINKER__slurmCombine_Debug CMakeFiles/slurmCombine.dir/mainSlurmCombine.cpp.o CMakeFiles/slurmCombine.dir/Slurm.cpp.o CMakeFiles/slurmCombine.dir/GNM.cpp.o CMakeFiles/slurmCombine.dir/SpikeSet.cpp.o CMakeFiles/slurmCombine.dir/SpikeTrain.cpp.o CMakeFiles/slurmCombine.dir/STTC.cpp.o
+  FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.6
+  LINK_LIBRARIES = -Wl,-rpath,/opt/homebrew/lib  -lhdf5  -lhdf5_hl  -lhdf5_cpp
+  LINK_PATH = -L/opt/homebrew/lib
+  OBJECT_DIR = CMakeFiles/slurmCombine.dir
+  POST_BUILD = :
+  PRE_LINK = :
+  TARGET_FILE = slurmCombine
+  TARGET_PDB = slurmCombine.dbg
+
 
 #############################################
 # Utility command for edit_cache
@@ -449,7 +518,7 @@ build rebuild_cache: phony CMakeFiles/rebuild_cache.util
 #############################################
 # Folder: /Users/maxwuerfek/code/diss/gnm-run/cmake-build-debug
 
-build all: phony main spikeTrainTest spikeSetTest sttcTest syntheticTest slurmPrep slurmRun
+build all: phony main spikeTrainTest spikeSetTest sttcTest syntheticTest slurmPrep slurmRun slurmCombine
 
 # =============================================================================
 # Built-in targets

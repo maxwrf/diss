@@ -9,7 +9,7 @@ int main() {
     std::string outDirPath = "/Users/maxwuerfek/code/diss/slurm";
     double corrCutoff = 0.2;
     int nSamples = -1;
-    int nRuns = 1000;
+    int nRuns = 10;
 
     Slurm::generateInputs(inDirPath, outDirPath, corrCutoff, nSamples, nRuns);
 

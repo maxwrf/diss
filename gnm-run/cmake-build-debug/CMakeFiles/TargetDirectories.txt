@@ -5,5 +5,6 @@
 /Users/maxwuerfek/code/diss/gnm-run/cmake-build-debug/CMakeFiles/syntheticTest.dir
 /Users/maxwuerfek/code/diss/gnm-run/cmake-build-debug/CMakeFiles/slurmPrep.dir
 /Users/maxwuerfek/code/diss/gnm-run/cmake-build-debug/CMakeFiles/slurmRun.dir
+/Users/maxwuerfek/code/diss/gnm-run/cmake-build-debug/CMakeFiles/slurmCombine.dir
 /Users/maxwuerfek/code/diss/gnm-run/cmake-build-debug/CMakeFiles/edit_cache.dir
 /Users/maxwuerfek/code/diss/gnm-run/cmake-build-debug/CMakeFiles/rebuild_cache.dir
