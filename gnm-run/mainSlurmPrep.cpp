@@ -6,26 +6,39 @@
 # include <string>
 
 int main() {
-    bool cluster = false;
+    bool cluster = true;
+    int dSet = 1;
+
+    std::vector<std::string> dSets = {
+            "Charlesworth2015",
+            "Xu2011"
+    };
 
     std::string inDirPath, outDirPath;
     double corrCutoff;
     int nSamples, nRuns;
 
+
     if (cluster) {
-        inDirPath = "/store/DAMTPEGLEN/mw894/g2c_data";
-        outDirPath = "/store/DAMTPEGLEN/mw894/slurm";
+        inDirPath = "/store/DAMTPEGLEN/mw894/data/" + dSets[dSet];
+        outDirPath = "/store/DAMTPEGLEN/mw894/slurm/" + dSets[dSet];
         corrCutoff = 0.2;
         nSamples = -1;
-        nRuns = 10000;
+        nRuns = 10;
     } else {
-        inDirPath = "/Users/maxwuerfek/code/diss/data/g2c_data";
-        outDirPath = "/Users/maxwuerfek/code/diss/slurm";
+        inDirPath = "/Users/maxwuerfek/code/diss/data/"  + dSets[dSet];
+        outDirPath = "/Users/maxwuerfek/code/diss/slurm/" + dSets[dSet];
         corrCutoff = 0.2;
         nSamples = -1;
         nRuns = 10;
     }
 
-    Slurm::generateInputs(inDirPath, outDirPath, corrCutoff, nSamples, nRuns);
+    Slurm::generateInputs(inDirPath,
+                          outDirPath,
+                          corrCutoff,
+                          nSamples,
+                          nRuns,
+                          dSet
+                          );
     return 0;
 }

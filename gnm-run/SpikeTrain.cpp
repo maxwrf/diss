@@ -13,13 +13,14 @@
 SpikeTrain::SpikeTrain(std::string FILE_NAME_,
                        std::vector<std::vector<double>> &electrodePos,
                        int numElectrodes,
-                       double sttcCutoff
+                       double sttcCutoff,
+                       int dSet
 ) {
     /**
      * This is the constructor for the spike train reading from HD5 specified in file name
      */
     FILE_NAME = FILE_NAME_;
-    getGroupId();
+    getGroupId(dSet);
 
     spikes = readDoubleDataset(FILE_NAME, "spikes");
     spikeCounts = readDoubleDataset(FILE_NAME, "sCount");
@@ -153,14 +154,20 @@ std::string SpikeTrain::readByteString(std::string file_name,
     return *strs;
 }
 
-void SpikeTrain::getGroupId() {
+void SpikeTrain::getGroupId(int dSet) {
     /**
      * The group ID needs to identify a subset of the HD5 spike trains in the provided directory
      * Will require specification for different spike train sets
      */
-    int div = (int) readDoubleDataset(FILE_NAME, "meta/age")[0];
-    std::string region = readByteString(FILE_NAME, "meta/region");
-    groupId = region + std::to_string(div);
+     if (dSet == 0) {
+         int div = (int) readDoubleDataset(FILE_NAME, "meta/age")[0];
+         std::string region = readByteString(FILE_NAME, "meta/region");
+         groupId = region + std::to_string(div);
+     } else if (dSet == 1) {
+         int div = (int) readDoubleDataset(FILE_NAME, "meta/age")[0];
+         groupId = std::to_string(div);
+     }
+
 }
 
 

@@ -14,7 +14,8 @@ public:
                                std::string &outDirPath,
                                double corrCutoff,
                                int nSamples,
-                               int nRuns);
+                               int nRuns,
+                               int dSet);
 
     static void readDatFile(std::string &inPath,
                             std::vector<std::vector<double>> &A_Y,

@@ -25,7 +25,7 @@ public:
     std::vector<std::vector<double>> electrodePos;
     std::vector<std::vector<double>> D;
 
-    SpikeSet(std::string path_, int nSamples);
+    SpikeSet(std::string path_, int nSamples, int dSet);
 };
 
 

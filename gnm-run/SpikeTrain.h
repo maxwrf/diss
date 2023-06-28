@@ -10,7 +10,7 @@
 
 class SpikeTrain {
 private:
-    void getGroupId();
+    void getGroupId(int dSet);
 
 public:
     std::string FILE_NAME;
@@ -41,7 +41,8 @@ public:
     SpikeTrain(std::string FILE_NAME,
                std::vector<std::vector<double>> &electrodePos,
                int numElectrodes,
-               double sttcCutoff
+               double sttcCutoff,
+               int dSet
     );
 };
 

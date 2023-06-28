@@ -7,7 +7,7 @@
 #include <cmath>
 #include "SpikeSet.h"
 
-SpikeSet::SpikeSet(std::string path_, int nSamples) {
+SpikeSet::SpikeSet(std::string path_, int nSamples, int dSet) {
     path = path_;
 
     // set the electrodes and distance
@@ -56,7 +56,8 @@ SpikeSet::SpikeSet(std::string path_, int nSamples) {
                 spikeTrains.push_back(SpikeTrain(path + "/" + f,
                                                  electrodePos,
                                                  numElectrodes,
-                                                 sttcCutoff));
+                                                 sttcCutoff,
+                                                 dSet));
 
                 samplesRead++;
             }
