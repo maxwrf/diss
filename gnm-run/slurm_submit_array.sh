@@ -1,4 +1,7 @@
 #!/bin/sh
+
+cd /store/DAMTPEGLEN/mw894/slurm/
+
 # time in minutes here.
 #SBATCH --time=1
 #SBATCH --ntasks=1

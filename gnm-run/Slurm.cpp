@@ -10,6 +10,7 @@
 #include <fstream>
 #include <vector>
 #include <map>
+#include <iomanip>
 
 void Slurm::generateInputs(std::string &inDirPath,
                            std::string &outDirPath,
@@ -33,7 +34,9 @@ void Slurm::generateInputs(std::string &inDirPath,
 
     for (int iSample = 0; iSample < spikeData.spikeTrains.size(); ++iSample) {
         // save the results
-        std::string n = std::to_string(iSample);
+        std::ostringstream oss;
+        oss << std::setw(3) << std::setfill('0') << iSample;
+        std::string n = oss.str();
         std::ofstream file(outDirPath + "/sample_" + n + ".dat", std::ios::binary);
         if (!file.is_open()) {
             std::cout << "Failed to open file for saving vectors" << std::endl;
