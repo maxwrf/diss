@@ -1,1 +1,0 @@
-/bin/g++-9 -g CMakeFiles/syntheticTest.dir/syntheticTest.cpp.o CMakeFiles/syntheticTest.dir/SpikeTrain.cpp.o CMakeFiles/syntheticTest.dir/STTC.cpp.o CMakeFiles/syntheticTest.dir/GNM.cpp.o -o syntheticTest   -L/opt/homebrew/lib  -Wl,-rpath,/opt/homebrew/lib -lhdf5 -lhdf5_hl -lhdf5_cpp 

@@ -11,6 +11,7 @@
 #include <vector>
 #include <map>
 #include <iomanip>
+#include <sstream>
 
 void Slurm::generateInputs(std::string &inDirPath,
                            std::string &outDirPath,

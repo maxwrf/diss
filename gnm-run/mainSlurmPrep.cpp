@@ -6,7 +6,7 @@
 # include <string>
 
 int main() {
-    bool cluster = true;
+    bool cluster = false;
 
     std::string inDirPath, outDirPath;
     double corrCutoff;

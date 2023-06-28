@@ -7,7 +7,7 @@
 #include <vector>
 
 int main() {
-    bool cluster = true;
+    bool cluster = false;
     std::string inDirPath;
 
     if (cluster) {
