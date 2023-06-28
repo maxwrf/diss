@@ -5,32 +5,37 @@
 #include "Slurm.h"
 # include <string>
 
+// This is required for the key
+std::vector<std::string> dSets = {
+        "Charlesworth2015",
+        "Hennig2011",
+        "Demas2006"
+};
+
+// Type of array
+std::vector<std::string> meaTypes = {
+        "MCS_8x8_200um",
+        "MCS_8x8_100um"
+};
+
 int main() {
-    bool cluster = true;
-    int dSet = 1;
+    // User required parameters
+    bool cluster = false;
+    int dSet = 2;
+    int meaType = 1;
+    double corrCutoff = 0.2;
+    int nSamples = -1;
+    int nRuns = 10;
 
-    std::vector<std::string> dSets = {
-            "Charlesworth2015",
-            "Xu2011"
-    };
-
+    // Set the paths
     std::string inDirPath, outDirPath;
-    double corrCutoff;
-    int nSamples, nRuns;
-
-
     if (cluster) {
         inDirPath = "/store/DAMTPEGLEN/mw894/data/" + dSets[dSet];
         outDirPath = "/store/DAMTPEGLEN/mw894/slurm/" + dSets[dSet];
-        corrCutoff = 0.2;
-        nSamples = -1;
-        nRuns = 10;
+
     } else {
-        inDirPath = "/Users/maxwuerfek/code/diss/data/"  + dSets[dSet];
+        inDirPath = "/Users/maxwuerfek/code/diss/data/" + dSets[dSet];
         outDirPath = "/Users/maxwuerfek/code/diss/slurm/" + dSets[dSet];
-        corrCutoff = 0.2;
-        nSamples = -1;
-        nRuns = 10;
     }
 
     Slurm::generateInputs(inDirPath,
@@ -38,7 +43,9 @@ int main() {
                           corrCutoff,
                           nSamples,
                           nRuns,
-                          dSet
-                          );
+                          dSet,
+                          meaType
+
+    );
     return 0;
 }

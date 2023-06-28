@@ -13,19 +13,29 @@ class SpikeSet {
 private:
     void getDistanceMatrix();
 
+    void getElectrodePos();
+
 public:
     std::string path;
     std::vector<std::string> hd5FileNames;
     std::vector<SpikeTrain> spikeTrains;
 
-    std::vector<std::string> electrodes;
+    double sttcCutoff;
+
+    int meaType;
     int electrodeDist;
     int numElectrodes;
-    double sttcCutoff;
+    std::vector<int> electrodes;
     std::vector<std::vector<double>> electrodePos;
     std::vector<std::vector<double>> D;
 
-    SpikeSet(std::string path_, int nSamples, int dSet);
+    SpikeSet(std::string path_,
+             int nSamples,
+             int dSet,
+             double corrCutoff,
+             int meaType_);
+
+
 };
 
 

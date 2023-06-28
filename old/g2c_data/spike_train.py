@@ -1,7 +1,7 @@
 import numpy as np
 import h5py
 import random
-from STTC import tiling
+#from STTC import tiling
 
 
 class SpikeTrain():
@@ -20,13 +20,13 @@ class SpikeTrain():
             self.electrodes = file['names'][()]
             self.array = file['array'][()]
 
-    def get_sttc(self, dt=0.05):
-        self.sttc = tiling(
-            self.spike_data,
-            np.cumsum(np.insert(self.spike_counts, 0, 0)),
-            self.recording_time,
-            0.05
-        )
+    # def get_sttc(self, dt=0.05):
+    #     self.sttc = tiling(
+    #         self.spike_data,
+    #         np.cumsum(np.insert(self.spike_counts, 0, 0)),
+    #         self.recording_time,
+    #         0.05
+    #     )
 
     def get_A(self, mea_electrodes: np.array, sttc_cutoff):
         self.elelectrodes = np.vectorize(

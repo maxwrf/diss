@@ -13,7 +13,7 @@ int main() {
     if (cluster) {
         inDirPath = "/store/DAMTPEGLEN/mw894/slurm";
     } else {
-        inDirPath = "/Users/maxwuerfek/code/diss/gnm-run/slurm";
+        inDirPath = "/Users/maxwuerfek/code/diss/slurm/Charlesworth2015";
     }
 
     std::vector<std::vector<std::vector<std::vector<double>>>> Kall;

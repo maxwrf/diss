@@ -4,7 +4,7 @@ import h5py
 import os
 import numpy as np
 import pandas as pd
-from g2c_data.spike_train import SpikeTrain
+from spike_train import SpikeTrain
 from scipy.spatial.distance import cdist
 
 
@@ -18,8 +18,8 @@ class G2C_data():
         self.mea_file_df = pd.DataFrame([self.__sort_data(f)
                                          for f in self.mea_data_files])
 
-        self.mea_file_df['region'] = self.mea_file_df['region'].apply(
-            lambda s: s.decode())
+        # self.mea_file_df['region'] = self.mea_file_df['region'].apply(
+        # lambda s: s.decode())
 
     def __make_meafile_cache(self) -> list:
         """
@@ -39,19 +39,20 @@ class G2C_data():
         """
         with h5py.File(file_name, 'r') as file:
             file_age = file['meta/age'][()]
-            file_region = file['meta/region'][()]
+            # file_region = file['meta/region'][()]
 
         return {'file': str(file_name),
-                'age': file_age[0],
-                'region': file_region[0]}
+                'age': file_age[0]}
+        # 'region': file_region[0]}
 
     def __get_spikes(self) -> list:
         """
-        Given an age and a region, computes reads the corresponding spikes and 
+        Given an age and a region, computes reads the corresponding spikes and
         returns a list of the spike data
         """
-        mea_file_subset = self.mea_file_df[(self.mea_file_df['age'].isin(self.ages))
-                                           & (self.mea_file_df['region'].isin(self.regions))].copy()
+        mea_file_subset = self.mea_file_df[(
+            self.mea_file_df['age'].isin(self.ages))].copy()
+#                                           & (self.mea_file_df['region'].isin(self.regions))].copy()
 
         # add column for easy spike data retrieval
         mea_file_subset['spike_idx'] = range(len(mea_file_subset))
@@ -92,3 +93,9 @@ class G2C_data():
                        self.electrode_pos, metric='euclidean')
 
         return 0
+
+
+if __name__ == "__main__":
+    dir = "/Users/maxwuerfek/code/diss/data/Demas2006"
+    g = G2C_data(dir)
+    g.create_spike_data()

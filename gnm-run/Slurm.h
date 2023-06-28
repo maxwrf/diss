@@ -15,7 +15,8 @@ public:
                                double corrCutoff,
                                int nSamples,
                                int nRuns,
-                               int dSet);
+                               int dSet,
+                               int meaType);
 
     static void readDatFile(std::string &inPath,
                             std::vector<std::vector<double>> &A_Y,

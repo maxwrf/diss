@@ -7,38 +7,19 @@
 #include <cmath>
 #include "SpikeSet.h"
 
-SpikeSet::SpikeSet(std::string path_, int nSamples, int dSet) {
+SpikeSet::SpikeSet(std::string path_,
+                   int nSamples,
+                   int dSet,
+                   double corrCutoff,
+                   int meaType_) {
     path = path_;
+    sttcCutoff = corrCutoff;
+    meaType = meaType_;
 
-    // set the electrodes and distance
-    electrodes = {
-            "ch_12", "ch_13", "ch_14", "ch_16", "ch_17", "ch_21", "ch_22",
-            "ch_23", "ch_24", "ch_25", "ch_26", "ch_27", "ch_28", "ch_31",
-            "ch_32", "ch_33", "ch_34", "ch_35", "ch_36", "ch_37", "ch_38",
-            "ch_41", "ch_42", "ch_43", "ch_44", "ch_45", "ch_46", "ch_47",
-            "ch_48", "ch_51", "ch_52", "ch_53", "ch_54", "ch_55", "ch_56",
-            "ch_57", "ch_58", "ch_61", "ch_62", "ch_63", "ch_64", "ch_65",
-            "ch_66", "ch_67", "ch_68", "ch_71", "ch_72", "ch_73", "ch_74",
-            "ch_75", "ch_76", "ch_77", "ch_78", "ch_82", "ch_83", "ch_84",
-            "ch_85", "ch_86", "ch_87"
-    };
-
+    // Get the electrode positions for this MEA type
+    getElectrodePos();
 
     // Compute the distance matrix
-    electrodeDist = 200;
-    sttcCutoff = 0.2;
-    numElectrodes = electrodes.size();
-
-    electrodePos = std::vector<std::vector<double>>(
-            numElectrodes,
-            std::vector<double>(2)
-    );
-
-    D = std::vector<std::vector<double>>(
-            electrodes.size(),
-            std::vector<double>(electrodes.size())
-    );
-
     getDistanceMatrix();
 
     // read in the files
@@ -65,13 +46,53 @@ SpikeSet::SpikeSet(std::string path_, int nSamples, int dSet) {
     }
 }
 
-void SpikeSet::getDistanceMatrix() {
-    // Compute electrode positions
-    for (int i = 0; i < numElectrodes; ++i) {
-        electrodePos[i][0] = (electrodes[i][electrodes[i].length() - 2] - '0') * electrodeDist;
-        electrodePos[i][1] = (9 - (electrodes[i][electrodes[i].length() - 1] - '0')) * electrodeDist;
+void SpikeSet::getElectrodePos() {
+    std::vector<int> excludeElectrodes;
+    int rowNumElectrodes;
+    bool yFromTopRight = false;
+    switch (meaType) {
+        case 0: // MCS_8x8_200um
+            rowNumElectrodes = 8;
+            electrodeDist = 200;
+            yFromTopRight = true;
+            excludeElectrodes = {11, 18, 81, 88, 15};
+            break;
+
+        case 1: // MCS_8x8_100um
+            rowNumElectrodes = 8;
+            electrodeDist = 100;
+            excludeElectrodes = {11, 18, 81, 88};
+            break;
     }
 
+    // Compute the electrode positions
+    numElectrodes = rowNumElectrodes * rowNumElectrodes - excludeElectrodes.size();
+    electrodePos = std::vector<std::vector<double>>(numElectrodes, std::vector<double>(2));
+    electrodes = std::vector<int>(numElectrodes);
+    
+    int electrodeNum = 0;
+    for (int i = 1; i < (rowNumElectrodes + 1); ++i) {
+        for (int j = 1; j < (rowNumElectrodes + 1); ++j) {
+            int electrode = i * 10 + j;
+            if (std::find(excludeElectrodes.begin(), excludeElectrodes.end(), electrode) == excludeElectrodes.end()) {
+                electrodes[electrodeNum] = electrode;
+                electrodePos[electrodeNum][0] = i * electrodeDist;
+                if (yFromTopRight) {
+                    electrodePos[electrodeNum][1] = ((rowNumElectrodes + 1) - j) * electrodeDist;
+                } else {
+                    electrodePos[electrodeNum][1] = j * electrodeDist;
+                }
+                electrodeNum++;
+            }
+        }
+    }
+}
+
+void SpikeSet::getDistanceMatrix() {
+    D = std::vector<std::vector<double>>(
+            electrodes.size(),
+            std::vector<double>(electrodes.size())
+    );
     // Compute distances across electrodes
     for (int i = 0; i < numElectrodes; ++i) {
         for (int j = 0; j < numElectrodes; ++j) {

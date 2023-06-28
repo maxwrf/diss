@@ -25,7 +25,7 @@ SpikeTrain::SpikeTrain(std::string FILE_NAME_,
     spikes = readDoubleDataset(FILE_NAME, "spikes");
     spikeCounts = readDoubleDataset(FILE_NAME, "sCount");
     numActiveElectrodes = spikeCounts.size();
-    recordingTime = readDoubleDataset(FILE_NAME, "recordingtime");
+    recordingTime = {0, readDoubleDataset(FILE_NAME, "/summary/duration")[0]};
 
 
     // Get the electrode Positions
@@ -159,14 +159,14 @@ void SpikeTrain::getGroupId(int dSet) {
      * The group ID needs to identify a subset of the HD5 spike trains in the provided directory
      * Will require specification for different spike train sets
      */
-     if (dSet == 0) {
-         int div = (int) readDoubleDataset(FILE_NAME, "meta/age")[0];
-         std::string region = readByteString(FILE_NAME, "meta/region");
-         groupId = region + std::to_string(div);
-     } else if (dSet == 1) {
-         int div = (int) readDoubleDataset(FILE_NAME, "meta/age")[0];
-         groupId = std::to_string(div);
-     }
+    if (dSet == 0) {
+        int div = (int) readDoubleDataset(FILE_NAME, "meta/age")[0];
+        std::string region = readByteString(FILE_NAME, "meta/region");
+        groupId = region + std::to_string(div);
+    } else if (dSet == 1) {
+        int div = (int) readDoubleDataset(FILE_NAME, "meta/age")[0];
+        groupId = std::to_string(div);
+    }
 
 }
 
