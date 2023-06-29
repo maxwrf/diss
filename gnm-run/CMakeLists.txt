@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.25)
 project(gnm-run)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 
 add_executable(main main.cpp SpikeSet.cpp SpikeSet.h SpikeTrain.cpp SpikeTrain.h STTC.cpp STTC.h GNM.cpp GNM.h)
 add_executable(spikeTrainTest SpikeTrain.cpp SpikeTrain.h STTC.cpp STTC.h)

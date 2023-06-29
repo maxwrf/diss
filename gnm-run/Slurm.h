@@ -16,7 +16,8 @@ public:
                                int nSamples,
                                int nRuns,
                                int dSet,
-                               int meaType);
+                               int meaType,
+                               double dt);
 
     static void readDatFile(std::string &inPath,
                             std::vector<std::vector<double>> &A_Y,

@@ -32,6 +32,7 @@ public:
     SpikeSet(std::string path_,
              int nSamples,
              int dSet,
+             double dt,
              double corrCutoff,
              int meaType_);
 

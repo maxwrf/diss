@@ -8,11 +8,14 @@
 #include <H5Cpp.h>
 #include <vector>
 #include <cassert>
-#include <algorithm>
+#include <iostream>
+#include <set>
 
 SpikeTrain::SpikeTrain(std::string FILE_NAME_,
                        std::vector<std::vector<double>> &electrodePos,
+                       std::vector<int> &electrodes,
                        int numElectrodes,
+                       double dt,
                        double sttcCutoff,
                        int dSet
 ) {
@@ -25,45 +28,26 @@ SpikeTrain::SpikeTrain(std::string FILE_NAME_,
     spikes = readDoubleDataset(FILE_NAME, "spikes");
     spikeCounts = readDoubleDataset(FILE_NAME, "sCount");
     numActiveElectrodes = spikeCounts.size();
-    recordingTime = {0, readDoubleDataset(FILE_NAME, "/summary/duration")[0]};
-
-
-    // Get the electrode Positions
-    std::vector<double> temp = readDoubleDataset(FILE_NAME, "epos");
-    activeElectrodePos = std::vector<std::vector<double>>(
-            numActiveElectrodes,
-            std::vector<double>(2)
-    );
-    for (int i = 0; i < numActiveElectrodes; ++i) {
-        for (int j = 0; j < 2; ++j) {
-            activeElectrodePos[i][j] = temp[i + numActiveElectrodes * j];
-        }
-    }
-
-    // Find the active electrodes
-    bool fix = false;
-    for (int i = 0; i < numActiveElectrodes; ++i) {
-        auto it = std::find(electrodePos.begin(), electrodePos.end(), activeElectrodePos[i]);
-        if (it != electrodePos.end()) {
-            activeElectrodes.push_back(std::distance(electrodePos.begin(), it));
-        } else {
-            // TODO: Why would we ever hit the condition, this must be an error
-            fix = true;
-        }
-    }
-
-    // TODO: This is only temp fix
-    if (fix) {
-        numActiveElectrodes--;
-    }
+    recordingTime = {*std::min_element(spikes.begin(), spikes.end()),
+                     *std::max_element(spikes.begin(), spikes.end())
+    };
 
     // Spike sorting
-    sttc = STTC::tiling(0.05,
+    sttc = STTC::tiling(dt,
                         recordingTime,
                         spikes,
                         spikeCounts
     );
 
+    // Get the active electrodes names and indices
+    activeElectrodeNames = readByteStringDataset(FILE_NAME, "names");
+    getActiveElectrodeNumbers(electrodes);
+
+    // Constructing the matrices
+    initAdjacencyMatrices(numElectrodes);
+}
+
+void SpikeTrain::initAdjacencyMatrices(int numElectrodes) {
     // Construct A with one where sttc threshold is met, and A init as subset
     A_Y = std::vector<std::vector<double>>(
             numElectrodes,
@@ -84,7 +68,6 @@ SpikeTrain::SpikeTrain(std::string FILE_NAME_,
                 A_Y[iElectrode][jElectrode] = A_Y[jElectrode][iElectrode] = 1;
                 m++;
 
-                // for initialization
                 // TODO: This does not ensure always exactly 20 percent
                 if ((static_cast<double>(std::rand()) / RAND_MAX) < 0.2) {
                     A_init[iElectrode][jElectrode] = A_init[jElectrode][iElectrode] = 1;
@@ -117,8 +100,8 @@ std::vector<double> SpikeTrain::readDoubleDataset(std::string file_name,
     return data;
 }
 
-std::string SpikeTrain::readByteString(std::string file_name,
-                                       std::string dataset_name) {
+std::vector<std::string> SpikeTrain::readByteStringDataset(std::string file_name,
+                                                           std::string dataset_name) {
     /**
      * This member function reads a byte string dataset from the HDF5 file.
      */
@@ -139,19 +122,18 @@ std::string SpikeTrain::readByteString(std::string file_name,
     auto data_size = data_type.getSize();
 
     // prepare a buffer and read in
-    char *out = new char[n * data_size]();
+    char *out = new char[n * data_size * dims_out[0]]();
     dataset.read(out, data_type);
 
-    // Convert to std::string
-    std::string *strs = new std::string[n];
-    for (auto i = 0u; i < n; ++i) {
-        auto len = data_size;
+    // Read in the string
+    std::vector<std::string> data(dims_out[0]);
+    auto len = data_size;
+    for (auto i = 0u; i < dims_out[0]; ++i) {
         auto c_str = out + data_size * i;
         for (auto p = c_str + len - 1; p != c_str && !*p; --p) --len;
-        strs[i].assign(c_str, len);
+        data[i] = c_str;
     }
-
-    return *strs;
+    return data;
 }
 
 void SpikeTrain::getGroupId(int dSet) {
@@ -161,19 +143,40 @@ void SpikeTrain::getGroupId(int dSet) {
      */
     if (dSet == 0) {
         int div = (int) readDoubleDataset(FILE_NAME, "meta/age")[0];
-        std::string region = readByteString(FILE_NAME, "meta/region");
+        std::string region = readByteStringDataset(FILE_NAME, "meta/region")[0];
         groupId = region + std::to_string(div);
     } else if (dSet == 1) {
         int div = (int) readDoubleDataset(FILE_NAME, "meta/age")[0];
         groupId = std::to_string(div);
     }
-
 }
 
+void SpikeTrain::getActiveElectrodeNumbers(std::vector<int> &electrodes) {
+    // Extract the electrode position indicator
+    std::vector<int> activeElectrodeNumbers;
+    std::vector<int> removalElectrodes;
+    for (int i = 0; i < numActiveElectrodes; ++i) {
+        if (activeElectrodeNames[i][5] == 'a') {
+            std::string numberString = activeElectrodeNames[i].substr(3, 2);
+            activeElectrodeNumbers.push_back(std::stoi(numberString));
+        } else {
+            // Handle the case when the same electrode was allocated multiple spikes
+            removalElectrodes.push_back(i);
+        };
+    }
 
-//int main() {
-//    const std::string FILE_NAME = "/Users/maxwuerfek/code/diss/data/g2c_data/C57_CTX_G2CEPHYS3_TC21_DIV28_D.h5";
-//    SpikeTrain test_st(FILE_NAME);
-//    std::cout << 1 << std::endl;
-//    return 0;
-//}
+    // Clean up the removed spikes at some electrodes
+    numActiveElectrodes -= removalElectrodes.size();
+    for (int i = 0; i < removalElectrodes.size(); ++i) {
+        activeElectrodeNames.erase(activeElectrodeNames.begin() + removalElectrodes[i] - i);
+        sttc.erase(sttc.begin() + removalElectrodes[i] - i);
+    }
+
+    // Find the index of that positon
+    for (int i = 0; i < numActiveElectrodes; ++i) {
+        auto it = std::find(electrodes.begin(), electrodes.end(), activeElectrodeNumbers[i]);
+        if (it != electrodes.end()) {
+            activeElectrodes.push_back(std::distance(electrodes.begin(), it));
+        }
+    }
+}

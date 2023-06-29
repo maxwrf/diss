@@ -19,9 +19,10 @@ void Slurm::generateInputs(std::string &inDirPath,
                            int nSamples,
                            int nRuns,
                            int dSet,
-                           int meaType) {
+                           int meaType,
+                           double dt) {
     // Load the spikes
-    SpikeSet spikeData(inDirPath, nSamples, dSet, corrCutoff, meaType);
+    SpikeSet spikeData(inDirPath, nSamples, dSet, dt, corrCutoff, meaType);
 
     // Generate parameter space
     std::vector<double> etaLimits = {-7, 7};

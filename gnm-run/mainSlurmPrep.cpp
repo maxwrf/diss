@@ -20,11 +20,12 @@ std::vector<std::string> meaTypes = {
 
 int main() {
     // User required parameters
-    bool cluster = true;
+    bool cluster = false;
     int dSet = 0;
     double corrCutoff = 0.2;
     int nSamples = -1;
     int nRuns = 10000;
+    double dt = 0.05;
 
     // Get the dSet Type
     int meaType;
@@ -51,7 +52,8 @@ int main() {
                           nSamples,
                           nRuns,
                           dSet,
-                          meaType
+                          meaType,
+                          dt
 
     );
     return 0;

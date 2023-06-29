@@ -11,6 +11,7 @@
 SpikeSet::SpikeSet(std::string path_,
                    int nSamples,
                    int dSet,
+                   double dt,
                    double corrCutoff,
                    int meaType_) {
     path = path_;
@@ -37,7 +38,9 @@ SpikeSet::SpikeSet(std::string path_,
                 hd5FileNames.push_back(f);
                 spikeTrains.push_back(SpikeTrain(path + "/" + f,
                                                  electrodePos,
+                                                 electrodes,
                                                  numElectrodes,
+                                                 dt,
                                                  sttcCutoff,
                                                  dSet));
 
@@ -56,7 +59,7 @@ void SpikeSet::getElectrodePos() {
             rowNumElectrodes = 8;
             electrodeDist = 200;
             yFromTopRight = true;
-            excludeElectrodes = {11, 18, 81, 88, 15};
+            excludeElectrodes = {11, 18, 81, 88}; // 15?
             break;
 
         case 1: // MCS_8x8_100um
@@ -70,7 +73,7 @@ void SpikeSet::getElectrodePos() {
     numElectrodes = rowNumElectrodes * rowNumElectrodes - excludeElectrodes.size();
     electrodePos = std::vector<std::vector<double>>(numElectrodes, std::vector<double>(2));
     electrodes = std::vector<int>(numElectrodes);
-    
+
     int electrodeNum = 0;
     for (int i = 1; i < (rowNumElectrodes + 1); ++i) {
         for (int j = 1; j < (rowNumElectrodes + 1); ++j) {
