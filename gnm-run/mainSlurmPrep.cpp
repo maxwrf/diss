@@ -20,8 +20,8 @@ std::vector<std::string> meaTypes = {
 
 int main() {
     // User required parameters
-    bool cluster = false;
-    int dSet = 0;
+    bool cluster = true;
+    int dSet = 2;
     double corrCutoff = 0.2;
     int nSamples = -1;
     int nRuns = 10000;

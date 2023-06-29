@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Specify the directory where the Slurm output and error files are located
-output_dir="/store/DAMTPEGLEN/mw894/slurm"
+output_dir="/store/DAMTPEGLEN/mw894/slurm/Charlesworth2015"
 
 # Initialize a counter for failed jobs
 failed_jobs=0

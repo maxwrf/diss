@@ -8,8 +8,7 @@
 #include <H5Cpp.h>
 #include <vector>
 #include <cassert>
-#include <iostream>
-#include <set>
+#include <algorithm>
 
 SpikeTrain::SpikeTrain(std::string FILE_NAME_,
                        std::vector<std::vector<double>> &electrodePos,
