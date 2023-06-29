@@ -1,0 +1,123 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.25"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "gnm-run",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "main::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-main-Debug-a61c0a4eeb7c0949ffdd.json",
+					"name" : "main",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "slurmCombine::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-slurmCombine-Debug-6a6969784a85056aed57.json",
+					"name" : "slurmCombine",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "slurmPrep::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-slurmPrep-Debug-f12c51e9ed8342473b6e.json",
+					"name" : "slurmPrep",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "slurmRun::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-slurmRun-Debug-9156300c6d29c9c5a6f4.json",
+					"name" : "slurmRun",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "spikeSetTest::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-spikeSetTest-Debug-26be19785af0f866dceb.json",
+					"name" : "spikeSetTest",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "spikeTrainTest::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-spikeTrainTest-Debug-62a2daa7571bd1666bb1.json",
+					"name" : "spikeTrainTest",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "sttcTest::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-sttcTest-Debug-c70f2ed5e2ec99c97f46.json",
+					"name" : "sttcTest",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "syntheticTest::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-syntheticTest-Debug-f4fcd586a90ac7ceec07.json",
+					"name" : "syntheticTest",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/mhome/damtp/r/mw894/diss/gnm-run/cmake-build-debug",
+		"source" : "/mhome/damtp/r/mw894/diss/gnm-run"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 5
+	}
+}

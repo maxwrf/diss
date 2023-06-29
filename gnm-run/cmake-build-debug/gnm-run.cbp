@@ -486,6 +486,12 @@
 			<Option target="slurmRun"/>
 			<Option target="slurmCombine"/>
 		</Unit>
+		<Unit filename="/mhome/damtp/r/mw894/diss/gnm-run/SyntheticData.cpp">
+			<Option target="syntheticTest"/>
+		</Unit>
+		<Unit filename="/mhome/damtp/r/mw894/diss/gnm-run/SyntheticData.h">
+			<Option target="syntheticTest"/>
+		</Unit>
 		<Unit filename="/mhome/damtp/r/mw894/diss/gnm-run/main.cpp">
 			<Option target="main"/>
 		</Unit>
@@ -498,7 +504,7 @@
 		<Unit filename="/mhome/damtp/r/mw894/diss/gnm-run/mainSlurmRun.cpp">
 			<Option target="slurmRun"/>
 		</Unit>
-		<Unit filename="/mhome/damtp/r/mw894/diss/gnm-run/syntheticTest.cpp">
+		<Unit filename="/mhome/damtp/r/mw894/diss/gnm-run/mainSyntheticTest.cpp">
 			<Option target="syntheticTest"/>
 		</Unit>
 		<Unit filename="/mhome/damtp/r/mw894/diss/gnm-run/CMakeLists.txt">

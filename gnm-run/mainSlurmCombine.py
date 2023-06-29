@@ -5,7 +5,7 @@ dSets = ["Charlesworth2015", "Hennig2011", "Demas2006"]
 
 
 def main():
-    cluster = False
+    cluster = True
     dSet = 0
 
     if cluster:

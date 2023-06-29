@@ -20,12 +20,19 @@ std::vector<std::string> meaTypes = {
 
 int main() {
     // User required parameters
-    bool cluster = false;
-    int dSet = 2;
-    int meaType = 1;
+    bool cluster = true;
+    int dSet = 0;
     double corrCutoff = 0.2;
     int nSamples = -1;
-    int nRuns = 10;
+    int nRuns = 10000;
+
+    // Get the dSet Type
+    int meaType;
+    if (dSet == 0) {
+        meaType = 0;
+    } else if (dSet == 2) {
+        meaType = 1;
+    }
 
     // Set the paths
     std::string inDirPath, outDirPath;

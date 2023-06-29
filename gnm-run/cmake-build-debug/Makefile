@@ -409,6 +409,30 @@ SpikeTrain.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/slurmCombine.dir/build.make CMakeFiles/slurmCombine.dir/SpikeTrain.cpp.s
 .PHONY : SpikeTrain.cpp.s
 
+SyntheticData.o: SyntheticData.cpp.o
+.PHONY : SyntheticData.o
+
+# target to build an object file
+SyntheticData.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/syntheticTest.dir/build.make CMakeFiles/syntheticTest.dir/SyntheticData.cpp.o
+.PHONY : SyntheticData.cpp.o
+
+SyntheticData.i: SyntheticData.cpp.i
+.PHONY : SyntheticData.i
+
+# target to preprocess a source file
+SyntheticData.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/syntheticTest.dir/build.make CMakeFiles/syntheticTest.dir/SyntheticData.cpp.i
+.PHONY : SyntheticData.cpp.i
+
+SyntheticData.s: SyntheticData.cpp.s
+.PHONY : SyntheticData.s
+
+# target to generate assembly for a file
+SyntheticData.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/syntheticTest.dir/build.make CMakeFiles/syntheticTest.dir/SyntheticData.cpp.s
+.PHONY : SyntheticData.cpp.s
+
 main.o: main.cpp.o
 .PHONY : main.o
 
@@ -505,29 +529,29 @@ mainSlurmRun.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/slurmRun.dir/build.make CMakeFiles/slurmRun.dir/mainSlurmRun.cpp.s
 .PHONY : mainSlurmRun.cpp.s
 
-syntheticTest.o: syntheticTest.cpp.o
-.PHONY : syntheticTest.o
+mainSyntheticTest.o: mainSyntheticTest.cpp.o
+.PHONY : mainSyntheticTest.o
 
 # target to build an object file
-syntheticTest.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/syntheticTest.dir/build.make CMakeFiles/syntheticTest.dir/syntheticTest.cpp.o
-.PHONY : syntheticTest.cpp.o
+mainSyntheticTest.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/syntheticTest.dir/build.make CMakeFiles/syntheticTest.dir/mainSyntheticTest.cpp.o
+.PHONY : mainSyntheticTest.cpp.o
 
-syntheticTest.i: syntheticTest.cpp.i
-.PHONY : syntheticTest.i
+mainSyntheticTest.i: mainSyntheticTest.cpp.i
+.PHONY : mainSyntheticTest.i
 
 # target to preprocess a source file
-syntheticTest.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/syntheticTest.dir/build.make CMakeFiles/syntheticTest.dir/syntheticTest.cpp.i
-.PHONY : syntheticTest.cpp.i
+mainSyntheticTest.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/syntheticTest.dir/build.make CMakeFiles/syntheticTest.dir/mainSyntheticTest.cpp.i
+.PHONY : mainSyntheticTest.cpp.i
 
-syntheticTest.s: syntheticTest.cpp.s
-.PHONY : syntheticTest.s
+mainSyntheticTest.s: mainSyntheticTest.cpp.s
+.PHONY : mainSyntheticTest.s
 
 # target to generate assembly for a file
-syntheticTest.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/syntheticTest.dir/build.make CMakeFiles/syntheticTest.dir/syntheticTest.cpp.s
-.PHONY : syntheticTest.cpp.s
+mainSyntheticTest.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/syntheticTest.dir/build.make CMakeFiles/syntheticTest.dir/mainSyntheticTest.cpp.s
+.PHONY : mainSyntheticTest.cpp.s
 
 # Help Target
 help:
@@ -560,6 +584,9 @@ help:
 	@echo "... SpikeTrain.o"
 	@echo "... SpikeTrain.i"
 	@echo "... SpikeTrain.s"
+	@echo "... SyntheticData.o"
+	@echo "... SyntheticData.i"
+	@echo "... SyntheticData.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
@@ -572,9 +599,9 @@ help:
 	@echo "... mainSlurmRun.o"
 	@echo "... mainSlurmRun.i"
 	@echo "... mainSlurmRun.s"
-	@echo "... syntheticTest.o"
-	@echo "... syntheticTest.i"
-	@echo "... syntheticTest.s"
+	@echo "... mainSyntheticTest.o"
+	@echo "... mainSyntheticTest.i"
+	@echo "... mainSyntheticTest.s"
 .PHONY : help
 
 

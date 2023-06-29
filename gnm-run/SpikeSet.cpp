@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <cmath>
 #include "SpikeSet.h"
+#include <algorithm>
 
 SpikeSet::SpikeSet(std::string path_,
                    int nSamples,
