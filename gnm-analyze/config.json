@@ -1,6 +1,5 @@
 {
-    "data_path": "/Users/maxwuerfek/code/diss/data/",
-    "results_path": "/Users/maxwuerfek/code/diss/results/",
+    "results_path": "/Users/maxwuerfek/code/diss/gnm-analyze/results/",
     "plot_path": "/Users/maxwuerfek/code/diss/gnm-analyze/plots/",
     "slurm_dir": "/Users/maxwuerfek/code/diss/slurm/"
 }

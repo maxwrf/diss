@@ -36,5 +36,5 @@ if __name__ == "__main__":
     config = Utils.params_from_json(
         "/Users/maxwuerfek/code/diss/gnm-analyze/config.json")
     f_p = '/Users/maxwuerfek/code/diss/gnm-run/testData/testKall.h5'
-    f_p = '/Users/maxwuerfek/code/diss/slurm/results_hpc14.h5'
+    # f_p = '/Users/maxwuerfek/code/diss/slurm/results_hpc14.h5'
     analyze(config, f_p)

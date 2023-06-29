@@ -7,7 +7,7 @@ add_executable(main main.cpp SpikeSet.cpp SpikeSet.h SpikeTrain.cpp SpikeTrain.h
 add_executable(spikeTrainTest SpikeTrain.cpp SpikeTrain.h STTC.cpp STTC.h)
 add_executable(spikeSetTest SpikeSet.cpp SpikeSet.h SpikeTrain.cpp SpikeTrain.h STTC.cpp STTC.h)
 add_executable(sttcTest STTC.cpp STTC.h)
-add_executable(syntheticTest syntheticTest.cpp SpikeTrain.cpp SpikeTrain.h STTC.cpp STTC.h GNM.cpp GNM.h)
+add_executable(syntheticTest mainSyntheticTest.cpp SpikeTrain.cpp SpikeTrain.h STTC.cpp STTC.h GNM.cpp GNM.h SyntheticData.cpp SyntheticData.h)
 add_executable(slurmPrep mainSlurmPrep.cpp Slurm.cpp Slurm.h SpikeSet.cpp SpikeSet.h SpikeTrain.cpp SpikeTrain.h STTC.cpp STTC.h GNM.cpp GNM.h)
 add_executable(slurmRun mainSlurmRun.cpp Slurm.cpp Slurm.h GNM.cpp GNM.h SpikeSet.cpp SpikeSet.h SpikeTrain.cpp SpikeTrain.h STTC.cpp STTC.h)
 add_executable(slurmCombine mainSlurmCombine.cpp Slurm.cpp Slurm.h GNM.cpp GNM.h SpikeSet.cpp SpikeSet.h SpikeTrain.cpp SpikeTrain.h STTC.cpp STTC.h)

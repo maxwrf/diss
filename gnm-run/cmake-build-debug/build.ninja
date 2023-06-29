@@ -55,8 +55,6 @@ build CMakeFiles/main.dir/main.cpp.o: CXX_COMPILER__main_Debug /Users/maxwuerfek
   INCLUDES = -I/opt/homebrew/include
   OBJECT_DIR = CMakeFiles/main.dir
   OBJECT_FILE_DIR = CMakeFiles/main.dir
-  TARGET_COMPILE_PDB = CMakeFiles/main.dir/
-  TARGET_PDB = main.pdb
 
 build CMakeFiles/main.dir/SpikeSet.cpp.o: CXX_COMPILER__main_Debug /Users/maxwuerfek/code/diss/gnm-run/SpikeSet.cpp || cmake_object_order_depends_target_main
   DEP_FILE = CMakeFiles/main.dir/SpikeSet.cpp.o.d
@@ -64,8 +62,6 @@ build CMakeFiles/main.dir/SpikeSet.cpp.o: CXX_COMPILER__main_Debug /Users/maxwue
   INCLUDES = -I/opt/homebrew/include
   OBJECT_DIR = CMakeFiles/main.dir
   OBJECT_FILE_DIR = CMakeFiles/main.dir
-  TARGET_COMPILE_PDB = CMakeFiles/main.dir/
-  TARGET_PDB = main.pdb
 
 build CMakeFiles/main.dir/SpikeTrain.cpp.o: CXX_COMPILER__main_Debug /Users/maxwuerfek/code/diss/gnm-run/SpikeTrain.cpp || cmake_object_order_depends_target_main
   DEP_FILE = CMakeFiles/main.dir/SpikeTrain.cpp.o.d
@@ -73,8 +69,6 @@ build CMakeFiles/main.dir/SpikeTrain.cpp.o: CXX_COMPILER__main_Debug /Users/maxw
   INCLUDES = -I/opt/homebrew/include
   OBJECT_DIR = CMakeFiles/main.dir
   OBJECT_FILE_DIR = CMakeFiles/main.dir
-  TARGET_COMPILE_PDB = CMakeFiles/main.dir/
-  TARGET_PDB = main.pdb
 
 build CMakeFiles/main.dir/STTC.cpp.o: CXX_COMPILER__main_Debug /Users/maxwuerfek/code/diss/gnm-run/STTC.cpp || cmake_object_order_depends_target_main
   DEP_FILE = CMakeFiles/main.dir/STTC.cpp.o.d
@@ -82,8 +76,6 @@ build CMakeFiles/main.dir/STTC.cpp.o: CXX_COMPILER__main_Debug /Users/maxwuerfek
   INCLUDES = -I/opt/homebrew/include
   OBJECT_DIR = CMakeFiles/main.dir
   OBJECT_FILE_DIR = CMakeFiles/main.dir
-  TARGET_COMPILE_PDB = CMakeFiles/main.dir/
-  TARGET_PDB = main.pdb
 
 build CMakeFiles/main.dir/GNM.cpp.o: CXX_COMPILER__main_Debug /Users/maxwuerfek/code/diss/gnm-run/GNM.cpp || cmake_object_order_depends_target_main
   DEP_FILE = CMakeFiles/main.dir/GNM.cpp.o.d
@@ -91,8 +83,6 @@ build CMakeFiles/main.dir/GNM.cpp.o: CXX_COMPILER__main_Debug /Users/maxwuerfek/
   INCLUDES = -I/opt/homebrew/include
   OBJECT_DIR = CMakeFiles/main.dir
   OBJECT_FILE_DIR = CMakeFiles/main.dir
-  TARGET_COMPILE_PDB = CMakeFiles/main.dir/
-  TARGET_PDB = main.pdb
 
 
 # =============================================================================
@@ -109,9 +99,8 @@ build main: CXX_EXECUTABLE_LINKER__main_Debug CMakeFiles/main.dir/main.cpp.o CMa
   OBJECT_DIR = CMakeFiles/main.dir
   POST_BUILD = :
   PRE_LINK = :
-  TARGET_COMPILE_PDB = CMakeFiles/main.dir/
   TARGET_FILE = main
-  TARGET_PDB = main.pdb
+  TARGET_PDB = main.dbg
 
 # =============================================================================
 # Object build statements for EXECUTABLE target spikeTrainTest
@@ -128,8 +117,6 @@ build CMakeFiles/spikeTrainTest.dir/SpikeTrain.cpp.o: CXX_COMPILER__spikeTrainTe
   INCLUDES = -I/opt/homebrew/include
   OBJECT_DIR = CMakeFiles/spikeTrainTest.dir
   OBJECT_FILE_DIR = CMakeFiles/spikeTrainTest.dir
-  TARGET_COMPILE_PDB = CMakeFiles/spikeTrainTest.dir/
-  TARGET_PDB = spikeTrainTest.pdb
 
 build CMakeFiles/spikeTrainTest.dir/STTC.cpp.o: CXX_COMPILER__spikeTrainTest_Debug /Users/maxwuerfek/code/diss/gnm-run/STTC.cpp || cmake_object_order_depends_target_spikeTrainTest
   DEP_FILE = CMakeFiles/spikeTrainTest.dir/STTC.cpp.o.d
@@ -137,8 +124,6 @@ build CMakeFiles/spikeTrainTest.dir/STTC.cpp.o: CXX_COMPILER__spikeTrainTest_Deb
   INCLUDES = -I/opt/homebrew/include
   OBJECT_DIR = CMakeFiles/spikeTrainTest.dir
   OBJECT_FILE_DIR = CMakeFiles/spikeTrainTest.dir
-  TARGET_COMPILE_PDB = CMakeFiles/spikeTrainTest.dir/
-  TARGET_PDB = spikeTrainTest.pdb
 
 
 # =============================================================================
@@ -155,9 +140,8 @@ build spikeTrainTest: CXX_EXECUTABLE_LINKER__spikeTrainTest_Debug CMakeFiles/spi
   OBJECT_DIR = CMakeFiles/spikeTrainTest.dir
   POST_BUILD = :
   PRE_LINK = :
-  TARGET_COMPILE_PDB = CMakeFiles/spikeTrainTest.dir/
   TARGET_FILE = spikeTrainTest
-  TARGET_PDB = spikeTrainTest.pdb
+  TARGET_PDB = spikeTrainTest.dbg
 
 # =============================================================================
 # Object build statements for EXECUTABLE target spikeSetTest
@@ -174,8 +158,6 @@ build CMakeFiles/spikeSetTest.dir/SpikeSet.cpp.o: CXX_COMPILER__spikeSetTest_Deb
   INCLUDES = -I/opt/homebrew/include
   OBJECT_DIR = CMakeFiles/spikeSetTest.dir
   OBJECT_FILE_DIR = CMakeFiles/spikeSetTest.dir
-  TARGET_COMPILE_PDB = CMakeFiles/spikeSetTest.dir/
-  TARGET_PDB = spikeSetTest.pdb
 
 build CMakeFiles/spikeSetTest.dir/SpikeTrain.cpp.o: CXX_COMPILER__spikeSetTest_Debug /Users/maxwuerfek/code/diss/gnm-run/SpikeTrain.cpp || cmake_object_order_depends_target_spikeSetTest
   DEP_FILE = CMakeFiles/spikeSetTest.dir/SpikeTrain.cpp.o.d
@@ -183,8 +165,6 @@ build CMakeFiles/spikeSetTest.dir/SpikeTrain.cpp.o: CXX_COMPILER__spikeSetTest_D
   INCLUDES = -I/opt/homebrew/include
   OBJECT_DIR = CMakeFiles/spikeSetTest.dir
   OBJECT_FILE_DIR = CMakeFiles/spikeSetTest.dir
-  TARGET_COMPILE_PDB = CMakeFiles/spikeSetTest.dir/
-  TARGET_PDB = spikeSetTest.pdb
 
 build CMakeFiles/spikeSetTest.dir/STTC.cpp.o: CXX_COMPILER__spikeSetTest_Debug /Users/maxwuerfek/code/diss/gnm-run/STTC.cpp || cmake_object_order_depends_target_spikeSetTest
   DEP_FILE = CMakeFiles/spikeSetTest.dir/STTC.cpp.o.d
@@ -192,8 +172,6 @@ build CMakeFiles/spikeSetTest.dir/STTC.cpp.o: CXX_COMPILER__spikeSetTest_Debug /
   INCLUDES = -I/opt/homebrew/include
   OBJECT_DIR = CMakeFiles/spikeSetTest.dir
   OBJECT_FILE_DIR = CMakeFiles/spikeSetTest.dir
-  TARGET_COMPILE_PDB = CMakeFiles/spikeSetTest.dir/
-  TARGET_PDB = spikeSetTest.pdb
 
 
 # =============================================================================
@@ -210,9 +188,8 @@ build spikeSetTest: CXX_EXECUTABLE_LINKER__spikeSetTest_Debug CMakeFiles/spikeSe
   OBJECT_DIR = CMakeFiles/spikeSetTest.dir
   POST_BUILD = :
   PRE_LINK = :
-  TARGET_COMPILE_PDB = CMakeFiles/spikeSetTest.dir/
   TARGET_FILE = spikeSetTest
-  TARGET_PDB = spikeSetTest.pdb
+  TARGET_PDB = spikeSetTest.dbg
 
 # =============================================================================
 # Object build statements for EXECUTABLE target sttcTest
@@ -228,8 +205,6 @@ build CMakeFiles/sttcTest.dir/STTC.cpp.o: CXX_COMPILER__sttcTest_Debug /Users/ma
   FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.6 -fcolor-diagnostics -std=gnu++17
   OBJECT_DIR = CMakeFiles/sttcTest.dir
   OBJECT_FILE_DIR = CMakeFiles/sttcTest.dir
-  TARGET_COMPILE_PDB = CMakeFiles/sttcTest.dir/
-  TARGET_PDB = sttcTest.pdb
 
 
 # =============================================================================
@@ -244,9 +219,8 @@ build sttcTest: CXX_EXECUTABLE_LINKER__sttcTest_Debug CMakeFiles/sttcTest.dir/ST
   OBJECT_DIR = CMakeFiles/sttcTest.dir
   POST_BUILD = :
   PRE_LINK = :
-  TARGET_COMPILE_PDB = CMakeFiles/sttcTest.dir/
   TARGET_FILE = sttcTest
-  TARGET_PDB = sttcTest.pdb
+  TARGET_PDB = sttcTest.dbg
 
 # =============================================================================
 # Object build statements for EXECUTABLE target syntheticTest
@@ -257,14 +231,12 @@ build sttcTest: CXX_EXECUTABLE_LINKER__sttcTest_Debug CMakeFiles/sttcTest.dir/ST
 
 build cmake_object_order_depends_target_syntheticTest: phony || CMakeFiles/syntheticTest.dir
 
-build CMakeFiles/syntheticTest.dir/syntheticTest.cpp.o: CXX_COMPILER__syntheticTest_Debug /Users/maxwuerfek/code/diss/gnm-run/syntheticTest.cpp || cmake_object_order_depends_target_syntheticTest
-  DEP_FILE = CMakeFiles/syntheticTest.dir/syntheticTest.cpp.o.d
+build CMakeFiles/syntheticTest.dir/mainSyntheticTest.cpp.o: CXX_COMPILER__syntheticTest_Debug /Users/maxwuerfek/code/diss/gnm-run/mainSyntheticTest.cpp || cmake_object_order_depends_target_syntheticTest
+  DEP_FILE = CMakeFiles/syntheticTest.dir/mainSyntheticTest.cpp.o.d
   FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.6 -fcolor-diagnostics -std=gnu++17
   INCLUDES = -I/opt/homebrew/include
   OBJECT_DIR = CMakeFiles/syntheticTest.dir
   OBJECT_FILE_DIR = CMakeFiles/syntheticTest.dir
-  TARGET_COMPILE_PDB = CMakeFiles/syntheticTest.dir/
-  TARGET_PDB = syntheticTest.pdb
 
 build CMakeFiles/syntheticTest.dir/SpikeTrain.cpp.o: CXX_COMPILER__syntheticTest_Debug /Users/maxwuerfek/code/diss/gnm-run/SpikeTrain.cpp || cmake_object_order_depends_target_syntheticTest
   DEP_FILE = CMakeFiles/syntheticTest.dir/SpikeTrain.cpp.o.d
@@ -272,8 +244,6 @@ build CMakeFiles/syntheticTest.dir/SpikeTrain.cpp.o: CXX_COMPILER__syntheticTest
   INCLUDES = -I/opt/homebrew/include
   OBJECT_DIR = CMakeFiles/syntheticTest.dir
   OBJECT_FILE_DIR = CMakeFiles/syntheticTest.dir
-  TARGET_COMPILE_PDB = CMakeFiles/syntheticTest.dir/
-  TARGET_PDB = syntheticTest.pdb
 
 build CMakeFiles/syntheticTest.dir/STTC.cpp.o: CXX_COMPILER__syntheticTest_Debug /Users/maxwuerfek/code/diss/gnm-run/STTC.cpp || cmake_object_order_depends_target_syntheticTest
   DEP_FILE = CMakeFiles/syntheticTest.dir/STTC.cpp.o.d
@@ -281,8 +251,6 @@ build CMakeFiles/syntheticTest.dir/STTC.cpp.o: CXX_COMPILER__syntheticTest_Debug
   INCLUDES = -I/opt/homebrew/include
   OBJECT_DIR = CMakeFiles/syntheticTest.dir
   OBJECT_FILE_DIR = CMakeFiles/syntheticTest.dir
-  TARGET_COMPILE_PDB = CMakeFiles/syntheticTest.dir/
-  TARGET_PDB = syntheticTest.pdb
 
 build CMakeFiles/syntheticTest.dir/GNM.cpp.o: CXX_COMPILER__syntheticTest_Debug /Users/maxwuerfek/code/diss/gnm-run/GNM.cpp || cmake_object_order_depends_target_syntheticTest
   DEP_FILE = CMakeFiles/syntheticTest.dir/GNM.cpp.o.d
@@ -290,8 +258,13 @@ build CMakeFiles/syntheticTest.dir/GNM.cpp.o: CXX_COMPILER__syntheticTest_Debug 
   INCLUDES = -I/opt/homebrew/include
   OBJECT_DIR = CMakeFiles/syntheticTest.dir
   OBJECT_FILE_DIR = CMakeFiles/syntheticTest.dir
-  TARGET_COMPILE_PDB = CMakeFiles/syntheticTest.dir/
-  TARGET_PDB = syntheticTest.pdb
+
+build CMakeFiles/syntheticTest.dir/SyntheticData.cpp.o: CXX_COMPILER__syntheticTest_Debug /Users/maxwuerfek/code/diss/gnm-run/SyntheticData.cpp || cmake_object_order_depends_target_syntheticTest
+  DEP_FILE = CMakeFiles/syntheticTest.dir/SyntheticData.cpp.o.d
+  FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.6 -fcolor-diagnostics -std=gnu++17
+  INCLUDES = -I/opt/homebrew/include
+  OBJECT_DIR = CMakeFiles/syntheticTest.dir
+  OBJECT_FILE_DIR = CMakeFiles/syntheticTest.dir
 
 
 # =============================================================================
@@ -301,16 +274,15 @@ build CMakeFiles/syntheticTest.dir/GNM.cpp.o: CXX_COMPILER__syntheticTest_Debug 
 #############################################
 # Link the executable syntheticTest
 
-build syntheticTest: CXX_EXECUTABLE_LINKER__syntheticTest_Debug CMakeFiles/syntheticTest.dir/syntheticTest.cpp.o CMakeFiles/syntheticTest.dir/SpikeTrain.cpp.o CMakeFiles/syntheticTest.dir/STTC.cpp.o CMakeFiles/syntheticTest.dir/GNM.cpp.o
+build syntheticTest: CXX_EXECUTABLE_LINKER__syntheticTest_Debug CMakeFiles/syntheticTest.dir/mainSyntheticTest.cpp.o CMakeFiles/syntheticTest.dir/SpikeTrain.cpp.o CMakeFiles/syntheticTest.dir/STTC.cpp.o CMakeFiles/syntheticTest.dir/GNM.cpp.o CMakeFiles/syntheticTest.dir/SyntheticData.cpp.o
   FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.6
   LINK_LIBRARIES = -Wl,-rpath,/opt/homebrew/lib  -lhdf5  -lhdf5_hl  -lhdf5_cpp
   LINK_PATH = -L/opt/homebrew/lib
   OBJECT_DIR = CMakeFiles/syntheticTest.dir
   POST_BUILD = :
   PRE_LINK = :
-  TARGET_COMPILE_PDB = CMakeFiles/syntheticTest.dir/
   TARGET_FILE = syntheticTest
-  TARGET_PDB = syntheticTest.pdb
+  TARGET_PDB = syntheticTest.dbg
 
 # =============================================================================
 # Object build statements for EXECUTABLE target slurmPrep
@@ -327,8 +299,6 @@ build CMakeFiles/slurmPrep.dir/mainSlurmPrep.cpp.o: CXX_COMPILER__slurmPrep_Debu
   INCLUDES = -I/opt/homebrew/include -I/home/mw894/hdf/CMake-hdf5-1.8.23/build/HDF5-1.8.23-Linux/HDF_Group/HDF5/1.8.23/include
   OBJECT_DIR = CMakeFiles/slurmPrep.dir
   OBJECT_FILE_DIR = CMakeFiles/slurmPrep.dir
-  TARGET_COMPILE_PDB = CMakeFiles/slurmPrep.dir/
-  TARGET_PDB = slurmPrep.pdb
 
 build CMakeFiles/slurmPrep.dir/Slurm.cpp.o: CXX_COMPILER__slurmPrep_Debug /Users/maxwuerfek/code/diss/gnm-run/Slurm.cpp || cmake_object_order_depends_target_slurmPrep
   DEP_FILE = CMakeFiles/slurmPrep.dir/Slurm.cpp.o.d
@@ -336,8 +306,6 @@ build CMakeFiles/slurmPrep.dir/Slurm.cpp.o: CXX_COMPILER__slurmPrep_Debug /Users
   INCLUDES = -I/opt/homebrew/include -I/home/mw894/hdf/CMake-hdf5-1.8.23/build/HDF5-1.8.23-Linux/HDF_Group/HDF5/1.8.23/include
   OBJECT_DIR = CMakeFiles/slurmPrep.dir
   OBJECT_FILE_DIR = CMakeFiles/slurmPrep.dir
-  TARGET_COMPILE_PDB = CMakeFiles/slurmPrep.dir/
-  TARGET_PDB = slurmPrep.pdb
 
 build CMakeFiles/slurmPrep.dir/SpikeSet.cpp.o: CXX_COMPILER__slurmPrep_Debug /Users/maxwuerfek/code/diss/gnm-run/SpikeSet.cpp || cmake_object_order_depends_target_slurmPrep
   DEP_FILE = CMakeFiles/slurmPrep.dir/SpikeSet.cpp.o.d
@@ -345,8 +313,6 @@ build CMakeFiles/slurmPrep.dir/SpikeSet.cpp.o: CXX_COMPILER__slurmPrep_Debug /Us
   INCLUDES = -I/opt/homebrew/include -I/home/mw894/hdf/CMake-hdf5-1.8.23/build/HDF5-1.8.23-Linux/HDF_Group/HDF5/1.8.23/include
   OBJECT_DIR = CMakeFiles/slurmPrep.dir
   OBJECT_FILE_DIR = CMakeFiles/slurmPrep.dir
-  TARGET_COMPILE_PDB = CMakeFiles/slurmPrep.dir/
-  TARGET_PDB = slurmPrep.pdb
 
 build CMakeFiles/slurmPrep.dir/SpikeTrain.cpp.o: CXX_COMPILER__slurmPrep_Debug /Users/maxwuerfek/code/diss/gnm-run/SpikeTrain.cpp || cmake_object_order_depends_target_slurmPrep
   DEP_FILE = CMakeFiles/slurmPrep.dir/SpikeTrain.cpp.o.d
@@ -354,8 +320,6 @@ build CMakeFiles/slurmPrep.dir/SpikeTrain.cpp.o: CXX_COMPILER__slurmPrep_Debug /
   INCLUDES = -I/opt/homebrew/include -I/home/mw894/hdf/CMake-hdf5-1.8.23/build/HDF5-1.8.23-Linux/HDF_Group/HDF5/1.8.23/include
   OBJECT_DIR = CMakeFiles/slurmPrep.dir
   OBJECT_FILE_DIR = CMakeFiles/slurmPrep.dir
-  TARGET_COMPILE_PDB = CMakeFiles/slurmPrep.dir/
-  TARGET_PDB = slurmPrep.pdb
 
 build CMakeFiles/slurmPrep.dir/STTC.cpp.o: CXX_COMPILER__slurmPrep_Debug /Users/maxwuerfek/code/diss/gnm-run/STTC.cpp || cmake_object_order_depends_target_slurmPrep
   DEP_FILE = CMakeFiles/slurmPrep.dir/STTC.cpp.o.d
@@ -363,8 +327,6 @@ build CMakeFiles/slurmPrep.dir/STTC.cpp.o: CXX_COMPILER__slurmPrep_Debug /Users/
   INCLUDES = -I/opt/homebrew/include -I/home/mw894/hdf/CMake-hdf5-1.8.23/build/HDF5-1.8.23-Linux/HDF_Group/HDF5/1.8.23/include
   OBJECT_DIR = CMakeFiles/slurmPrep.dir
   OBJECT_FILE_DIR = CMakeFiles/slurmPrep.dir
-  TARGET_COMPILE_PDB = CMakeFiles/slurmPrep.dir/
-  TARGET_PDB = slurmPrep.pdb
 
 build CMakeFiles/slurmPrep.dir/GNM.cpp.o: CXX_COMPILER__slurmPrep_Debug /Users/maxwuerfek/code/diss/gnm-run/GNM.cpp || cmake_object_order_depends_target_slurmPrep
   DEP_FILE = CMakeFiles/slurmPrep.dir/GNM.cpp.o.d
@@ -372,8 +334,6 @@ build CMakeFiles/slurmPrep.dir/GNM.cpp.o: CXX_COMPILER__slurmPrep_Debug /Users/m
   INCLUDES = -I/opt/homebrew/include -I/home/mw894/hdf/CMake-hdf5-1.8.23/build/HDF5-1.8.23-Linux/HDF_Group/HDF5/1.8.23/include
   OBJECT_DIR = CMakeFiles/slurmPrep.dir
   OBJECT_FILE_DIR = CMakeFiles/slurmPrep.dir
-  TARGET_COMPILE_PDB = CMakeFiles/slurmPrep.dir/
-  TARGET_PDB = slurmPrep.pdb
 
 
 # =============================================================================
@@ -390,9 +350,8 @@ build slurmPrep: CXX_EXECUTABLE_LINKER__slurmPrep_Debug CMakeFiles/slurmPrep.dir
   OBJECT_DIR = CMakeFiles/slurmPrep.dir
   POST_BUILD = :
   PRE_LINK = :
-  TARGET_COMPILE_PDB = CMakeFiles/slurmPrep.dir/
   TARGET_FILE = slurmPrep
-  TARGET_PDB = slurmPrep.pdb
+  TARGET_PDB = slurmPrep.dbg
 
 # =============================================================================
 # Object build statements for EXECUTABLE target slurmRun
@@ -409,8 +368,6 @@ build CMakeFiles/slurmRun.dir/mainSlurmRun.cpp.o: CXX_COMPILER__slurmRun_Debug /
   INCLUDES = -I/opt/homebrew/include -I/home/mw894/hdf/CMake-hdf5-1.8.23/build/HDF5-1.8.23-Linux/HDF_Group/HDF5/1.8.23/include
   OBJECT_DIR = CMakeFiles/slurmRun.dir
   OBJECT_FILE_DIR = CMakeFiles/slurmRun.dir
-  TARGET_COMPILE_PDB = CMakeFiles/slurmRun.dir/
-  TARGET_PDB = slurmRun.pdb
 
 build CMakeFiles/slurmRun.dir/Slurm.cpp.o: CXX_COMPILER__slurmRun_Debug /Users/maxwuerfek/code/diss/gnm-run/Slurm.cpp || cmake_object_order_depends_target_slurmRun
   DEP_FILE = CMakeFiles/slurmRun.dir/Slurm.cpp.o.d
@@ -418,8 +375,6 @@ build CMakeFiles/slurmRun.dir/Slurm.cpp.o: CXX_COMPILER__slurmRun_Debug /Users/m
   INCLUDES = -I/opt/homebrew/include -I/home/mw894/hdf/CMake-hdf5-1.8.23/build/HDF5-1.8.23-Linux/HDF_Group/HDF5/1.8.23/include
   OBJECT_DIR = CMakeFiles/slurmRun.dir
   OBJECT_FILE_DIR = CMakeFiles/slurmRun.dir
-  TARGET_COMPILE_PDB = CMakeFiles/slurmRun.dir/
-  TARGET_PDB = slurmRun.pdb
 
 build CMakeFiles/slurmRun.dir/GNM.cpp.o: CXX_COMPILER__slurmRun_Debug /Users/maxwuerfek/code/diss/gnm-run/GNM.cpp || cmake_object_order_depends_target_slurmRun
   DEP_FILE = CMakeFiles/slurmRun.dir/GNM.cpp.o.d
@@ -427,8 +382,6 @@ build CMakeFiles/slurmRun.dir/GNM.cpp.o: CXX_COMPILER__slurmRun_Debug /Users/max
   INCLUDES = -I/opt/homebrew/include -I/home/mw894/hdf/CMake-hdf5-1.8.23/build/HDF5-1.8.23-Linux/HDF_Group/HDF5/1.8.23/include
   OBJECT_DIR = CMakeFiles/slurmRun.dir
   OBJECT_FILE_DIR = CMakeFiles/slurmRun.dir
-  TARGET_COMPILE_PDB = CMakeFiles/slurmRun.dir/
-  TARGET_PDB = slurmRun.pdb
 
 build CMakeFiles/slurmRun.dir/SpikeSet.cpp.o: CXX_COMPILER__slurmRun_Debug /Users/maxwuerfek/code/diss/gnm-run/SpikeSet.cpp || cmake_object_order_depends_target_slurmRun
   DEP_FILE = CMakeFiles/slurmRun.dir/SpikeSet.cpp.o.d
@@ -436,8 +389,6 @@ build CMakeFiles/slurmRun.dir/SpikeSet.cpp.o: CXX_COMPILER__slurmRun_Debug /User
   INCLUDES = -I/opt/homebrew/include -I/home/mw894/hdf/CMake-hdf5-1.8.23/build/HDF5-1.8.23-Linux/HDF_Group/HDF5/1.8.23/include
   OBJECT_DIR = CMakeFiles/slurmRun.dir
   OBJECT_FILE_DIR = CMakeFiles/slurmRun.dir
-  TARGET_COMPILE_PDB = CMakeFiles/slurmRun.dir/
-  TARGET_PDB = slurmRun.pdb
 
 build CMakeFiles/slurmRun.dir/SpikeTrain.cpp.o: CXX_COMPILER__slurmRun_Debug /Users/maxwuerfek/code/diss/gnm-run/SpikeTrain.cpp || cmake_object_order_depends_target_slurmRun
   DEP_FILE = CMakeFiles/slurmRun.dir/SpikeTrain.cpp.o.d
@@ -445,8 +396,6 @@ build CMakeFiles/slurmRun.dir/SpikeTrain.cpp.o: CXX_COMPILER__slurmRun_Debug /Us
   INCLUDES = -I/opt/homebrew/include -I/home/mw894/hdf/CMake-hdf5-1.8.23/build/HDF5-1.8.23-Linux/HDF_Group/HDF5/1.8.23/include
   OBJECT_DIR = CMakeFiles/slurmRun.dir
   OBJECT_FILE_DIR = CMakeFiles/slurmRun.dir
-  TARGET_COMPILE_PDB = CMakeFiles/slurmRun.dir/
-  TARGET_PDB = slurmRun.pdb
 
 build CMakeFiles/slurmRun.dir/STTC.cpp.o: CXX_COMPILER__slurmRun_Debug /Users/maxwuerfek/code/diss/gnm-run/STTC.cpp || cmake_object_order_depends_target_slurmRun
   DEP_FILE = CMakeFiles/slurmRun.dir/STTC.cpp.o.d
@@ -454,8 +403,6 @@ build CMakeFiles/slurmRun.dir/STTC.cpp.o: CXX_COMPILER__slurmRun_Debug /Users/ma
   INCLUDES = -I/opt/homebrew/include -I/home/mw894/hdf/CMake-hdf5-1.8.23/build/HDF5-1.8.23-Linux/HDF_Group/HDF5/1.8.23/include
   OBJECT_DIR = CMakeFiles/slurmRun.dir
   OBJECT_FILE_DIR = CMakeFiles/slurmRun.dir
-  TARGET_COMPILE_PDB = CMakeFiles/slurmRun.dir/
-  TARGET_PDB = slurmRun.pdb
 
 
 # =============================================================================
@@ -472,9 +419,8 @@ build slurmRun: CXX_EXECUTABLE_LINKER__slurmRun_Debug CMakeFiles/slurmRun.dir/ma
   OBJECT_DIR = CMakeFiles/slurmRun.dir
   POST_BUILD = :
   PRE_LINK = :
-  TARGET_COMPILE_PDB = CMakeFiles/slurmRun.dir/
   TARGET_FILE = slurmRun
-  TARGET_PDB = slurmRun.pdb
+  TARGET_PDB = slurmRun.dbg
 
 # =============================================================================
 # Object build statements for EXECUTABLE target slurmCombine
@@ -491,8 +437,6 @@ build CMakeFiles/slurmCombine.dir/mainSlurmCombine.cpp.o: CXX_COMPILER__slurmCom
   INCLUDES = -I/opt/homebrew/include -I/home/mw894/hdf/CMake-hdf5-1.8.23/build/HDF5-1.8.23-Linux/HDF_Group/HDF5/1.8.23/include
   OBJECT_DIR = CMakeFiles/slurmCombine.dir
   OBJECT_FILE_DIR = CMakeFiles/slurmCombine.dir
-  TARGET_COMPILE_PDB = CMakeFiles/slurmCombine.dir/
-  TARGET_PDB = slurmCombine.pdb
 
 build CMakeFiles/slurmCombine.dir/Slurm.cpp.o: CXX_COMPILER__slurmCombine_Debug /Users/maxwuerfek/code/diss/gnm-run/Slurm.cpp || cmake_object_order_depends_target_slurmCombine
   DEP_FILE = CMakeFiles/slurmCombine.dir/Slurm.cpp.o.d
@@ -500,8 +444,6 @@ build CMakeFiles/slurmCombine.dir/Slurm.cpp.o: CXX_COMPILER__slurmCombine_Debug 
   INCLUDES = -I/opt/homebrew/include -I/home/mw894/hdf/CMake-hdf5-1.8.23/build/HDF5-1.8.23-Linux/HDF_Group/HDF5/1.8.23/include
   OBJECT_DIR = CMakeFiles/slurmCombine.dir
   OBJECT_FILE_DIR = CMakeFiles/slurmCombine.dir
-  TARGET_COMPILE_PDB = CMakeFiles/slurmCombine.dir/
-  TARGET_PDB = slurmCombine.pdb
 
 build CMakeFiles/slurmCombine.dir/GNM.cpp.o: CXX_COMPILER__slurmCombine_Debug /Users/maxwuerfek/code/diss/gnm-run/GNM.cpp || cmake_object_order_depends_target_slurmCombine
   DEP_FILE = CMakeFiles/slurmCombine.dir/GNM.cpp.o.d
@@ -509,8 +451,6 @@ build CMakeFiles/slurmCombine.dir/GNM.cpp.o: CXX_COMPILER__slurmCombine_Debug /U
   INCLUDES = -I/opt/homebrew/include -I/home/mw894/hdf/CMake-hdf5-1.8.23/build/HDF5-1.8.23-Linux/HDF_Group/HDF5/1.8.23/include
   OBJECT_DIR = CMakeFiles/slurmCombine.dir
   OBJECT_FILE_DIR = CMakeFiles/slurmCombine.dir
-  TARGET_COMPILE_PDB = CMakeFiles/slurmCombine.dir/
-  TARGET_PDB = slurmCombine.pdb
 
 build CMakeFiles/slurmCombine.dir/SpikeSet.cpp.o: CXX_COMPILER__slurmCombine_Debug /Users/maxwuerfek/code/diss/gnm-run/SpikeSet.cpp || cmake_object_order_depends_target_slurmCombine
   DEP_FILE = CMakeFiles/slurmCombine.dir/SpikeSet.cpp.o.d
@@ -518,8 +458,6 @@ build CMakeFiles/slurmCombine.dir/SpikeSet.cpp.o: CXX_COMPILER__slurmCombine_Deb
   INCLUDES = -I/opt/homebrew/include -I/home/mw894/hdf/CMake-hdf5-1.8.23/build/HDF5-1.8.23-Linux/HDF_Group/HDF5/1.8.23/include
   OBJECT_DIR = CMakeFiles/slurmCombine.dir
   OBJECT_FILE_DIR = CMakeFiles/slurmCombine.dir
-  TARGET_COMPILE_PDB = CMakeFiles/slurmCombine.dir/
-  TARGET_PDB = slurmCombine.pdb
 
 build CMakeFiles/slurmCombine.dir/SpikeTrain.cpp.o: CXX_COMPILER__slurmCombine_Debug /Users/maxwuerfek/code/diss/gnm-run/SpikeTrain.cpp || cmake_object_order_depends_target_slurmCombine
   DEP_FILE = CMakeFiles/slurmCombine.dir/SpikeTrain.cpp.o.d
@@ -527,8 +465,6 @@ build CMakeFiles/slurmCombine.dir/SpikeTrain.cpp.o: CXX_COMPILER__slurmCombine_D
   INCLUDES = -I/opt/homebrew/include -I/home/mw894/hdf/CMake-hdf5-1.8.23/build/HDF5-1.8.23-Linux/HDF_Group/HDF5/1.8.23/include
   OBJECT_DIR = CMakeFiles/slurmCombine.dir
   OBJECT_FILE_DIR = CMakeFiles/slurmCombine.dir
-  TARGET_COMPILE_PDB = CMakeFiles/slurmCombine.dir/
-  TARGET_PDB = slurmCombine.pdb
 
 build CMakeFiles/slurmCombine.dir/STTC.cpp.o: CXX_COMPILER__slurmCombine_Debug /Users/maxwuerfek/code/diss/gnm-run/STTC.cpp || cmake_object_order_depends_target_slurmCombine
   DEP_FILE = CMakeFiles/slurmCombine.dir/STTC.cpp.o.d
@@ -536,8 +472,6 @@ build CMakeFiles/slurmCombine.dir/STTC.cpp.o: CXX_COMPILER__slurmCombine_Debug /
   INCLUDES = -I/opt/homebrew/include -I/home/mw894/hdf/CMake-hdf5-1.8.23/build/HDF5-1.8.23-Linux/HDF_Group/HDF5/1.8.23/include
   OBJECT_DIR = CMakeFiles/slurmCombine.dir
   OBJECT_FILE_DIR = CMakeFiles/slurmCombine.dir
-  TARGET_COMPILE_PDB = CMakeFiles/slurmCombine.dir/
-  TARGET_PDB = slurmCombine.pdb
 
 
 # =============================================================================
@@ -554,9 +488,8 @@ build slurmCombine: CXX_EXECUTABLE_LINKER__slurmCombine_Debug CMakeFiles/slurmCo
   OBJECT_DIR = CMakeFiles/slurmCombine.dir
   POST_BUILD = :
   PRE_LINK = :
-  TARGET_COMPILE_PDB = CMakeFiles/slurmCombine.dir/
   TARGET_FILE = slurmCombine
-  TARGET_PDB = slurmCombine.pdb
+  TARGET_PDB = slurmCombine.dbg
 
 
 #############################################
@@ -601,14 +534,14 @@ build all: phony main spikeTrainTest spikeSetTest sttcTest syntheticTest slurmPr
 #############################################
 # Re-run CMake if any of its inputs changed.
 
-build build.ninja: RERUN_CMAKE | /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCCompiler.cmake.in /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCCompilerABI.c /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCXXCompiler.cmake.in /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCXXCompilerABI.cpp /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCXXInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCommonLanguageInclude.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCompilerIdDetection.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeDetermineCCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeDetermineCXXCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeDetermineCompileFeatures.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeDetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeDetermineCompilerABI.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeDetermineCompilerId.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeDetermineSystem.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeFindBinUtils.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeGenericSystem.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeInitializeConfigs.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeLanguageInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeParseImplicitIncludeInfo.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeParseImplicitLinkInfo.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeParseLibraryArchitecture.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeSystem.cmake.in /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeSystemSpecificInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeSystemSpecificInitialize.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeTestCCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeTestCXXCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeTestCompilerCommon.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/ADSP-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/ARMCC-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/ARMClang-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/AppleClang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/AppleClang-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/AppleClang-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Borland-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Bruce-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/CMakeCommonCompilerMacros.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Clang-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Clang-DetermineCompilerInternal.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Clang.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Comeau-CXX-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Compaq-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Compaq-CXX-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Cray-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Embarcadero-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Fujitsu-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/FujitsuClang-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/GHS-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/GNU-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/GNU-CXX-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/GNU.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/HP-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/HP-CXX-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/IAR-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/IBMCPP-C-DetermineVersionInternal.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/IBMCPP-CXX-DetermineVersionInternal.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/IBMClang-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/IBMClang-CXX-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Intel-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/IntelLLVM-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/LCC-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/LCC-CXX-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/MSVC-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/NVHPC-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/NVIDIA-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/OpenWatcom-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/PGI-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/PathScale-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/SCO-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/SDCC-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/SunPro-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/SunPro-CXX-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/TI-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Tasking-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/TinyCC-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/VisualAge-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/VisualAge-CXX-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Watcom-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/XL-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/XL-CXX-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/XLClang-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/XLClang-CXX-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/zOS-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/zOS-CXX-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Internal/FeatureTesting.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-AppleClang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-AppleClang-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-Clang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-Clang-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-Clang.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Darwin-Determine-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Darwin-Initialize.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Darwin.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/UnixPaths.cmake /Users/maxwuerfek/code/diss/gnm-run/CMakeLists.txt CMakeCache.txt CMakeFiles/3.25.2/CMakeCCompiler.cmake CMakeFiles/3.25.2/CMakeCXXCompiler.cmake CMakeFiles/3.25.2/CMakeSystem.cmake
+build build.ninja: RERUN_CMAKE | /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCXXInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCommonLanguageInclude.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeGenericSystem.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeInitializeConfigs.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeLanguageInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeSystemSpecificInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeSystemSpecificInitialize.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/AppleClang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/AppleClang-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/CMakeCommonCompilerMacros.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Clang.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/GNU.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-AppleClang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-AppleClang-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-Clang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-Clang-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-Clang.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Darwin-Initialize.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Darwin.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/UnixPaths.cmake /Users/maxwuerfek/code/diss/gnm-run/CMakeLists.txt CMakeCache.txt CMakeFiles/3.25.2/CMakeCCompiler.cmake CMakeFiles/3.25.2/CMakeCXXCompiler.cmake CMakeFiles/3.25.2/CMakeSystem.cmake
   pool = console
 
 
 #############################################
 # A missing CMake input file is not an error.
 
-build /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCCompiler.cmake.in /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCCompilerABI.c /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCXXCompiler.cmake.in /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCXXCompilerABI.cpp /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCXXInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCommonLanguageInclude.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCompilerIdDetection.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeDetermineCCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeDetermineCXXCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeDetermineCompileFeatures.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeDetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeDetermineCompilerABI.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeDetermineCompilerId.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeDetermineSystem.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeFindBinUtils.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeGenericSystem.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeInitializeConfigs.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeLanguageInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeParseImplicitIncludeInfo.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeParseImplicitLinkInfo.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeParseLibraryArchitecture.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeSystem.cmake.in /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeSystemSpecificInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeSystemSpecificInitialize.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeTestCCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeTestCXXCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeTestCompilerCommon.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/ADSP-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/ARMCC-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/ARMClang-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/AppleClang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/AppleClang-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/AppleClang-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Borland-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Bruce-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/CMakeCommonCompilerMacros.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Clang-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Clang-DetermineCompilerInternal.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Clang.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Comeau-CXX-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Compaq-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Compaq-CXX-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Cray-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Embarcadero-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Fujitsu-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/FujitsuClang-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/GHS-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/GNU-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/GNU-CXX-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/GNU.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/HP-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/HP-CXX-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/IAR-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/IBMCPP-C-DetermineVersionInternal.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/IBMCPP-CXX-DetermineVersionInternal.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/IBMClang-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/IBMClang-CXX-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Intel-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/IntelLLVM-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/LCC-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/LCC-CXX-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/MSVC-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/NVHPC-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/NVIDIA-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/OpenWatcom-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/PGI-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/PathScale-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/SCO-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/SDCC-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/SunPro-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/SunPro-CXX-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/TI-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Tasking-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/TinyCC-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/VisualAge-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/VisualAge-CXX-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Watcom-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/XL-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/XL-CXX-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/XLClang-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/XLClang-CXX-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/zOS-C-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/zOS-CXX-DetermineCompiler.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Internal/FeatureTesting.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-AppleClang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-AppleClang-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-Clang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-Clang-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-Clang.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Darwin-Determine-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Darwin-Initialize.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Darwin.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/UnixPaths.cmake /Users/maxwuerfek/code/diss/gnm-run/CMakeLists.txt CMakeCache.txt CMakeFiles/3.25.2/CMakeCCompiler.cmake CMakeFiles/3.25.2/CMakeCXXCompiler.cmake CMakeFiles/3.25.2/CMakeSystem.cmake: phony
+build /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCXXInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCommonLanguageInclude.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeGenericSystem.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeInitializeConfigs.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeLanguageInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeSystemSpecificInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeSystemSpecificInitialize.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/AppleClang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/AppleClang-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/CMakeCommonCompilerMacros.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Clang.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/GNU.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-AppleClang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-AppleClang-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-Clang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-Clang-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-Clang.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Darwin-Initialize.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Darwin.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/UnixPaths.cmake /Users/maxwuerfek/code/diss/gnm-run/CMakeLists.txt CMakeCache.txt CMakeFiles/3.25.2/CMakeCCompiler.cmake CMakeFiles/3.25.2/CMakeCXXCompiler.cmake CMakeFiles/3.25.2/CMakeSystem.cmake: phony
 
 
 #############################################
