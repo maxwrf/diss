@@ -187,11 +187,11 @@
 				},
 				{
 					"name" : "HELPSTRING",
-					"value" : "CXX compiler"
+					"value" : "No help, variable specified on the command line."
 				}
 			],
-			"type" : "STRING",
-			"value" : "/bin/g++-9"
+			"type" : "UNINITIALIZED",
+			"value" : "g++-9"
 		},
 		{
 			"name" : "CMAKE_CXX_COMPILER_AR",

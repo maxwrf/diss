@@ -6,7 +6,7 @@ dSets = ["Charlesworth2015", "Hennig2011", "Demas2006"]
 
 def main():
     cluster = True
-    dSet = 0
+    dSet = 2
 
     if cluster:
         inDirPath = "/store/DAMTPEGLEN/mw894/slurm/" + dSets[dSet]
@@ -17,7 +17,7 @@ def main():
     print("Files read: " + str(filesRead))
     Slurm.writeGroupsHD5(Kall, paramSpace, groupIds, inDirPath)
     print("Groups written:" + str(len(np.unique(groupIds))))
-
+    print("Path:" + inDirPath)
 
 if __name__ == "__main__":
     main()

@@ -9,6 +9,7 @@
 #include <vector>
 #include <cassert>
 #include <algorithm>
+#include <iostream>
 
 SpikeTrain::SpikeTrain(std::string FILE_NAME_,
                        std::vector<std::vector<double>> &electrodePos,
@@ -140,14 +141,33 @@ void SpikeTrain::getGroupId(int dSet) {
      * The group ID needs to identify a subset of the HD5 spike trains in the provided directory
      * Will require specification for different spike train sets
      */
-    if (dSet == 0) {
-        int div = (int) readDoubleDataset(FILE_NAME, "meta/age")[0];
-        std::string region = readByteStringDataset(FILE_NAME, "meta/region")[0];
-        groupId = region + std::to_string(div);
-    } else if (dSet == 1) {
-        int div = (int) readDoubleDataset(FILE_NAME, "meta/age")[0];
-        groupId = std::to_string(div);
-    }
+    switch (dSet) {
+        int div;
+        case 0:
+        {
+            div = (int) readDoubleDataset(FILE_NAME, "meta/age")[0];
+            std::string region = readByteStringDataset(FILE_NAME, "meta/region")[0];
+            groupId = region + std::to_string(div);
+            break;
+        }
+
+        case 1:
+        {
+            div = (int) readDoubleDataset(FILE_NAME, "meta/age")[0];
+            groupId = std::to_string(div);
+            break;
+        }
+
+        case 2:
+        {
+            div = (int) readDoubleDataset(FILE_NAME, "meta/age")[0];
+            groupId = std::to_string(div);
+            break;
+        }
+
+        default:
+            std::cout << "No group ID implemented for this dataset" << std::endl;
+    };
 }
 
 void SpikeTrain::getActiveElectrodeNumbers(std::vector<int> &electrodes) {
