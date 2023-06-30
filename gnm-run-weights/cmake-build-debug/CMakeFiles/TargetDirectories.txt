@@ -1,0 +1,3 @@
+/Users/maxwuerfek/code/diss/gnm-run-weights/cmake-build-debug/CMakeFiles/mainTest.dir
+/Users/maxwuerfek/code/diss/gnm-run-weights/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/maxwuerfek/code/diss/gnm-run-weights/cmake-build-debug/CMakeFiles/rebuild_cache.dir
