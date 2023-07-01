@@ -14,7 +14,7 @@ def analyze(config, filePathIn):
         K_all = f['Kall'][()]
         K_max_all = np.max(K_all, axis=-1)
         param_space = f['paramSpace'][()]
-        groupId = f['groupId'][()][0]
+        #groupId = f['groupId'][()][0]
 
     # make table with results
     idx = np.indices(K_max_all.shape).reshape(K_max_all.ndim, -1).T
@@ -39,9 +39,12 @@ if __name__ == "__main__":
         "/Users/maxwuerfek/code/diss/gnm-analyze/config.json")
 
     #dir = "/Users/maxwuerfek/code/diss/gnm-analyze/results/Demas2006"
-    dir = "/Users/maxwuerfek/code/diss/gnm-analyze/results/Charlesworth2015"
+    #dir = "/Users/maxwuerfek/code/diss/gnm-analyze/results/Charlesworth2015"
 
-    filesPaths = glob.glob(dir + "/*.h5")
+    #filesPaths = glob.glob(dir + "/*.h5")
+
+    filesPaths = [
+        "/Users/maxwuerfek/code/diss/gnm-run-weights/testData/testKall.h5"]
 
     for f_p in filesPaths:
         analyze(config, f_p)

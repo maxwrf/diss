@@ -6,7 +6,6 @@
 #define GNM_RUN_WEIGHTEDGNM_H
 
 #include "GNM.h"
-#include "WeightedModel.h"
 
 class WeightedGNM : public GNM {
 
@@ -15,8 +14,22 @@ private:
 
     void runParamComb(int i_pcomb) override;
 
+    // Get the reps (actual differences to current edge value)
+    std::vector<double> getReps(double currentEdgeValue) {
+        std::vector<double> reps(nReps);
+        for (int i = 0; i < nReps; i++) {
+            reps[i] = currentEdgeValue + currentEdgeValue * repVec[i];
+        }
+        return reps;
+    }
+
 public:
-    WeightedModel &wModel;
+    int start;
+    int optiFunc;
+    int nReps;
+    std::vector<double> repVec;
+    // Parameters, Iterations, nxn
+    std::vector<std::vector<std::vector<std::vector<double>>>> &A_keep, &W_keep;
 
     WeightedGNM(std::vector<std::vector<double>> &A_Y_,
                 std::vector<std::vector<double>> &A_init_,
@@ -28,7 +41,12 @@ public:
                 int model_,
                 int n_p_combs_,
                 int n_nodes_,
-                WeightedModel &wModel_
+                int start_,
+                int optiFunc_,
+                double optiResolution_,
+                int optiSamples_,
+                std::vector<std::vector<std::vector<std::vector<double>>>> &A_keep_,
+                std::vector<std::vector<std::vector<std::vector<double>>>> &W_keep_
     ) : GNM(A_Y_,
             A_init_,
             D_,
@@ -38,8 +56,22 @@ public:
             m_,
             model_,
             n_p_combs_,
-            n_nodes_), wModel(wModel_) {
+            n_nodes_),
+        start(start_),
+        optiFunc(optiFunc_),
+        A_keep(A_keep_),
+        W_keep(W_keep_) {
+
         W_current.resize(n_nodes, std::vector<double>(n_nodes));
+
+        // Prepare repVec (relative differences to current edge value)
+        double minVal = -optiSamples_ * optiResolution_;
+        double maxVal = -minVal;
+        nReps = static_cast<int>((maxVal - minVal) / optiResolution_) + 1;
+        repVec.resize(nReps);
+        for (int i = 0; i < nReps; i++) {
+            repVec[i] = minVal + i * optiResolution_;
+        }
     };
 };
 

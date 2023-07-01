@@ -71,10 +71,8 @@ void WeightedGNM::runParamComb(int i_pcomb) {
         C[0] = 0;
 
         // Initiate the keep arrays
-        std::vector<std::vector<std::vector<double>>> Akeep(
-                m - m_seed, std::vector<std::vector<double>>(n_nodes, std::vector<double>(n_nodes)));
-        std::vector<std::vector<std::vector<double>>> Wkeep(
-                m - m_seed, std::vector<std::vector<double>>(n_nodes, std::vector<double>(n_nodes)));
+        A_keep.resize(m - m_seed, std::vector<std::vector<double>>(n_nodes, std::vector<double>(n_nodes)));
+        W_keep.resize(m - m_seed, std::vector<std::vector<double>>(n_nodes, std::vector<double>(n_nodes)));
 
         // main loop adding new connections to adjacency matrix
         for (int i = m_seed + 1; i <= m; ++i) {
@@ -125,15 +123,15 @@ void WeightedGNM::runParamComb(int i_pcomb) {
             }
 
             // Update Akeep
-            Akeep[i - m_seed - 1] = A_current;
+            A_keep[i - m_seed - 1] = A_current;
 
             // If we use w Model, and we are past the start iteration
-            if (i >= (wModel.start + m_seed + 1)) {
+            if (i >= (start + m_seed + 1)) {
                 // Initalize W
-                if (i == (wModel.start + m_seed + 1)) {
+                if (i == (start + m_seed + 1)) {
                     W_current = A_current;
                 } else {
-                    W_current = Wkeep[i - m_seed - 1];
+                    W_current = W_keep[i - m_seed - 1];
                     W_current[uu][vv] = W_current[vv][uu] = 1;
                 }
 
@@ -151,10 +149,10 @@ void WeightedGNM::runParamComb(int i_pcomb) {
                 }
 
                 // Compute Eq. 3, Communicability. Simulate over edges
-                std::vector<std::vector<double>> sumComm(nEdges, std::vector<double>(wModel.nReps));
+                std::vector<std::vector<double>> sumComm(nEdges, std::vector<double>(nReps));
                 for (int jEdge = 0; jEdge < nEdges; ++jEdge) {
                     double currentEdgeValue = W_current[edgeRowIdx[jEdge]][edgeColIdx[jEdge]];
-                    std::vector<double> reps = wModel.getReps(currentEdgeValue);
+                    std::vector<double> reps = getReps(currentEdgeValue);
 
                     // Over reps
                     Eigen::MatrixXd W_currentSynthEigen(n_nodes, n_nodes);
@@ -164,13 +162,13 @@ void WeightedGNM::runParamComb(int i_pcomb) {
                         }
                     }
 
-                    for (int kRep = 0; kRep < wModel.nReps; kRep++) {
+                    for (int kRep = 0; kRep < nReps; kRep++) {
                         W_currentSynthEigen(edgeRowIdx[jEdge], edgeColIdx[jEdge]) = W_currentSynthEigen(
                                 edgeColIdx[jEdge],
                                 edgeRowIdx[jEdge]) = reps[kRep];
 
                         Eigen::MatrixXd comm(n_nodes, n_nodes);
-                        switch (wModel.optiFunc) {
+                        switch (optiFunc) {
                             case 0: {
                                 // Non-normalized matrix exponential of W
                                 comm = W_currentSynthEigen.exp();
@@ -199,10 +197,10 @@ void WeightedGNM::runParamComb(int i_pcomb) {
                 // Compute Eq. 4, Objective function.
                 std::vector<double> curve(nEdges);
                 for (int jEdge = 0; jEdge < nEdges; ++jEdge) {
-                    std::vector<double> x(wModel.nReps), y(wModel.nReps);
+                    std::vector<double> x(nReps), y(nReps);
                     double sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
 
-                    for (int kRep = 0; kRep < wModel.nReps; kRep++) {
+                    for (int kRep = 0; kRep < nReps; kRep++) {
                         x[kRep] = kRep + 1;
                         y[kRep] = std::pow((sumComm[jEdge][kRep] * D[edgeRowIdx[jEdge]][edgeColIdx[jEdge]]), omega);
                         sumX += x[kRep];
@@ -211,7 +209,7 @@ void WeightedGNM::runParamComb(int i_pcomb) {
                         sumX2 += x[kRep] * x[kRep];
                     }
 
-                    curve[jEdge] = (wModel.nReps * sumXY - sumX * sumY) / (wModel.nReps * sumX2 - sumX * sumX);
+                    curve[jEdge] = (nReps * sumXY - sumX * sumY) / (nReps * sumX2 - sumX * sumX);
                 }
 
                 // Compute Eq. 5, Update the connection strengths
@@ -223,7 +221,7 @@ void WeightedGNM::runParamComb(int i_pcomb) {
                     }
                 }
                 // Need network for next iteration
-                Wkeep[i - m_seed - 1] = W_current;
+                W_keep[i - m_seed - 1] = W_current;
             }
         }
     }

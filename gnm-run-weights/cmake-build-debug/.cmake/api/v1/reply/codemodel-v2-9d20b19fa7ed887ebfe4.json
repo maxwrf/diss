@@ -1,0 +1,69 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.25"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "gnm-run",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "mainTest::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-mainTest-Debug-10feb48c316e29ed53a7.json",
+					"name" : "mainTest",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "mainTestWeights::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-mainTestWeights-Debug-d5364b5a4429bb4d0824.json",
+					"name" : "mainTestWeights",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/Users/maxwuerfek/code/diss/gnm-run-weights/cmake-build-debug",
+		"source" : "/Users/maxwuerfek/code/diss/gnm-run-weights"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 4
+	}
+}

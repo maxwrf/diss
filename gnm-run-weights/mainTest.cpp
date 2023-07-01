@@ -7,43 +7,49 @@
 #include <vector>
 #include <iostream>
 #include "TestData.h"
-#include "WeightedGNM.h"
-
 
 int main() {
-    // Load the test data
-    std::string pA = "/Users/maxwuerfek/code/diss/gnm-run-weights/testData/A.h5";
-    std::string pA_init = "/Users/maxwuerfek/code/diss/gnm-run-weights/testData/Ainit.h5";
-    std::string pD = "/Users/maxwuerfek/code/diss/gnm-run-weights/testData/D.h5";
+    std::string pData = "/Users/maxwuerfek/code/diss/gnm-run-weights/testData/syntheticData.h5";
+    std::string pDist = "/Users/maxwuerfek/code/diss/gnm-run-weights/testData/syntheticDataDistances.h5";
+    std::string pOut = "/Users/maxwuerfek/code/diss/gnm-run-weights/testData/testKall.h5";
 
     // Load the synthetic data
-    int n = 68, m = 80;
-    std::vector<std::vector<double>> A(n, std::vector<double>(n, 0));
-    std::vector<std::vector<double>> A_init(n, std::vector<double>(n, 0));
-    std::vector<std::vector<double>> D(n, std::vector<double>(n));
+    int n1 = 270, n2 = 68, n3 = 68;
+    std::vector<std::vector<double>> A_init(n2, std::vector<double>(n3, 0));
+    std::vector<double> connectomesM(n1, 0);
+    std::vector<std::vector<std::vector<double>>> connectomes(
+            n1, std::vector<std::vector<double>>(n2, std::vector<double>(n3)));
+    std::vector<std::vector<double>> D(n2, std::vector<double>(n3));
 
-    TestData::getSyntheticData(
-            A,
+    SyntheticData::getSyntheticData(
+            connectomes,
+            connectomesM,
             A_init,
             D,
-            pA,
-            pA_init,
-            pD,
-            n);
+            pData,
+            pDist,
+            n1,
+            n2,
+            n3);
 
-
+    // Only generate the models for some number of samples
+    int nSamples = 2;
+    if (nSamples == -1) {
+        nSamples = n1;
+    }
 
     // Generate parameter space
-    double eta = -3.2, gamma = 0.38, alpha = 0.05, omega = 0.9;
-    std::vector<std::vector<double>> paramSpace = {{eta, gamma, alpha, omega}};
-
-    // Weighted model parameters
-    WeightedModel wModel(1, 0, 1, 0.05, 5);
+    int nRuns = 1000;
+    std::vector<double> etaLimits = {-7, 7};
+    std::vector<double> gammaLimits = {-7, 7};
+    std::vector<std::vector<double>> paramSpace = GNM::generateParamSpace(nRuns,
+                                                                          etaLimits,
+                                                                          gammaLimits);
 
     // Initialize Kall
     std::vector<std::string> rules = GNM::getRules();
     std::vector<std::vector<std::vector<std::vector<double>>>> Kall(
-            1,
+            nSamples,
             std::vector<std::vector<std::vector<double>>>(
                     rules.size(),
                     std::vector<std::vector<double>>(
@@ -51,10 +57,10 @@ int main() {
                             std::vector<double>(4))));
 
     // Run the generative models
-    int nSamples = 1;
     for (int iSample = 0; iSample < nSamples; ++iSample) {
+        int m = connectomesM[iSample] / 2;
         for (int jModel = 0; jModel < rules.size(); ++jModel) {
-            auto start = std::chrono::high_resolution_clock::now();
+            auto startT = std::chrono::high_resolution_clock::now();
             std::vector<std::vector<int>> b(
                     m,
                     std::vector<int>(paramSpace.size())
@@ -65,8 +71,8 @@ int main() {
                     std::vector<double>(4)
             );
 
-            WeightedGNM model(
-                    A,
+            GNM model(
+                    connectomes[iSample],
                     A_init,
                     D,
                     paramSpace,
@@ -75,22 +81,19 @@ int main() {
                     m,
                     jModel,
                     paramSpace.size(),
-                    A.size(),
-                    wModel
-            );
+                    connectomes[iSample].size());
 
             model.generateModels();
             Kall[iSample][jModel] = K;
 
-            auto end = std::chrono::high_resolution_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
-            std::cout << "Done | Sample: " << iSample << " Model: " << jModel << " Duration: " << duration.count()
+            auto endT = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endT - startT);
+            std::cout << "Done | Sample: " << iSample << " Model: " << jModel << " Duration (MS): " << duration.count()
                       << std::endl;
         }
     }
 
     // Store the results
-    std::string pOut = "/Users/maxwuerfek/code/diss/gnm-run/testData/testKall.h5";
     GNM::saveResults(pOut, Kall, paramSpace);
     return 0;
 }
