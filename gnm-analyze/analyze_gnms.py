@@ -44,7 +44,7 @@ if __name__ == "__main__":
     #filesPaths = glob.glob(dir + "/*.h5")
 
     filesPaths = [
-        "/Users/maxwuerfek/code/diss/gnm-run-weights/testData/testKall.h5"]
+        "/Users/maxwuerfek/code/diss/gnm-run/testData/testKall.h5"]
 
     for f_p in filesPaths:
         analyze(config, f_p)

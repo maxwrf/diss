@@ -11,11 +11,8 @@
 class GNM {
 private:
     std::vector<std::vector<double>> &A_Y;
-    std::vector<std::vector<double>> A_current;
-    std::vector<std::vector<double>> K_current;
-    std::vector<double> k_current;
     std::vector<double> clu_coeff_current;
-    double epsilon = 1e-5;
+
 
     static double ksTest(const std::vector<double> &x,
                          const std::vector<double> &y);
@@ -34,18 +31,27 @@ private:
             std::vector<std::vector<double>> &D,
             int n_nodes);
 
+    void resetAcurrent();
+
+    virtual void runParamComb(int i_pcomb);
+
+protected:
+    std::vector<double> k_current;
+    std::vector<std::vector<double>> A_current;
+    int m_seed, upper_tri_index;
+    std::vector<int> u, v;
+
+    void initK();
+
+    std::vector<std::vector<double>> K_current;
+
     std::vector<int> updateClusteringCoeff(
             int uu,
             int vv);
 
-    void resetAcurrent();
-
-    void initK();
-
     void updateK(std::vector<int> bth);
 
-    void runParamComb(int i_pcomb);
-
+    double epsilon = 1e-5;
 public:
     std::vector<std::vector<double>> &A_init;
     std::vector<std::vector<double>> &D;
@@ -98,6 +104,27 @@ public:
         K_current.resize(n_nodes, std::vector<double>(n_nodes));
         k_current.resize(n_nodes);
         clu_coeff_current.resize(n_nodes);
+
+        // get the indices of the upper triangle
+        u.resize(n_nodes * (n_nodes - 1) / 2);
+        v.resize(n_nodes * (n_nodes - 1) / 2);
+
+        upper_tri_index = 0;
+        for (int i = 0; i < n_nodes; ++i) {
+            for (int j = i + 1; j < n_nodes; ++j) {
+                u[upper_tri_index] = i;
+                v[upper_tri_index] = j;
+                upper_tri_index++;
+            }
+        }
+
+        // Number of connections we start with
+        m_seed = 0;
+        for (int i = 0; i < upper_tri_index; ++i) {
+            if (A_init[u[i]][v[i]]) {
+                m_seed++;
+            }
+        }
     }
 };
 
