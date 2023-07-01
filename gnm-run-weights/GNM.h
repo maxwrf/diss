@@ -13,6 +13,7 @@ private:
     std::vector<std::vector<double>> &A_Y;
     std::vector<double> clu_coeff_current;
 
+
     static double ksTest(const std::vector<double> &x,
                          const std::vector<double> &y);
 
@@ -37,6 +38,8 @@ private:
 protected:
     std::vector<double> k_current;
     std::vector<std::vector<double>> A_current;
+    int m_seed, upper_tri_index;
+    std::vector<int> u, v;
 
     void initK();
 
@@ -101,6 +104,27 @@ public:
         K_current.resize(n_nodes, std::vector<double>(n_nodes));
         k_current.resize(n_nodes);
         clu_coeff_current.resize(n_nodes);
+
+        // get the indices of the upper triangle
+        u.resize(n_nodes * (n_nodes - 1) / 2);
+        v.resize(n_nodes * (n_nodes - 1) / 2);
+
+        upper_tri_index = 0;
+        for (int i = 0; i < n_nodes; ++i) {
+            for (int j = i + 1; j < n_nodes; ++j) {
+                u[upper_tri_index] = i;
+                v[upper_tri_index] = j;
+                upper_tri_index++;
+            }
+        }
+
+        // Number of connections we start with
+        m_seed = 0;
+        for (int i = 0; i < upper_tri_index; ++i) {
+            if (A_init[u[i]][v[i]]) {
+                m_seed++;
+            }
+        }
     }
 };
 

@@ -62,7 +62,18 @@ public:
         A_keep(A_keep_),
         W_keep(W_keep_) {
 
+        // Resize the private variables
         W_current.resize(n_nodes, std::vector<double>(n_nodes));
+
+        // Initiate the keep arrays (params, iterations (i.e., edges added), nxn)
+        A_keep.resize(n_p_combs, std::vector<std::vector<std::vector<double>>>(m - m_seed,
+                                                                               std::vector<std::vector<double>>(
+                                                                                       n_nodes, std::vector<double>(
+                                                                                               n_nodes))));
+        W_keep.resize(n_p_combs, std::vector<std::vector<std::vector<double>>>(m - m_seed,
+                                                                               std::vector<std::vector<double>>(
+                                                                                       n_nodes, std::vector<double>(
+                                                                                               n_nodes))));
 
         // Prepare repVec (relative differences to current edge value)
         double minVal = -optiSamples_ * optiResolution_;

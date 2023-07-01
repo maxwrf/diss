@@ -22,15 +22,7 @@ int main() {
     std::vector<std::vector<double>> A(n, std::vector<double>(n, 0));
     std::vector<std::vector<double>> A_init(n, std::vector<double>(n, 0));
     std::vector<std::vector<double>> D(n, std::vector<double>(n));
-
-    TestDataWeights::getSyntheticData(
-            A,
-            A_init,
-            D,
-            pA,
-            pA_init,
-            pD,
-            n);
+    TestDataWeights::getSyntheticData(A, A_init, D, pA, pA_init, pD, n);
 
     // Generate parameter space
     double eta = -3.2, gamma = 0.38, alpha = 0.05, omega = 0.9;
@@ -51,24 +43,18 @@ int main() {
                             std::vector<double>(4))));
 
     // Initialize AkeepAll and WkeepAll (Sample => Model, Params, Iterations (i.e., added edges), nxn)
-    std::map<int, std::vector<std::vector<std::vector<std::vector<double>>>>> AkeepAll, WkeepAll;
+    std::map<int, std::map<int, std::vector<std::vector<std::vector<std::vector<double>>>>>> AkeepAll, WkeepAll;
 
     // Run the generative models
     int nSamples = 1;
     for (int iSample = 0; iSample < nSamples; ++iSample) {
         for (int jModel = 0; jModel < rules.size(); ++jModel) {
             auto startT = std::chrono::high_resolution_clock::now();
-            std::vector<std::vector<int>> b(
-                    m,
-                    std::vector<int>(paramSpace.size())
-            );
 
-            std::vector<std::vector<double>> K(
-                    paramSpace.size(),
-                    std::vector<double>(4)
-            );
-
-            std::vector<std::vector<std::vector<double>>> Akeep, Wkeep;
+            // Init to store results
+            std::vector<std::vector<int>> b(m, std::vector<int>(paramSpace.size()));
+            std::vector<std::vector<double>> K(paramSpace.size(), std::vector<double>(4));
+            std::vector<std::vector<std::vector<std::vector<double>>>> Akeep, Wkeep;
 
             WeightedGNM model(
                     A,
@@ -91,7 +77,8 @@ int main() {
 
             model.generateModels();
             Kall[iSample][jModel] = K;
-
+            AkeepAll[iSample][jModel] = Akeep;
+            WkeepAll[iSample][jModel] = Wkeep;
 
             auto endT = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endT - startT);
@@ -99,9 +86,5 @@ int main() {
                       << std::endl;
         }
     }
-
-    // Store the results
-    std::string pOut = "/Users/maxwuerfek/code/diss/gnm-run/testData/testKall.h5";
-    GNM::saveResults(pOut, Kall, paramSpace);
     return 0;
 }

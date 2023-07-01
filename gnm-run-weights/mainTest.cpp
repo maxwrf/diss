@@ -61,15 +61,10 @@ int main() {
         int m = connectomesM[iSample] / 2;
         for (int jModel = 0; jModel < rules.size(); ++jModel) {
             auto startT = std::chrono::high_resolution_clock::now();
-            std::vector<std::vector<int>> b(
-                    m,
-                    std::vector<int>(paramSpace.size())
-            );
 
-            std::vector<std::vector<double>> K(
-                    paramSpace.size(),
-                    std::vector<double>(4)
-            );
+            // Init to store results
+            std::vector<std::vector<int>> b(m, std::vector<int>(paramSpace.size()));
+            std::vector<std::vector<double>> K(paramSpace.size(), std::vector<double>(4));
 
             GNM model(
                     connectomes[iSample],
