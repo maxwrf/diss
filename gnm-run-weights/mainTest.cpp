@@ -7,7 +7,6 @@
 #include <vector>
 #include <iostream>
 #include "TestData.h"
-#include "WeightedModel.h"
 #include "WeightedGNM.h"
 
 
@@ -39,7 +38,7 @@ int main() {
     std::vector<std::vector<double>> paramSpace = {{eta, gamma, alpha, omega}};
 
     // Weighted model parameters
-    WeightedModel wModel(1, 0, 0, 0.05, 5);
+    WeightedModel wModel(1, 0, 1, 0.05, 5);
 
     // Initialize Kall
     std::vector<std::string> rules = GNM::getRules();
@@ -55,6 +54,7 @@ int main() {
     int nSamples = 1;
     for (int iSample = 0; iSample < nSamples; ++iSample) {
         for (int jModel = 0; jModel < rules.size(); ++jModel) {
+            auto start = std::chrono::high_resolution_clock::now();
             std::vector<std::vector<int>> b(
                     m,
                     std::vector<int>(paramSpace.size())
@@ -82,7 +82,10 @@ int main() {
             model.generateModels();
             Kall[iSample][jModel] = K;
 
-            std::cout << "Done | Sample: " << iSample << " Model: " << jModel << std::endl;
+            auto end = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
+            std::cout << "Done | Sample: " << iSample << " Model: " << jModel << " Duration: " << duration.count()
+                      << std::endl;
         }
     }
 

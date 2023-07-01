@@ -44,7 +44,7 @@ class Slurm():
                         groupIds.append(groupId)
                         filesRead += 1
 
-        return np.array(Kall), paramSpace, groupIds, filesRead
+        return np.array(Kall), paramSpace, np.array(groupIds), filesRead
 
     @staticmethod
     def writeGroupsHD5(Kall, paramSpace, groupIds, outDirPath):
@@ -52,7 +52,7 @@ class Slurm():
 
         for groupId in uniqueGroupIds:
             indices = np.where(groupIds == groupId)
-            KallGroup = Kall[indices, ...]
+            KallGroup = Kall[indices]
             outFile = outDirPath + "/" + groupId + ".h5"
             with h5py.File(outFile, "w") as file:
                 file.create_dataset("Kall", data=KallGroup)

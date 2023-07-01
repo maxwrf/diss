@@ -3,4 +3,5 @@ diss-env/
 data/
 gnm-run/slurm/*
 gnm-analyze/__pycache__/
+gnm-analyze/results/
 slurm/

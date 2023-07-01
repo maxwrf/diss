@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import json
+import os
 
 
 class Utils:
@@ -28,7 +29,7 @@ class Utils:
         return params
 
     @staticmethod
-    def plot_boxplots(df_results, gnm_rules, config):
+    def plot_boxplots(df_results, gnm_rules, filePathIn):
         """
         For every rule get for every sample the best model (param comb)
         Plot a histogram accordingly
@@ -45,10 +46,12 @@ class Utils:
         axes.set_xticklabels(gnm_rules)
 
         axes.boxplot(data)
-        fig.savefig(config['plot_path'] + 'boxplots' + '.png')
+
+        base_name, _ = os.path.splitext(filePathIn)
+        fig.savefig(base_name + '_boxplot' + '.png')
 
     @staticmethod
-    def plot_landscape(df_results, gnm_rules, config):
+    def plot_landscape(df_results, gnm_rules, filePathIn):
         """
         For every model type draws the energy landscapes for all parameter 
         combinations
@@ -89,10 +92,12 @@ class Utils:
         axes[-2].set_visible(False)
         fig.tight_layout()
         fig.colorbar(im, ax=axes.ravel().tolist(), shrink=0.5)
-        fig.savefig(config['plot_path'] + 'landscape' + '.png')
+
+        base_name, _ = os.path.splitext(filePathIn)
+        fig.savefig(base_name + '_landscape' + '.png')
 
     @staticmethod
-    def summary_table(df_results, config):
+    def summary_table(df_results, filePathIn):
         """
         For every sample and model get the best energy value and parameter comb
         Then for every model across all samples compute summary statistics
@@ -108,4 +113,6 @@ class Utils:
                 'eta': ['mean', 'min', 'max', 'std'],
                 'gamma': ['mean', 'min', 'max', 'std']
             },).reset_index()
-        df_summary.to_csv(config['results_path'] + 'results_' + '.csv')
+
+        base_name, _ = os.path.splitext(filePathIn)
+        df_summary.to_csv(base_name + '_results' + '.csv')

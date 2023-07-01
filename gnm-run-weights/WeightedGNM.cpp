@@ -41,12 +41,9 @@ void WeightedGNM::runParamComb(int i_pcomb) {
         }
 
         // get the indices of the upper triangle of P (denoted u and v)
-        std::vector<int> u(n_nodes *(n_nodes
-        -1) / 2);
-        std::vector<int> v(n_nodes *(n_nodes
-        -1) / 2);
+        std::vector<int> u(n_nodes *(n_nodes - 1) / 2);
+        std::vector<int> v(n_nodes *(n_nodes - 1) / 2);
         int upper_tri_index = 0;
-
         for (int i = 0; i < n_nodes; ++i) {
             for (int j = i + 1; j < n_nodes; ++j) {
                 u[upper_tri_index] = i;
@@ -122,8 +119,7 @@ void WeightedGNM::runParamComb(int i_pcomb) {
                 }
             }
 
-            // update p
-            // TODO: This currently just updates every position
+            // update p, TODO: This currently just updates every position
             for (int i = 0; i < upper_tri_index; ++i) {
                 P[i] = Ff[u[i]][v[i]];
             }
@@ -190,7 +186,8 @@ void WeightedGNM::runParamComb(int i_pcomb) {
                                     }
                                 }
                                 Eigen::MatrixXd S = s.asDiagonal();
-                                Eigen::MatrixXd adj = S.pow(-0.5) * W_currentSynthEigen * S.pow(-0.5);
+                                Eigen::MatrixXd temp =(S.inverse().array().sqrt().matrix());
+                                Eigen::MatrixXd adj =  temp * W_currentSynthEigen * temp;
                                 comm = adj.exp();
                                 break;
                             }
