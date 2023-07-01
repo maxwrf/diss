@@ -84,6 +84,13 @@ build CMakeFiles/mainTest.dir/TestData.cpp.o: CXX_COMPILER__mainTest_Debug /User
   OBJECT_DIR = CMakeFiles/mainTest.dir
   OBJECT_FILE_DIR = CMakeFiles/mainTest.dir
 
+build CMakeFiles/mainTest.dir/WeightedGNM.cpp.o: CXX_COMPILER__mainTest_Debug /Users/maxwuerfek/code/diss/gnm-run-weights/WeightedGNM.cpp || cmake_object_order_depends_target_mainTest
+  DEP_FILE = CMakeFiles/mainTest.dir/WeightedGNM.cpp.o.d
+  FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.6 -fcolor-diagnostics -std=gnu++17
+  INCLUDES = -I/opt/homebrew/include -I/opt/homebrew/include/eigen3
+  OBJECT_DIR = CMakeFiles/mainTest.dir
+  OBJECT_FILE_DIR = CMakeFiles/mainTest.dir
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target mainTest
@@ -92,7 +99,7 @@ build CMakeFiles/mainTest.dir/TestData.cpp.o: CXX_COMPILER__mainTest_Debug /User
 #############################################
 # Link the executable mainTest
 
-build mainTest: CXX_EXECUTABLE_LINKER__mainTest_Debug CMakeFiles/mainTest.dir/mainTest.cpp.o CMakeFiles/mainTest.dir/SpikeTrain.cpp.o CMakeFiles/mainTest.dir/STTC.cpp.o CMakeFiles/mainTest.dir/GNM.cpp.o CMakeFiles/mainTest.dir/TestData.cpp.o
+build mainTest: CXX_EXECUTABLE_LINKER__mainTest_Debug CMakeFiles/mainTest.dir/mainTest.cpp.o CMakeFiles/mainTest.dir/SpikeTrain.cpp.o CMakeFiles/mainTest.dir/STTC.cpp.o CMakeFiles/mainTest.dir/GNM.cpp.o CMakeFiles/mainTest.dir/TestData.cpp.o CMakeFiles/mainTest.dir/WeightedGNM.cpp.o
   FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.6
   LINK_LIBRARIES = -Wl,-rpath,/opt/homebrew/lib  -lhdf5  -lhdf5_hl  -lhdf5_cpp
   LINK_PATH = -L/opt/homebrew/lib

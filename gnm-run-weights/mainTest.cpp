@@ -8,6 +8,7 @@
 #include <iostream>
 #include "TestData.h"
 #include "WeightedModel.h"
+#include "WeightedGNM.h"
 
 
 int main() {
@@ -64,7 +65,7 @@ int main() {
                     std::vector<double>(4)
             );
 
-            GNM model(
+            WeightedGNM model(
                     A,
                     A_init,
                     D,

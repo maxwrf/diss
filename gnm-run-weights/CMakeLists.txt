@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 
 
-add_executable(mainTest mainTest.cpp SpikeTrain.cpp SpikeTrain.h STTC.cpp STTC.h GNM.cpp GNM.h TestData.cpp TestData.h)
+add_executable(mainTest mainTest.cpp SpikeTrain.cpp SpikeTrain.h STTC.cpp STTC.h GNM.cpp GNM.h TestData.cpp TestData.h WeightedGNM.cpp)
 
 
 target_include_directories(mainTest PRIVATE /opt/homebrew/include PRIVATE /opt/homebrew/include/eigen3/)

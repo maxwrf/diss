@@ -7,9 +7,7 @@
 #include <string>
 #include <H5Cpp.h>
 #include <algorithm>
-#include <Eigen/Dense>
-#include <unsupported/Eigen/MatrixFunctions>
-#include <iostream>
+
 
 std::vector<std::string> GNM::getRules() {
     std::vector<std::string> rules = {"spatial",
@@ -658,8 +656,6 @@ void GNM::runParamComb(int i_pcomb)
     // get the params
     double eta = params[i_pcomb][0];
     double gamma = params[i_pcomb][1];
-    double alpha = params[i_pcomb][2];
-    double omega = params[i_pcomb][3];
 
     // initiate the degree of each node
     for (int i = 0; i < n_nodes; ++i) {
@@ -716,12 +712,6 @@ void GNM::runParamComb(int i_pcomb)
     std::vector<double> C(upper_tri_index + 1);
     C[0] = 0;
 
-    // Initiate the keep arrays
-    std::vector<std::vector<std::vector<double>>> Akeep(
-            m - m_seed, std::vector<std::vector<double>>(n_nodes, std::vector<double>(n_nodes)));
-    std::vector<std::vector<std::vector<double>>> Wkeep(
-            m - m_seed, std::vector<std::vector<double>>(n_nodes, std::vector<double>(n_nodes)));
-
     // main loop adding new connections to adjacency matrix
     for (int i = m_seed + 1; i <= m; ++i) {
         // compute the cumulative sum of the probabilities
@@ -769,112 +759,6 @@ void GNM::runParamComb(int i_pcomb)
         // TODO: This currently just updates every position
         for (int i = 0; i < upper_tri_index; ++i) {
             P[i] = Ff[u[i]][v[i]];
-        }
-
-        // Update Akeep
-        Akeep[i - m_seed - 1] = A_current;
-
-        std::cout << "Added edge at iteration " << i << std::endl;
-
-        // If we use w Model, and we are past the start iteration
-        if (wModel.update && (i >= (wModel.start + m_seed + 1))) {
-            // Initalize W
-            std::vector<std::vector<double>> W_current(n_nodes, std::vector<double>(n_nodes));
-            if (i == (wModel.start + m_seed + 1)) {
-                W_current = A_current;
-            } else {
-                W_current = Wkeep[i - m_seed - 1];
-                W_current[uu][vv] = W_current[vv][uu] = 1;
-            }
-
-            // Find the edges in the W matrix
-            std::vector<int> edgeRowIdx, edgeColIdx;
-            int nEdges = 0;
-            for (int j = 0; j < n_nodes; j++) {
-                for (int k = j + 1; k < n_nodes; k++) {
-                    if (W_current[j][k] != 0) {
-                        edgeRowIdx.push_back(j);
-                        edgeColIdx.push_back(k);
-                        nEdges++;
-                    }
-                }
-            }
-
-
-            // Compute Eq. 3, Communicability. Simulate over edges
-            std::vector<std::vector<double>> sumComm(nEdges, std::vector<double>(wModel.nReps));
-            for (int jEdge = 0; jEdge < nEdges; ++jEdge) {
-                double currentEdgeValue = W_current[edgeRowIdx[jEdge]][edgeColIdx[jEdge]];
-                std::vector<double> reps = wModel.getReps(currentEdgeValue);
-
-                // Over reps
-                Eigen::MatrixXd W_currentSynthEigen(n_nodes, n_nodes);
-                for (int l = 0; l < n_nodes; ++l) {
-                    for (int n = l; n < n_nodes; ++n) {
-                        W_currentSynthEigen(l, n) = W_currentSynthEigen(n, l) = W_current[l][n];
-                    }
-                }
-
-                for (int kRep = 0; kRep < wModel.nReps; kRep++) {
-                    W_currentSynthEigen(edgeRowIdx[jEdge], edgeColIdx[jEdge]) = W_currentSynthEigen(edgeColIdx[jEdge],
-                                                                                                    edgeRowIdx[jEdge]) = reps[kRep];
-
-                    Eigen::MatrixXd comm(n_nodes, n_nodes);
-                    switch (wModel.optiFunc) {
-                        case 0: {
-                            // Non-normalized matrix exponential of W
-                            comm = W_currentSynthEigen.exp();
-                            break;
-                        }
-
-                        case 1: {
-                            // Normalized matrix exponential of W
-                            Eigen::VectorXd s = W_currentSynthEigen.rowwise().sum();
-                            for (int n = 0; n < s.size(); n++) {
-                                if (s(n) == 0) {
-                                    s(n) = epsilon;
-                                }
-                            }
-                            Eigen::MatrixXd S = s.asDiagonal();
-                            Eigen::MatrixXd adj = S.pow(-0.5) * W_currentSynthEigen * S.pow(-0.5);
-                            comm = adj.exp();
-                            break;
-                        }
-                    }
-                    sumComm[jEdge][kRep] = comm.sum();
-                }
-            }
-
-            // Compute Eq. 4, Objective function.
-            std::vector<double> curve(nEdges);
-            for (int jEdge = 0; jEdge < nEdges; ++jEdge) {
-                std::vector<double> x(wModel.nReps), y(wModel.nReps);
-                double sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-
-                for (int kRep = 0; kRep < wModel.nReps; kRep++) {
-                    x[kRep] = kRep + 1;
-                    y[kRep] = std::pow((sumComm[jEdge][kRep] * D[edgeRowIdx[jEdge]][edgeColIdx[jEdge]]), omega);
-                    sumX += x[kRep];
-                    sumY += y[kRep];
-                    sumXY += x[kRep] * y[kRep];
-                    sumX2 += x[kRep] * x[kRep];
-                }
-
-                curve[jEdge] = (wModel.nReps * sumXY - sumX * sumY) / (wModel.nReps * sumX2 - sumX * sumX);
-            }
-
-            // Compute Eq. 5, Update the connection strengths
-            for (int jEdge = 0; jEdge < nEdges; ++jEdge) {
-                W_current[edgeRowIdx[jEdge]][edgeColIdx[jEdge]] = W_current[edgeColIdx[jEdge]][edgeRowIdx[jEdge]] =
-                        W_current[edgeRowIdx[jEdge]][edgeColIdx[jEdge]] - (alpha * curve[jEdge]);
-                if (W_current[edgeRowIdx[jEdge]][edgeColIdx[jEdge]] < 0) {
-                    W_current[edgeRowIdx[jEdge]][edgeColIdx[jEdge]] = W_current[edgeColIdx[jEdge]][edgeRowIdx[jEdge]] = 0;
-                }
-            }
-            // Need network for next iteration
-            Wkeep[i - m_seed - 1] = W_current;
-
-            std::cout << "Tuned weights at " << i << std::endl;
         }
     }
 

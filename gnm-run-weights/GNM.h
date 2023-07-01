@@ -7,16 +7,11 @@
 
 # include <vector>
 # include <string>
-#include "WeightedModel.h"
 
 class GNM {
 private:
     std::vector<std::vector<double>> &A_Y;
-    std::vector<std::vector<double>> A_current;
-    std::vector<std::vector<double>> K_current;
-    std::vector<double> k_current;
     std::vector<double> clu_coeff_current;
-    double epsilon = 1e-5;
 
     static double ksTest(const std::vector<double> &x,
                          const std::vector<double> &y);
@@ -35,25 +30,31 @@ private:
             std::vector<std::vector<double>> &D,
             int n_nodes);
 
+    void resetAcurrent();
+
+    virtual void runParamComb(int i_pcomb);
+
+protected:
+    std::vector<double> k_current;
+    std::vector<std::vector<double>> A_current;
+
+    void initK();
+
+    std::vector<std::vector<double>> K_current;
+
     std::vector<int> updateClusteringCoeff(
             int uu,
             int vv);
 
-    void resetAcurrent();
-
-    void initK();
-
     void updateK(std::vector<int> bth);
 
-    void runParamComb(int i_pcomb);
-
+    double epsilon = 1e-5;
 public:
     std::vector<std::vector<double>> &A_init;
     std::vector<std::vector<double>> &D;
     std::vector<std::vector<double>> &params;
     std::vector<std::vector<int>> &b;
     std::vector<std::vector<double>> &K;
-    WeightedModel &wModel;
     int m;
     int model;
     int n_p_combs;
@@ -83,15 +84,12 @@ public:
         int m_,
         int model_,
         int n_p_combs_,
-        int n_nodes_,
-        WeightedModel &wModel_
-    ) : A_Y(A_Y_),
-        A_init(A_init_),
-        D(D_),
-        params(params_),
-        b(b_),
-        K(K_),
-        wModel(wModel_) {
+        int n_nodes_) : A_Y(A_Y_),
+                        A_init(A_init_),
+                        D(D_),
+                        params(params_),
+                        b(b_),
+                        K(K_) {
 
         m = m_;
         model = model_;
