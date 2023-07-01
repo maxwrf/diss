@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <Eigen/Dense>
 #include <unsupported/Eigen/MatrixFunctions>
+#include <iostream>
 
 std::vector<std::string> GNM::getRules() {
     std::vector<std::string> rules = {"spatial",
@@ -773,6 +774,8 @@ void GNM::runParamComb(int i_pcomb)
         // Update Akeep
         Akeep[i - m_seed - 1] = A_current;
 
+        std::cout << "Added edge at iteration " << i << std::endl;
+
         // If we use w Model, and we are past the start iteration
         if (wModel.update && (i >= (wModel.start + m_seed + 1))) {
             // Initalize W
@@ -805,16 +808,16 @@ void GNM::runParamComb(int i_pcomb)
                 std::vector<double> reps = wModel.getReps(currentEdgeValue);
 
                 // Over reps
-                for (int kRep = 0; kRep < wModel.nReps; kRep++) {
-                    std::vector<std::vector<double>> W_currentSynth = W_current;
-                    W_currentSynth[edgeRowIdx[jEdge]][edgeColIdx[jEdge]] = W_currentSynth[edgeColIdx[jEdge]][edgeRowIdx[jEdge]] = reps[kRep];
-
-                    Eigen::MatrixXd W_currentSynthEigen(n_nodes, n_nodes);
-                    for (int l = 0; l < n_nodes; ++l) {
-                        for (int n = l; n < n_nodes; ++n) {
-                            W_currentSynthEigen(l, n) = W_currentSynthEigen(n, l) = W_currentSynth[l][n];
-                        }
+                Eigen::MatrixXd W_currentSynthEigen(n_nodes, n_nodes);
+                for (int l = 0; l < n_nodes; ++l) {
+                    for (int n = l; n < n_nodes; ++n) {
+                        W_currentSynthEigen(l, n) = W_currentSynthEigen(n, l) = W_current[l][n];
                     }
+                }
+
+                for (int kRep = 0; kRep < wModel.nReps; kRep++) {
+                    W_currentSynthEigen(edgeRowIdx[jEdge], edgeColIdx[jEdge]) = W_currentSynthEigen(edgeColIdx[jEdge],
+                                                                                                    edgeRowIdx[jEdge]) = reps[kRep];
 
                     Eigen::MatrixXd comm(n_nodes, n_nodes);
                     switch (wModel.optiFunc) {
@@ -825,6 +828,16 @@ void GNM::runParamComb(int i_pcomb)
                         }
 
                         case 1: {
+                            // Normalized matrix exponential of W
+                            Eigen::VectorXd s = W_currentSynthEigen.rowwise().sum();
+                            for (int n = 0; n < s.size(); n++) {
+                                if (s(n) == 0) {
+                                    s(n) = epsilon;
+                                }
+                            }
+                            Eigen::MatrixXd S = s.asDiagonal();
+                            Eigen::MatrixXd adj = S.pow(-0.5) * W_currentSynthEigen * S.pow(-0.5);
+                            comm = adj.exp();
                             break;
                         }
                     }
@@ -860,6 +873,8 @@ void GNM::runParamComb(int i_pcomb)
             }
             // Need network for next iteration
             Wkeep[i - m_seed - 1] = W_current;
+
+            std::cout << "Tuned weights at " << i << std::endl;
         }
     }
 
