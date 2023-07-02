@@ -9,19 +9,21 @@
 std::vector<std::string> dSets = {
         "Charlesworth2015",
         "Hennig2011",
-        "Demas2006"
+        "Demas2006",
+        "Maccione2014"
 };
 
 // Type of array
 std::vector<std::string> meaTypes = {
         "MCS_8x8_200um",
-        "MCS_8x8_100um"
+        "MCS_8x8_100um",
+        "APS_64x64_42um"
 };
 
 int main() {
     // User required parameters
-    bool cluster = true;
-    int dSet = 2;
+    bool cluster = false;
+    int dSet = 0;
     double corrCutoff = 0.2;
     int nSamples = -1;
     int nRuns = 10000;
@@ -29,11 +31,20 @@ int main() {
 
     // Get the dSet Type
     int meaType;
-    if (dSet == 0) {
-        meaType = 0;
-    } else if (dSet == 2) {
-        meaType = 1;
-    }
+    switch (dSet) {
+        case 0: {
+            meaType = 0;
+            break;
+        }
+        case 2: {
+            meaType = 1;
+            break;
+        }
+        case 3: {
+            meaType = 2;
+            break;
+        }
+    };
 
     // Set the paths
     std::string inDirPath, outDirPath;

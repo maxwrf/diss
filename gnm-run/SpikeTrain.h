@@ -10,9 +10,11 @@
 
 class SpikeTrain {
 private:
+    int meaType;
+
     void getGroupId(int dSet);
 
-    void getActiveElectrodeNumbers(std::vector<int> &electrodes);
+    void getActiveElectrodeNumbers(std::vector<std::vector<int>> &electrodes);
 
     void initAdjacencyMatrices(int numElectrodes);
 
@@ -30,7 +32,7 @@ public:
     std::vector<double> recordingTime;
 
     // To be computed
-    std::vector<int> activeElectrodes;
+    std::vector<int> activeElectrodeIdx;
     std::vector<std::vector<double>> sttc;
     std::vector<std::vector<double>> A_Y;
     std::vector<std::vector<double>> A_init;
@@ -42,13 +44,13 @@ public:
     std::vector<std::string> readByteStringDataset(std::string file_name,
                                                    std::string dataset_name);
 
-    SpikeTrain(std::string FILE_NAME,
-               std::vector<std::vector<double>> &electrodePos,
-               std::vector<int> &electrodes,
+    SpikeTrain(std::string FILE_NAME_,
+               std::vector<std::vector<int>> &electrodes,
                int numElectrodes,
                double dt,
-               double sttcCutoff,
-               int dSet
+               double sttcCutoff_,
+               int dSet,
+               int meaType
     );
 };
 

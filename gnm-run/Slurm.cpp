@@ -27,9 +27,7 @@ void Slurm::generateInputs(std::string &inDirPath,
     // Generate parameter space
     std::vector<double> etaLimits = {-7, 7};
     std::vector<double> gammaLimits = {-7, 7};
-    std::vector<std::vector<double>> paramSpace = GNM::generateParamSpace(nRuns,
-                                                                          etaLimits,
-                                                                          gammaLimits);
+    std::vector<std::vector<double>> paramSpace = GNM::generateParamSpace(nRuns, etaLimits, gammaLimits);
 
     // Check directory to store results
     if (!std::filesystem::exists(outDirPath)) {

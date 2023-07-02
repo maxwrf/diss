@@ -37,12 +37,12 @@ SpikeSet::SpikeSet(std::string path_,
 
                 hd5FileNames.push_back(f);
                 spikeTrains.push_back(SpikeTrain(path + "/" + f,
-                                                 electrodePos,
                                                  electrodes,
                                                  numElectrodes,
                                                  dt,
                                                  sttcCutoff,
-                                                 dSet));
+                                                 dSet,
+                                                 meaType));
 
                 samplesRead++;
             }
@@ -51,33 +51,51 @@ SpikeSet::SpikeSet(std::string path_,
 }
 
 void SpikeSet::getElectrodePos() {
-    std::vector<int> excludeElectrodes;
-    int rowNumElectrodes;
+    std::vector<std::vector<int>> excludeElectrodes;
     bool yFromTopRight = false;
+    int startDistMultiplier;
+    int rowNumElectrodes;
     switch (meaType) {
         case 0: // MCS_8x8_200um
             rowNumElectrodes = 8;
             electrodeDist = 200;
             yFromTopRight = true;
-            excludeElectrodes = {11, 18, 81, 88}; // 15?
+            excludeElectrodes = {{1, 1},
+                                 {1, 8},
+                                 {8, 1},
+                                 {8, 8}}; // 15?
+            startDistMultiplier = 1;
             break;
 
         case 1: // MCS_8x8_100um
             rowNumElectrodes = 8;
             electrodeDist = 100;
-            excludeElectrodes = {11, 18, 81, 88};
+            excludeElectrodes = {{1, 1},
+                                 {1, 8},
+                                 {8, 1},
+                                 {8, 8}};
+            startDistMultiplier = 1;
             break;
+
+        case 2: // APS_64x64_42um
+            rowNumElectrodes = 64;
+            electrodeDist = 42;
+            startDistMultiplier = 0;
+            break;
+
+        default:
+            throw std::runtime_error("MEA not implemented");
     }
 
     // Compute the electrode positions
     numElectrodes = rowNumElectrodes * rowNumElectrodes - excludeElectrodes.size();
     electrodePos = std::vector<std::vector<double>>(numElectrodes, std::vector<double>(2));
-    electrodes = std::vector<int>(numElectrodes);
+    electrodes = std::vector(numElectrodes, std::vector<int>(2));
 
     int electrodeNum = 0;
-    for (int i = 1; i < (rowNumElectrodes + 1); ++i) {
-        for (int j = 1; j < (rowNumElectrodes + 1); ++j) {
-            int electrode = i * 10 + j;
+    for (int i = startDistMultiplier; i < (rowNumElectrodes + startDistMultiplier); ++i) {
+        for (int j = startDistMultiplier; j < (rowNumElectrodes + startDistMultiplier); ++j) {
+            std::vector<int> electrode = {i + 1 - startDistMultiplier, j + 1 - startDistMultiplier};
             if (std::find(excludeElectrodes.begin(), excludeElectrodes.end(), electrode) == excludeElectrodes.end()) {
                 electrodes[electrodeNum] = electrode;
                 electrodePos[electrodeNum][0] = i * electrodeDist;

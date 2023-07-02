@@ -25,7 +25,7 @@ public:
     int meaType;
     int electrodeDist;
     int numElectrodes;
-    std::vector<int> electrodes;
+    std::vector<std::vector<int>> electrodes;
     std::vector<std::vector<double>> electrodePos;
     std::vector<std::vector<double>> D;
 
