@@ -19,10 +19,17 @@ int main() {
 
     // Load the synthetic data
     int n = 68, m = 80;
+    std::vector<std::vector<double>> W(n, std::vector<double>(n, 0));
     std::vector<std::vector<double>> A(n, std::vector<double>(n, 0));
     std::vector<std::vector<double>> A_init(n, std::vector<double>(n, 0));
     std::vector<std::vector<double>> D(n, std::vector<double>(n));
-    TestDataWeights::getSyntheticData(A, A_init, D, pA, pA_init, pD, n);
+    TestDataWeights::getSyntheticData(W, A_init, D, pA, pA_init, pD, n);
+
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            A[i][j] = (double) W[i][j] > 0;
+        }
+    }
 
     // Generate parameter space
     double eta = -3.2, gamma = 0.38, alpha = 0.05, omega = 0.9;
@@ -34,6 +41,9 @@ int main() {
 
     // Initialize Kall (Samples, Models, Parameters, K)
     std::vector<std::string> rules = GNM::getRules();
+    // TODO: Remove this
+    rules = {"matching"};
+
     std::vector<std::vector<std::vector<std::vector<double>>>> Kall(
             1,
             std::vector<std::vector<std::vector<double>>>(
@@ -49,6 +59,9 @@ int main() {
     int nSamples = 1;
     for (int iSample = 0; iSample < nSamples; ++iSample) {
         for (int jModel = 0; jModel < rules.size(); ++jModel) {
+            // TODO: Remove this
+            jModel = 2;
+
             auto startT = std::chrono::high_resolution_clock::now();
 
             // Init to store results
@@ -58,6 +71,7 @@ int main() {
 
             WeightedGNM model(
                     A,
+                    W,
                     A_init,
                     D,
                     paramSpace,

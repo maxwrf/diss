@@ -40,12 +40,11 @@ if __name__ == "__main__":
 
     #dir = "/Users/maxwuerfek/code/diss/gnm-analyze/results/Demas2006"
     dir = "/Users/maxwuerfek/code/diss/gnm-analyze/results/Charlesworth2015"
-    dir = "/Users/maxwuerfek/code/diss/gnm-analyze/results/Xu2011"
+    #dir = "/Users/maxwuerfek/code/diss/gnm-analyze/results/Xu2011"
 
     filesPaths = glob.glob(dir + "/*.h5")
 
-    # filesPaths = [
-    #     "/Users/maxwuerfek/code/diss/gnm-run/testData/testKall.h5"]
+    filesPaths = ["/Users/maxwuerfek/code/diss/gnm-run/testData/testKall.h5"]
 
     for f_p in filesPaths:
         analyze(config, f_p)

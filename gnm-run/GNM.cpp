@@ -231,7 +231,7 @@ std::vector<double> GNM::getClusteringCoeff(
             int neighbors[int(k[i_node])];
             int n_neighbors = 0;
             for (int j = 0; j < n_nodes; ++j) {
-                if (A[i_node][j]) {
+                if (A[i_node][j] > 0) {
                     neighbors[n_neighbors] = j;
                     n_neighbors++;
                 }

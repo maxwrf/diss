@@ -10,9 +10,11 @@
 class WeightedGNM : public GNM {
 
 private:
-    std::vector<std::vector<double>> W_current;
+    std::vector<std::vector<double>> W, W_current;
 
     void runParamComb(int i_pcomb) override;
+
+    std::vector<std::vector<double>> normalizeMatrix(std::vector<std::vector<double>> W);
 
     // Get the reps (actual differences to current edge value)
     std::vector<double> getReps(double currentEdgeValue) {
@@ -31,7 +33,10 @@ public:
     // Parameters, Iterations, nxn
     std::vector<std::vector<std::vector<std::vector<double>>>> &A_keep, &W_keep;
 
+    void generateModels() override;
+
     WeightedGNM(std::vector<std::vector<double>> &A_Y_,
+                std::vector<std::vector<double>> &W_,
                 std::vector<std::vector<double>> &A_init_,
                 std::vector<std::vector<double>> &D_,
                 std::vector<std::vector<double>> &params_,
@@ -58,6 +63,7 @@ public:
             n_p_combs_,
             n_nodes_),
         start(start_),
+        W(W_),
         optiFunc(optiFunc_),
         A_keep(A_keep_),
         W_keep(W_keep_) {

@@ -10,28 +10,8 @@
 
 class GNM {
 private:
-    std::vector<std::vector<double>> &A_Y;
     std::vector<double> clu_coeff_current;
 
-
-    static double ksTest(const std::vector<double> &x,
-                         const std::vector<double> &y);
-
-    static std::vector<double> getBetweennesCentrality(
-            std::vector<std::vector<double> > &A,
-            int n);
-
-    static std::vector<double> getClusteringCoeff(
-            std::vector<std::vector<double> > &A,
-            int n_nodes,
-            std::vector<double> &k);
-
-    static std::vector<double> getEdgeLength(
-            std::vector<std::vector<double> > &A,
-            std::vector<std::vector<double>> &D,
-            int n_nodes);
-
-    void resetAcurrent();
 
     virtual void runParamComb(int i_pcomb);
 
@@ -52,6 +32,27 @@ protected:
     void updateK(std::vector<int> bth);
 
     double epsilon = 1e-5;
+
+    static std::vector<double> getClusteringCoeff(
+            std::vector<std::vector<double> > &A,
+            int n_nodes,
+            std::vector<double> &k);
+
+    static std::vector<double> getBetweennesCentrality(
+            std::vector<std::vector<double> > &A,
+            int n);
+
+    static std::vector<double> getEdgeLength(
+            std::vector<std::vector<double> > &A,
+            std::vector<std::vector<double>> &D,
+            int n_nodes);
+
+    void resetAcurrent();
+
+    static double ksTest(const std::vector<double> &x,
+                         const std::vector<double> &y);
+
+    std::vector<std::vector<double>> &A_Y;
 public:
     std::vector<std::vector<double>> &A_init;
     std::vector<std::vector<double>> &D;
@@ -63,7 +64,7 @@ public:
     int n_p_combs;
     int n_nodes;
 
-    void generateModels();
+    virtual void virtual generateModels();
 
     static std::vector<std::vector<double>> generateParamSpace(int n_runs,
                                                                std::vector<double> eta_limits = {-7, 7},

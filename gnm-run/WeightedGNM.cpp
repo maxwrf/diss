@@ -6,7 +6,8 @@
 #include <Eigen/Dense>
 #include <unsupported/Eigen/MatrixFunctions>
 #include <cmath>
-
+#include <iostream>
+#include <chrono>
 
 void WeightedGNM::runParamComb(int i_pcomb)
 // main function for the generative network build
@@ -125,20 +126,29 @@ void WeightedGNM::runParamComb(int i_pcomb)
                 }
             }
 
+            auto startT = std::chrono::high_resolution_clock::now();
             // Compute Eq. 3, Communicability. Simulate over edges
             std::vector<std::vector<double>> sumComm(nEdges, std::vector<double>(nReps));
+            Eigen::MatrixXd W_currentSynthEigen(n_nodes, n_nodes);
+            for (int l = 0; l < n_nodes; ++l) {
+                for (int n = l; n < n_nodes; ++n) {
+                    W_currentSynthEigen(l, n) = W_currentSynthEigen(n, l) = W_current[l][n];
+                }
+            }
+
+            // Over edges
             for (int jEdge = 0; jEdge < nEdges; ++jEdge) {
                 double currentEdgeValue = W_current[edgeRowIdx[jEdge]][edgeColIdx[jEdge]];
                 std::vector<double> reps = getReps(currentEdgeValue);
 
-                // Over reps
-                Eigen::MatrixXd W_currentSynthEigen(n_nodes, n_nodes);
-                for (int l = 0; l < n_nodes; ++l) {
-                    for (int n = l; n < n_nodes; ++n) {
-                        W_currentSynthEigen(l, n) = W_currentSynthEigen(n, l) = W_current[l][n];
-                    }
-                }
+                // Reset the value of the previous edge
+                if (jEdge > 0) {
+                    int resetRowIdx = edgeRowIdx[jEdge - 1], resetColIdx = edgeColIdx[jEdge - 1];
+                    W_currentSynthEigen(resetRowIdx, resetColIdx) = W_currentSynthEigen(resetColIdx,
+                                                                                        resetRowIdx) = W_current[resetRowIdx][resetColIdx];
+                };
 
+                // Over reps
                 for (int kRep = 0; kRep < nReps; kRep++) {
                     W_currentSynthEigen(edgeRowIdx[jEdge], edgeColIdx[jEdge]) = W_currentSynthEigen(
                             edgeColIdx[jEdge],
@@ -170,6 +180,9 @@ void WeightedGNM::runParamComb(int i_pcomb)
                     sumComm[jEdge][kRep] = comm.sum();
                 }
             }
+            auto endT = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endT - startT);
+            std::cout << "Time to compute communicability: " << duration.count() << " ms" << nEdges << std::endl;
 
             // Compute Eq. 4, Objective function.
             std::vector<double> curve(nEdges);
@@ -199,6 +212,87 @@ void WeightedGNM::runParamComb(int i_pcomb)
             }
             // Need W for next iteration
             W_keep[i_pcomb][i - m_seed - 1] = W_current;
+            std::cout << "Iteration: " << i - m_seed - 1 << std::endl;
         }
     }
 }
+
+void WeightedGNM::generateModels()
+// Initiates the network generation leveraging the different rules
+{
+    // Prep scores for A_Y
+    std::vector<std::vector<double>> energy_Y(4, std::vector<double>(n_nodes, 0.0));
+    std::vector<std::vector<double>> energy_WY(4, std::vector<double>(n_nodes, 0.0));
+
+    // Normalize for weights
+
+    // 1. nodal degree
+    for (int i = 0; i < n_nodes; ++i) {
+        for (int j = 0; j < n_nodes; ++j) {
+            energy_Y[0][i] += A_Y[i][j];
+        }
+    }
+
+    // 2. clustering coefficient
+    energy_Y[1] = getClusteringCoeff(A_Y, n_nodes, energy_Y[0]);
+
+    // 3. betweens centrality
+    energy_Y[2] = getBetweennesCentrality(A_Y, n_nodes);
+
+    // 4. edge length
+    energy_Y[3] = getEdgeLength(A_Y, D, n_nodes);
+
+    for (int i_pcomb = 0; i_pcomb < n_p_combs; i_pcomb++) {
+        // compute the adjacency matrix for the param combination
+        resetAcurrent();
+        runParamComb(i_pcomb);
+
+        // evaluate
+        std::vector<std::vector<double> > energy(4, std::vector<double>(n_nodes, 0.0));
+
+        // // 1. nodal degree
+        for (int i = 0; i < n_nodes; i++) {
+            energy[0][i] = k_current[i];
+        }
+
+        // 2. clustering coefficient
+        energy[1] = getClusteringCoeff(A_current, n_nodes, energy[0]);
+
+        // 3. betweens centrality
+        energy[2] = getBetweennesCentrality(A_current, n_nodes);
+
+        // 4. edge length
+        energy[3] = getEdgeLength(A_current, D, n_nodes);
+
+        K[i_pcomb][0] = ksTest(energy_Y[0], energy[0]);
+        K[i_pcomb][1] = ksTest(energy_Y[1], energy[1]);
+        K[i_pcomb][2] = ksTest(energy_Y[2], energy[2]);
+        K[i_pcomb][3] = ksTest(energy_Y[3], energy[3]);
+    }
+}
+
+
+std::vector<std::vector<double>> WeightedGNM::normalizeMatrix(std::vector<std::vector<double>> M) {
+    // Flatten the matrix into a 1D vector
+    std::vector<double> flattened;
+    for (const auto &row: M) {
+        flattened.insert(flattened.end(), row.begin(), row.end());
+    }
+
+    // Find the maximum absolute value across the entire vector
+    double maxVal = *std::max_element(flattened.begin(), flattened.end(), [](double a, double b) {
+        return std::abs(a) < std::abs(b);
+    });
+
+    // Check if maxVal is non-zero to avoid division by zero
+    if (maxVal != 0.0) {
+        // Divide each element of the matrix by the maximum absolute value
+        for (auto &row: M) {
+            for (auto &val: row) {
+                val /= maxVal;
+            }
+        }
+    }
+
+    return M;
+};
