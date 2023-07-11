@@ -2,7 +2,6 @@ module GNM_Mod
 
 using LinearAlgebra
 using Statistics
-using MAT
 using Distances
 include("gnm_utils.jl")
 include("graph_utils.jl")
@@ -53,6 +52,14 @@ mutable struct GNM_Weighted <: GNM
     K::Matrix{Float64}
     energy_Y::Matrix{Float64}
     epsilon::Float64
+
+    # specific to weighed model
+    W_Y::Matrix{Float64}
+    start_edge::Int
+    opti_func::Int
+    A_keep::Array{Float64,3}
+    W_keep::Array{Float64,3}
+    rep_vec::Vector{Float64}
 end
 
 function GNM(
@@ -61,7 +68,13 @@ function GNM(
     A_init::Matrix{Float64},
     params::Matrix{Float64},
     i_model::Int,
-    weighted::Bool=false)
+    weighted::Bool=false,
+    W_Y::Union{Matrix{Float64},Nothing}=nothing,
+    start_edge::Union{Int,Nothing}=nothing,
+    opti_func::Union{Int,Nothing}=nothing,
+    opti_samples::Union{Int,Nothing}=nothing,
+    opti_resolution::Union{Float64,Nothing}=nothing
+)
     """
     Outer constructor for GNM structure
     """
@@ -103,7 +116,15 @@ function GNM(
         return GNM_Binary(A_Y, D, A_init, params, i_model, A_current, K_current,
             k_current, stat, m, m_seed, n_nodes, u, v, b, K, energy_Y, epsilon)
     else
-        #TODO
+        A_keep = zeros(Int(m - m_seed), n_nodes, n_nodes)
+        W_keep = zeros(Int(m - m_seed), n_nodes, n_nodes)
+        min_val = -opti_samples * opti_resolution
+        n_reps = Int(((-min_val) - min_val) / opti_resolution) + 1
+        rep_vec = [min_val + (i - 1) * opti_resolution for i in 1:n_reps]
+
+        return GNM_Weighted(A_Y, D, A_init, params, i_model, A_current, K_current,
+            k_current, stat, m, m_seed, n_nodes, u, v, b, K, energy_Y, epsilon,
+            W_Y, start_edge, opti_func, A_keep, W_keep, rep_vec)
     end
 end
 
@@ -219,7 +240,6 @@ function update_K(model::GNM, uu::Int, vv::Int)
 
     return bth
 end
-
 
 function generate_models(model::GNM)
     # start model generation

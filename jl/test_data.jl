@@ -1,3 +1,5 @@
+using MAT
+
 function load_test_data(n_samples::Int=-1)
     pData = "./test/example_binarised_connectomes.mat"
     pDist = "./test/dk_coordinates.mat"
