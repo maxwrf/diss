@@ -2,6 +2,8 @@ include("gnm.jl")
 include("test_data.jl")
 include("gnm_utils.jl")
 
+using .GNM_Mod
+
 function main()
     models = ["spatial", "neighbors", "matching", "clu-avg", "clu-min",
         "clu-max", "clu-dist", "clu-prod", "deg-avg", "deg-min", "deg-max",
@@ -17,10 +19,10 @@ function main()
         A = As[i_sample, :, :]
         A_init = A_inits[i_sample, :, :]
         for i_model in 1:length(models)
-            println("Sample: ", i_sample, " Model: ", i_model, "\n")
-            x = GNM(A, D, A_init, params, i_model)
-            generate_models(x)
-            K[i_sample, i_model, :, :] = x.K
+            println("Sample: ", i_sample, " Model: ", i_model)
+            model = GNM_Mod.GNM(A, D, A_init, params, i_model, false)
+            GNM_Mod.generate_models(model)
+            K[i_sample, i_model, :, :] = model.K
         end
     end
 

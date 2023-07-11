@@ -1,12 +1,15 @@
-using Distributions
-using StatsBase
+struct MyStruct
+    x::Int
+    y::Float64
+end
 
-# Generate two random samples
-sample1 = rand(Normal(0, 1), 100)
-sample2 = rand(Normal(0, 1), 100)
+function MyStruct(x::Int, y::Float64)
+    obj = MyStruct()
+    obj.x = x
+    obj.y = y
+    return obj
+end
 
-# Perform the two-sample KS test
-ks_statistic, p_value = ks_test(sample1, sample2)
 
-println("KS statistic: ", ks_statistic)
-println("P-value: ", p_value)
+
+MyStruct(3, 64.2)

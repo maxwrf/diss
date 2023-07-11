@@ -7,9 +7,8 @@ using Distances
 include("gnm_utils.jl")
 include("graph_utils.jl")
 
-abstract type GNM end
 
-mutable struct GNM_Binary <: GNM
+mutable struct GNM
     A_Y::Matrix{Float64}
     D::Matrix{Float64}
     A_init::Matrix{Float64}
@@ -30,88 +29,47 @@ mutable struct GNM_Binary <: GNM
     K::Matrix{Float64}
     energy_Y::Matrix{Float64}
     epsilon::Float64
-end
 
-mutable struct GNM_Weighted <: GNM
-    A_Y::Matrix{Float64}
-    D::Matrix{Float64}
-    A_init::Matrix{Float64}
-    params::Matrix{Float64}
-    i_model::Int
+    function GNM(A_Y, D, A_init, params, i_model)
+        epsilon = 1e-5
 
-    A_current::Matrix{Float64}
-    K_current::Matrix{Float64}
-    k_current::Vector{Float64}
-    stat::Vector{Float64}
+        # number of edges and nodes
+        m = sum(A_Y) / 2
+        m_seed = sum(A_init) / 2
+        n_nodes = size(A_Y, 2)
 
-    m::Int
-    m_seed::Int
-    n_nodes::Int
-    u::Vector{Int}
-    v::Vector{Int}
-    b::Matrix{Int}
-    K::Matrix{Float64}
-    energy_Y::Matrix{Float64}
-    epsilon::Float64
-end
+        # prepare outputs
+        b = zeros(Int(m), Int(size(params, 1)))
+        K = zeros(Int(size(params, 1)), 4)
 
-function GNM(
-    A_Y::Matrix{Float64},
-    D::Matrix{Float64},
-    A_init::Matrix{Float64},
-    params::Matrix{Float64},
-    i_model::Int,
-    weighted::Bool=false)
-    """
-    Constructor for GNM structure
-    """
-    model = weighted ? GNM_Weighted() : GNM_Binary()
-    model.epsilon = 1e-5
+        # get upper tri indices, TODO: refactor
+        u = Int[]
+        v = Int[]
 
-    model.A_Y = A_Y
-    model.D = D
-    model.A_init = A_init
-    model.params = params
-    model.i_model = i_model
-
-    # number of edges and nodes
-    model.m = sum(A_Y) / 2
-    model.m_seed = sum(A_init) / 2
-    model.n_nodes = size(A_Y, 2)
-
-    # prepare outputs
-    model.b = zeros(Int(m), Int(size(params, 1)))
-    model.K = zeros(Int(size(params, 1)), 4)
-
-    # get upper tri indices, TODO: refactor
-    model.u = Int[]
-    model.v = Int[]
-
-    for i in 1:model.n_nodes
-        for j in (i+1):model.n_nodes
-            push!(model.u, i)
-            push!(model.v, j)
+        for i in 1:n_nodes
+            for j in (i+1):n_nodes
+                push!(u, i)
+                push!(v, j)
+            end
         end
+
+        # compute sample energy
+        energy_Y = zeros(4, n_nodes)
+        energy_Y[1, :] = sum(A_Y, dims=1)
+        energy_Y[2, :] = get_clustering_coeff(A_Y, n_nodes)
+        energy_Y[3, :] = betweenness_centrality(A_Y, n_nodes)
+        energy_Y[4, :] = sum((D .* A_Y), dims=1)
+
+        A_current = zeros(n_nodes, n_nodes)
+        K_current = zeros(n_nodes, n_nodes)
+        k_current = zeros(n_nodes)
+        stat = zeros(n_nodes)
+
+        new(A_Y, D, A_init, params, i_model, A_current, K_current, k_current,
+            stat, m, m_seed, n_nodes, u, v, b, K, energy_Y, epsilon)
     end
-
-    # compute sample energy
-    model.energy_Y = zeros(4, model.n_nodes)
-    model.energy_Y[1, :] = sum(model.A_Y, dims=1)
-    model.energy_Y[2, :] = get_clustering_coeff(model.A_Y, model.n_nodes)
-    model.energy_Y[3, :] = betweenness_centrality(model.A_Y, model.n_nodes)
-    model.energy_Y[4, :] = sum((model.D .* model.A_Y), dims=1)
-
-    model.A_current = zeros(model.n_nodes, model.n_nodes)
-    model.K_current = zeros(model.n_nodes, model.n_nodes)
-    model.k_current = zeros(model.n_nodes)
-    model.stat = zeros(model.n_nodes)
-
-    if weighted
-        # TODO: add this stuff
-    end
-
-    return model
 end
+
 
 function init_K(model::GNM)
     if model.i_model == 1 # spatial

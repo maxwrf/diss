@@ -1,12 +1,11 @@
 function load_test_data(n_samples::Int=-1)
-    pData = "/Users/maxwuerfek/code/diss/data/example_binarised_connectomes.mat"
-    pDist = "/Users/maxwuerfek/code/diss/data/dk_coordinates.mat"
+    pData = "./test/example_binarised_connectomes.mat"
+    pDist = "./test/dk_coordinates.mat"
 
     A = matread(pData)["example_binarised_connectomes"]
     D = matread(pDist)["coordinates"]
     D = pairwise(Euclidean(), D, dims=1)
 
-    # TODO: Is this the correct #
     A_init = Float64.(mean(A, dims=1) .== 0.2)
     A_init = repeat(A_init, 270)
 
@@ -17,3 +16,14 @@ function load_test_data(n_samples::Int=-1)
 
     return A, D, A_init
 end
+
+function load_weight_test_data()
+    pData = "./test-weights/demo_data.mat"
+    data = matread(pData)
+    D = data["demo_data"]["D"]
+    A_init = data["demo_data"]["seed"]
+    W_Y = data["demo_data"]["Wtgt"]
+    return W_Y, D, A_init
+end
+
+
