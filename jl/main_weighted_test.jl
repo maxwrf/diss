@@ -21,7 +21,7 @@ function main()
 
     # weighted model parameters
     start_edge = 0
-    opti_func = 0
+    opti_func = 1
     opti_samples = 5
     opti_resolution = 0.05
 
@@ -33,12 +33,15 @@ function main()
             # To be removed
             i_model = 3
             println("Sample: ", i_sample, " Model: ", i_model)
-
-            model = GNM_Mod.GNM(A_Y, D, A_init, params, i_model, true, W_Y,
-                start_edge, opti_func, opti_samples, opti_resolution)
-
-            # generate_models(model)
-            # K[i_sample, i_model, :, :] = model.K
+            elapsed_time = @elapsed begin
+                model = GNM_Mod.GNM(A_Y, D, A_init, params, i_model, true, W_Y,
+                    start_edge, opti_func, opti_samples, opti_resolution)
+                model.m = 80
+                GNM_Mod.generate_models(model)
+                # TODO: Need to change for prod
+                K[i_sample, 1, :, :] = model.K
+            end
+            println("Elapsed: $elapsed_time seconds")
         end
     end
 

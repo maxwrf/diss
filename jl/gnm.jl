@@ -3,6 +3,7 @@ module GNM_Mod
 using LinearAlgebra
 using Statistics
 using Distances
+using Polynomials
 include("gnm_utils.jl")
 include("graph_utils.jl")
 
@@ -57,8 +58,8 @@ mutable struct GNM_Weighted <: GNM
     W_Y::Matrix{Float64}
     start_edge::Int
     opti_func::Int
-    A_keep::Array{Float64,3}
-    W_keep::Array{Float64,3}
+    A_keep::Array{Float64,4}
+    W_keep::Array{Float64,4}
     rep_vec::Vector{Float64}
 end
 
@@ -116,8 +117,8 @@ function GNM(
         return GNM_Binary(A_Y, D, A_init, params, i_model, A_current, K_current,
             k_current, stat, m, m_seed, n_nodes, u, v, b, K, energy_Y, epsilon)
     else
-        A_keep = zeros(Int(m - m_seed), n_nodes, n_nodes)
-        W_keep = zeros(Int(m - m_seed), n_nodes, n_nodes)
+        A_keep = zeros(size(params, 1), Int(m - m_seed), n_nodes, n_nodes)
+        W_keep = zeros(size(params, 1), Int(m - m_seed), n_nodes, n_nodes)
         min_val = -opti_samples * opti_resolution
         n_reps = Int(((-min_val) - min_val) / opti_resolution) + 1
         rep_vec = [min_val + (i - 1) * opti_resolution for i in 1:n_reps]
@@ -241,7 +242,7 @@ function update_K(model::GNM, uu::Int, vv::Int)
     return bth
 end
 
-function generate_models(model::GNM)
+function generate_models(model::GNM_Binary)
     # start model generation
     for i_param in 1:size(model.params, 1)
         eta, gamma = model.params[i_param, :]
@@ -287,4 +288,107 @@ function generate_models(model::GNM)
         model.K[i_param, 4] = ks_test(model.energy_Y[4, :], energy_Y_head[4, :])
     end
 end
+
+function generate_models(model::GNM_Weighted)
+    # start model generation
+    for i_param in 1:size(model.params, 1)
+        eta, gamma, alpha, omega = model.params[i_param, :]
+        model.A_current = copy(model.A_init)
+        model.k_current = dropdims(sum(model.A_current, dims=1), dims=1)
+        init_K(model)
+
+        # initiate probability
+        Fd = model.D .^ eta
+        Fk = model.K_current .^ gamma
+        Ff = Fd .* Fk .* (model.A_current .== 0)
+        P = [Ff[model.u[i], model.v[i]] for i in 1:length(model.u)]
+
+        for i_edge in (model.m_seed+1):model.m
+            # probabilistically select a new edge
+            C = [0; cumsum(P)]
+            r = sum(C .<= (rand() * C[end]))
+            uu, vv = model.u[r], model.v[r]
+            model.k_current[uu] += 1
+            model.k_current[vv] += 1
+            model.A_current[uu, vv] = model.A_current[vv, uu] = 1
+
+            # update K
+            bth = update_K(model, uu, vv)
+
+            # update the probabilities
+            for bth_i in bth
+                Ff[bth_i, :] = Ff[:, bth_i] = Fd[bth_i, :] .* model.K_current[bth_i, :] .^ gamma .* (model.A_current[bth_i, :] .== 0)
+            end
+            P = [Ff[model.u[i], model.v[i]] for i in 1:length(model.u)]
+
+            model.A_keep[i_param, (i_edge-model.m_seed), :, :] = model.A_current
+
+            if (i_edge >= (model.start_edge + model.m_seed + 1))
+                println("Tune ", i_edge, " / ", model.m)
+                # Init W current
+                if (i_edge == (model.start_edge + model.m_seed + 1))
+                    W_current = copy(model.A_current)
+                else
+                    W_current = model.W_keep[i_param, (i_edge-model.m_seed-1), :, :]
+                    W_current[uu, vv] = W_current[vv, uu] = 1.0
+                end
+
+                # find edges
+                edges = findall(==(1), triu(model.A_current, 1))
+
+                # compute Eq. 3, Communicability for each edge
+                sum_comm = zeros(length(edges), length(model.rep_vec))
+                for (j_edge, edge_idx) in enumerate(edges)
+                    edge_val = W_current[edge_idx]
+                    reps = [edge_val * (1 + i) for i in model.rep_vec]
+                    for (i_rep, ru) in enumerate(reps)
+                        W_synth = copy(W_current)
+                        W_synth[edge_idx] = W_synth[edge_idx[2], edge_idx[1]] = ru
+                        if model.opti_func == 1
+                            comm = exp(W_synth)
+                        elseif model.opti_func == 2
+                            s = sum(W_synth, dims=2)
+                            s[s.==0] .= model.epsilon
+                            S = Diagonal(s[:, 1])
+                            adj = sqrt(inv(S)) .* W_synth .* sqrt(inv(S))
+                            comm = exp(adj)
+                        end
+                        sum_comm[j_edge, i_rep] = sum(comm)
+                    end
+                end
+
+                for (j_edge, edge_idx) in enumerate(edges)
+                    # compute Eq. 4, Objective function
+                    y = (sum_comm[j_edge, :] .* model.D[edge_idx]) .^ omega
+
+                    # fit over the reps
+                    x = 1:length(model.rep_vec)
+                    slope = fit(x, y, 1)[1]
+
+                    # Compute Eq. 5, update the connection strengths
+                    W_current[edge_idx] -= (alpha * slope)
+                    W_current[edge_idx[2], edge_idx[1]] = W_current[edge_idx]
+                end
+
+                # prevent negative weights
+                W_current[W_current.<0] .= 0
+                model.W_keep[i_param, (i_edge-model.m_seed), :, :] = W_current
+            end
+        end
+
+        # evaluate the param combination
+        edge_indices = [Int((idx[1] + 1) * 10^(ceil(log10(idx[2] + 1)))) + idx[2] for idx in findall(==(1), model.A_current)]
+        energy_Y_head = zeros(4, model.n_nodes)
+        energy_Y_head[1, :] = sum(model.A_current, dims=1)
+        energy_Y_head[2, :] = get_clustering_coeff(model.A_current, model.n_nodes)
+        energy_Y_head[3, :] = betweenness_centrality(model.A_current, model.n_nodes)
+        energy_Y_head[4, :] = sum((model.D .* model.A_current), dims=1)
+        model.K[i_param, 1] = ks_test(model.energy_Y[1, :], energy_Y_head[1, :])
+        model.K[i_param, 2] = ks_test(model.energy_Y[2, :], energy_Y_head[2, :])
+        model.K[i_param, 3] = ks_test(model.energy_Y[3, :], energy_Y_head[3, :])
+        model.K[i_param, 4] = ks_test(model.energy_Y[4, :], energy_Y_head[4, :])
+    end
+end
+
+
 end

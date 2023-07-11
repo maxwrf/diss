@@ -1,15 +1,5 @@
-struct MyStruct
-    x::Int
-    y::Float64
+indices = [CartesianIndex(1, 2), CartesianIndex(3, 4), CartesianIndex(5, 6)]
+
+for index in indices
+    println(index[1])
 end
-
-function MyStruct(x::Int, y::Float64)
-    obj = MyStruct()
-    obj.x = x
-    obj.y = y
-    return obj
-end
-
-
-
-MyStruct(3, 64.2)
