@@ -3,24 +3,31 @@ using Statistics
 using MAT
 using Distances
 include("gnm_utils.jl")
-include("test_data.jl")
 include("graph_utils.jl")
-
-# function get_func()
-#     funcs = Dict(
-#         'avg' => 
-#     )
-# end
 
 function init_K(A_current, modelIdx::Int, n_nodes::Int)
     epsilon = 1e-5
     stat = nothing
+
     if modelIdx == 1 # spatial
         K = ones(n_nodes, n_nodes)
-    elseif (modelIdx >= 4) && (modelIdx <= 8) # clustering
-        stat = get_clustering_coeff(A_current, n_nodes)
-        if modelIdx == 4 # avg
+    elseif (modelIdx >= 4) && (modelIdx <= 13) # clustering or degree
+        if (modelIdx <= 8) # clustering
+            stat = get_clustering_coeff(A_current, n_nodes)
+        else # degree
+            stat = dropdims(sum(A_current, dims=1), dims=1)
+        end
+
+        if (modelIdx == 4 || modelIdx == 9) # avg
             K = (stat' .+ stat) ./ 2
+        elseif (modelIdx == 5 || modelIdx == 10) # min
+            K = min.(stat', stat)
+        elseif (modelIdx == 6 || modelIdx == 11) # max
+            K = max.(stat', stat)
+        elseif (modelIdx == 7 || modelIdx == 12) # dist
+            K = abs.(stat' .- stat)
+        elseif (modelIdx == 8 || modelIdx == 13) # prod
+            K = (stat' .* stat)
         end
     end
 
@@ -33,24 +40,41 @@ function update_K(A_current, K_current, k_current, modelIdx::Int, uu::Int, vv::I
     if modelIdx == 1 # spatial
         bth = [uu, vv]
 
-    elseif (modelIdx >= 4) && (modelIdx <= 8)
-        # update the clustering coefficient at uu and vv
-        bu = findall(==(1), A_current[uu, :])
-        bv = findall(==(1), A_current[vv, :])
-        su = Int.(A_current[bu, :][:, bu])
-        sv = Int.(A_current[bv, :][:, bv])
-        stat[uu] = k_current[uu] > 1 ? sum(su) / (k_current[uu]^2 - k_current[uu]) : 0
-        stat[vv] = k_current[vv] > 1 ? sum(sv) / (k_current[vv]^2 - k_current[vv]) : 0
+    elseif (modelIdx >= 4) && (modelIdx <= 13) # clustering or degree 
+        if (modelIdx <= 8) # clustering
+            # update the clustering coefficient at uu and vv
+            bu = findall(==(1), A_current[uu, :])
+            bv = findall(==(1), A_current[vv, :])
+            su = Int.(A_current[bu, :][:, bu])
+            sv = Int.(A_current[bv, :][:, bv])
+            stat[uu] = k_current[uu] > 1 ? sum(su) / (k_current[uu]^2 - k_current[uu]) : 0
+            stat[vv] = k_current[vv] > 1 ? sum(sv) / (k_current[vv]^2 - k_current[vv]) : 0
 
-        # update the clustering coefficient at common neighbors
-        bth = intersect(bu, bv)
+            # update the clustering coefficient at common neighbors
+            bth = intersect(bu, bv)
 
-        stat[bth] = stat[bth] .+ 2 ./ (k_current[bth] .^ 2 .- k_current[bth])
-        stat[k_current.<2] .= 0
-        bth = union(bth, [uu, vv])
+            stat[bth] = stat[bth] .+ 2 ./ (k_current[bth] .^ 2 .- k_current[bth])
+            stat[k_current.<2] .= 0
+            bth = union(bth, [uu, vv])
+        else # degree
+            bth = [uu, vv]
+            stat = k_current
+        end
 
-        if modelIdx == 4
+        if (modelIdx == 4 || modelIdx == 9)
             K_current[bth, :] = (stat' .+ stat[bth]) ./ 2 .+ epsilon
+            K_current[:, bth] = K_current[bth, :]'
+        elseif (modelIdx == 5 || modelIdx == 10)
+            K_current[bth, :] = min.(stat', stat[bth]) .+ epsilon
+            K_current[:, bth] = K_current[bth, :]'
+        elseif (modelIdx == 6 || modelIdx == 11)
+            K_current[bth, :] = max.(stat', stat[bth]) .+ epsilon
+            K_current[:, bth] = K_current[bth, :]'
+        elseif (modelIdx == 7 || modelIdx == 12)
+            K_current[bth, :] = abs.(stat' .- stat[bth]) .+ epsilon
+            K_current[:, bth] = K_current[bth, :]'
+        elseif (modelIdx == 8 || modelIdx == 13)
+            K_current[bth, :] = (stat' .* stat[bth]) .+ epsilon
             K_current[:, bth] = K_current[bth, :]'
         end
     end
