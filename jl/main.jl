@@ -18,7 +18,9 @@ function main()
         A_init = A_inits[i_sample, :, :]
         for i_model in 1:length(models)
             println("Sample: ", i_sample, " Model: ", i_model, "\n")
-            K[i_sample, i_model, :, :] = generate_models(A, D, A_init, params, i_model)
+            x = GNM(A, D, A_init, params, i_model)
+            generate_models(x)
+            K[i_sample, i_model, :, :] = x.K
         end
     end
 
