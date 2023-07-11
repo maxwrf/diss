@@ -20,7 +20,7 @@ function main()
         A_init = A_inits[i_sample, :, :]
         for i_model in 1:length(models)
             println("Sample: ", i_sample, " Model: ", i_model)
-            model = GNM_Mod.GNM(A, D, A_init, params, i_model, false)
+            model = GNM_Mod.GNM(A, D, A_init, params, i_model)
             GNM_Mod.generate_models(model)
             K[i_sample, i_model, :, :] = model.K
         end

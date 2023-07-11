@@ -63,54 +63,48 @@ function GNM(
     i_model::Int,
     weighted::Bool=false)
     """
-    Constructor for GNM structure
+    Outer constructor for GNM structure
     """
-    model = weighted ? GNM_Weighted() : GNM_Binary()
-    model.epsilon = 1e-5
-
-    model.A_Y = A_Y
-    model.D = D
-    model.A_init = A_init
-    model.params = params
-    model.i_model = i_model
+    epsilon = 1e-5
 
     # number of edges and nodes
-    model.m = sum(A_Y) / 2
-    model.m_seed = sum(A_init) / 2
-    model.n_nodes = size(A_Y, 2)
+    m = sum(A_Y) / 2
+    m_seed = sum(A_init) / 2
+    n_nodes = size(A_Y, 2)
 
     # prepare outputs
-    model.b = zeros(Int(m), Int(size(params, 1)))
-    model.K = zeros(Int(size(params, 1)), 4)
+    b = zeros(Int(m), Int(size(params, 1)))
+    K = zeros(Int(size(params, 1)), 4)
 
     # get upper tri indices, TODO: refactor
-    model.u = Int[]
-    model.v = Int[]
+    u = Int[]
+    v = Int[]
 
-    for i in 1:model.n_nodes
-        for j in (i+1):model.n_nodes
-            push!(model.u, i)
-            push!(model.v, j)
+    for i in 1:n_nodes
+        for j in (i+1):n_nodes
+            push!(u, i)
+            push!(v, j)
         end
     end
 
     # compute sample energy
-    model.energy_Y = zeros(4, model.n_nodes)
-    model.energy_Y[1, :] = sum(model.A_Y, dims=1)
-    model.energy_Y[2, :] = get_clustering_coeff(model.A_Y, model.n_nodes)
-    model.energy_Y[3, :] = betweenness_centrality(model.A_Y, model.n_nodes)
-    model.energy_Y[4, :] = sum((model.D .* model.A_Y), dims=1)
+    energy_Y = zeros(4, n_nodes)
+    energy_Y[1, :] = sum(A_Y, dims=1)
+    energy_Y[2, :] = get_clustering_coeff(A_Y, n_nodes)
+    energy_Y[3, :] = betweenness_centrality(A_Y, n_nodes)
+    energy_Y[4, :] = sum((D .* A_Y), dims=1)
 
-    model.A_current = zeros(model.n_nodes, model.n_nodes)
-    model.K_current = zeros(model.n_nodes, model.n_nodes)
-    model.k_current = zeros(model.n_nodes)
-    model.stat = zeros(model.n_nodes)
+    A_current = zeros(n_nodes, n_nodes)
+    K_current = zeros(n_nodes, n_nodes)
+    k_current = zeros(n_nodes)
+    stat = zeros(n_nodes)
 
-    if weighted
-        # TODO: add this stuff
+    if !weighted
+        return GNM_Binary(A_Y, D, A_init, params, i_model, A_current, K_current,
+            k_current, stat, m, m_seed, n_nodes, u, v, b, K, energy_Y, epsilon)
+    else
+        #TODO
     end
-
-    return model
 end
 
 function init_K(model::GNM)
