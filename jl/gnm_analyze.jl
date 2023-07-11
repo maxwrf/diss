@@ -9,21 +9,25 @@ function plot_landscape(df)
     for model in unique(df.model)
         data = filter(row -> row.model == model, df)[:, ["sample", "eta", "gamma", "KS_MAX"]]
         grouped_data = combine(groupby(data, [:eta, :gamma]), :KS_MAX => mean)
-        landscape = reshape(grouped_data.KS_MAX_mean, (length(unique(data.eta)), length(unique(data.gamma))))
+        landscape = reshape(grouped_data.KS_MAX_mean,
+            (length(unique(data.eta)), length(unique(data.gamma))))
         p = heatmap(landscape,
-            xticks=(1:length(unique(grouped_data[:, 1])), unique(grouped_data[:, 1])),
-            yticks=(1:length(unique(grouped_data[:, 2])), unique(grouped_data[:, 2])),
             clim=(0, 1),
             c=:viridis,
-            title="abc",
-            xlabel="eta",
-            ylabel="gamma"
+            legend=:none,
+            title="Model " * string(model),
+            xticks=:none,
+            yticks=:none
         )
         yflip!(true)
         push!(plots, p)
     end
 
-    plot(plots..., layout=(5, 3), size=(3000, 2000))
+    l = @layout[[° ° °; ° ° °; ° ° °; ° ° °; ° _ _] a{0.05w}]
+    bar = heatmap((0:0.01:1) .* ones(101, 1), legend=:none, xticks=:none,
+        yticks=(1:10:101, string.(0:0.1:1)), c=:viridis)
+
+    plot(plots..., bar, layout=l, size=(1600, 2000))
     savefig("/Users/maxwuerfek/code/diss/jl/test/landscape.png")
 end
 
