@@ -1,3 +1,19 @@
+function get_matching_indices(A::Matrix{Float64})
+    """
+    For any two nodes in the adjacency matrix, computes the overlap in the
+    connections.
+    Note that if two nodes have a common neighbor, the two edges are both
+    counted as part of the intersection set.
+    Any connection between the two nodes is excluded.
+    """
+    intersect = A * A .* .~Matrix{Bool}(I, size(A, 1), size(A, 1))
+    degree = dropdims(sum(A, dims=1), dims=1)
+    union = (degree .+ degree') .- (2 .* A)
+    m_indices = (intersect .* 2) ./ union
+    replace!(m_indices, NaN => 0)
+    return m_indices
+end
+
 function get_clustering_coeff(A::Matrix{Float64}, n_nodes::Int)::Vector{Float64}
     """
     Computes the clustering coefficients for each node

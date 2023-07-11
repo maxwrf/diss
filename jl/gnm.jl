@@ -11,6 +11,13 @@ function init_K(A_current, modelIdx::Int, n_nodes::Int)
 
     if modelIdx == 1 # spatial
         K = ones(n_nodes, n_nodes)
+
+    elseif modelIdx == 2 # neighbors
+        K = A_current * A_current .* .~Matrix{Bool}(I, size(A_current, 1), size(A_current, 1))
+
+    elseif modelIdx == 3 # matching
+        K = get_matching_indices(A_current)
+
     elseif (modelIdx >= 4) && (modelIdx <= 13) # clustering or degree
         if (modelIdx <= 8) # clustering
             stat = get_clustering_coeff(A_current, n_nodes)
@@ -39,6 +46,40 @@ function update_K(A_current, K_current, k_current, modelIdx::Int, uu::Int, vv::I
 
     if modelIdx == 1 # spatial
         bth = [uu, vv]
+
+    elseif modelIdx == 2 # neighbors
+        bth = [uu, vv]
+        bu = findall(==(1), A_current[uu, :])
+        bv = findall(==(1), A_current[vv, :])
+        bu = bu[bu.!=vv]
+        bv = bv[bv.!=uu]
+        K_current[vv, bu] .+= 1
+        K_current[bu, vv] .+= 1
+        K_current[uu, bv] .+= 1
+        K_current[bv, uu] .+= 1
+
+    elseif modelIdx == 3 # matching
+        bth = [uu, vv]
+        update_uu = findall(==(1), A_current * A_current[:, uu])
+        update_vv = findall(==(1), A_current * A_current[:, vv])
+        update_uu = filter(x -> x != uu, update_uu)
+        update_vv = filter(x -> x != vv, update_vv)
+
+        # TODO: Refactor
+        for j in update_uu
+            intersect = sum(A_current[uu, :] .* A_current[j, :])
+            union = (k_current[uu] + k_current[j]) - 2 * A_current[uu, j]
+            score = intersect > 0 ? (intersect * 2) / union : epsilon
+            K_current[uu, j] = K_current[j, uu] = score
+        end
+
+        for j in update_vv
+            intersect = sum(A_current[vv, :] .* A_current[j, :])
+            union = (k_current[vv] + k_current[j]) - 2 * A_current[vv, j]
+            score = intersect > 0 ? (intersect * 2) / union : epsilon
+            K_current[vv, j] = K_current[j, vv] = score
+        end
+
 
     elseif (modelIdx >= 4) && (modelIdx <= 13) # clustering or degree 
         if (modelIdx <= 8) # clustering
