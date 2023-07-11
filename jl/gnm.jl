@@ -6,21 +6,60 @@ include("gnm_utils.jl")
 include("test_data.jl")
 include("graph_utils.jl")
 
-function init_K(modelIdx::Int, nNodes::Int)
+# function get_func()
+#     funcs = Dict(
+#         'avg' => 
+#     )
+# end
+
+function init_K(A_current, modelIdx::Int, n_nodes::Int)
+    epsilon = 1e-5
+    stat = nothing
     if modelIdx == 1 # spatial
-        return ones(nNodes, nNodes)
+        K = ones(n_nodes, n_nodes)
+    elseif (modelIdx >= 4) && (modelIdx <= 8) # clustering
+        stat = get_clustering_coeff(A_current, n_nodes)
+        if modelIdx == 4 # avg
+            K = (stat' .+ stat) ./ 2
+        end
     end
+
+    return K .+ epsilon, stat
 end
 
-function update_K(K_current, modelIdx::Int)
+function update_K(A_current, K_current, k_current, modelIdx::Int, uu::Int, vv::Int, stat)
+    epsilon = 1e-5
+
     if modelIdx == 1 # spatial
-        return K_current
+        bth = [uu, vv]
+
+    elseif (modelIdx >= 4) && (modelIdx <= 8)
+        # update the clustering coefficient at uu and vv
+        bu = findall(==(1), A_current[uu, :])
+        bv = findall(==(1), A_current[vv, :])
+        su = Int.(A_current[bu, :][:, bu])
+        sv = Int.(A_current[bv, :][:, bv])
+        stat[uu] = k_current[uu] > 1 ? sum(su) / (k_current[uu]^2 - k_current[uu]) : 0
+        stat[vv] = k_current[vv] > 1 ? sum(sv) / (k_current[vv]^2 - k_current[vv]) : 0
+
+        # update the clustering coefficient at common neighbors
+        bth = intersect(bu, bv)
+
+        stat[bth] = stat[bth] .+ 2 ./ (k_current[bth] .^ 2 .- k_current[bth])
+        stat[k_current.<2] .= 0
+        bth = union(bth, [uu, vv])
+
+        if modelIdx == 4
+            K_current[bth, :] = (stat' .+ stat[bth]) ./ 2 .+ epsilon
+            K_current[:, bth] = K_current[bth, :]'
+        end
     end
-    return K_current
+
+    return K_current, stat, bth
 end
 
 
-function generate_models(A, D, A_init, params, iModel)
+function generate_models(A, D, A_init, params, i_model)
     # number of edges and nodes
     m = sum(A) / 2
     m_seed = sum(A_init) / 2
@@ -52,8 +91,8 @@ function generate_models(A, D, A_init, params, iModel)
     for iParam in 1:size(params, 1)
         eta, gamma = params[iParam, :]
         A_current = copy(A_init)
-        k_current = sum(A_current, dims=1)
-        K_current = init_K(iModel, n_nodes)
+        k_current = dropdims(sum(A_current, dims=1), dims=1)
+        K_current, stat = init_K(A_current, i_model, n_nodes)
 
         # initiate probability
         Fd = D .^ eta
@@ -69,14 +108,14 @@ function generate_models(A, D, A_init, params, iModel)
             k_current[uu] += 1
             k_current[vv] += 1
             A_current[uu, vv] = A_current[vv, uu] = 1
-            bth = [uu, vv]
 
             # update K
-            K_current = update_K(K_current, iModel)
+            K_current, stat, bth = update_K(
+                A_current, K_current, k_current, i_model, uu, vv, stat)
 
             # update the probabilities
             for bth_i in bth
-                Ff[bth_i, :] = Ff[:, bth_i] = Fd[:, bth_i] .* K_current[bth_i, :] .^ gamma .* (A_current[bth_i, :] .== 0)
+                Ff[bth_i, :] = Ff[:, bth_i] = Fd[bth_i, :] .* K_current[bth_i, :] .^ gamma .* (A_current[bth_i, :] .== 0)
             end
             P = [Ff[u[i], v[i]] for i in 1:length(u)]
         end

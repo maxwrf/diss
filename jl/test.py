@@ -29,3 +29,19 @@ data1 = np.array([1.2, 3.4, 2.1, 5.6, 4.2, 8.3])
 data2 = np.array([0.5, 2.3, 1.1, 4.9, 3.7, 7.4])
 
 print(ks_test(data1, data2))
+
+    gnm_rules = [
+        'spatial',
+        'neighbors',
+        'matching',
+        'clu-avg',
+        'clu-min',
+        'clu-max',
+        'clu-dist',
+        'clu-prod',
+        'deg-avg',
+        'deg-min',
+        'deg-max',
+        'deg-dist',
+        'deg-prod'
+    ]

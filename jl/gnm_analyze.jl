@@ -11,15 +11,15 @@ function plot_landscape(df)
         grouped_data = combine(groupby(data, [:eta, :gamma]), :KS_MAX => mean)
         landscape = reshape(grouped_data.KS_MAX_mean, (length(unique(data.eta)), length(unique(data.gamma))))
         p = heatmap(landscape,
-            xticks=minimum(grouped_data[:, 1]):maximum(grouped_data[:, 1]),
-            yticks=minimum(grouped_data[:, 1]):maximum(grouped_data[:, 1]),
+            xticks=(1:length(unique(grouped_data[:, 1])), unique(grouped_data[:, 1])),
+            yticks=(1:length(unique(grouped_data[:, 2])), unique(grouped_data[:, 2])),
             clim=(0, 1),
             c=:viridis,
             title="abc",
             xlabel="eta",
             ylabel="gamma"
         )
-
+        yflip!(true)
         push!(plots, p)
     end
 

@@ -12,9 +12,9 @@ function main()
     for iSample in 1:size(As, 1)
         A = As[iSample, :, :]
         A_init = A_inits[iSample, :, :]
-        for iModel in 1:length(models)
+        for iModel in [4]
             println("Sample: ", iSample, " Model: ", iModel, "\n")
-            K[iSample, iModel, :, :] = generate_models(A, D, A_init, params, iModel)
+            K[iSample, 1, :, :] = generate_models(A, D, A_init, params, iModel)
         end
     end
 
