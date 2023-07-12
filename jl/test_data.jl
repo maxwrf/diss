@@ -1,4 +1,6 @@
 using MAT
+using Distances
+using Statistics
 
 function load_test_data(n_samples::Int=-1)
     pData = "./test/example_binarised_connectomes.mat"

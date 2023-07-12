@@ -1,4 +1,4 @@
-include("gnm.jl")
+include("gnm copy.jl")
 include("test_data.jl")
 include("gnm_utils.jl")
 

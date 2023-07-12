@@ -163,6 +163,10 @@ The models include:
     \item Networks of high rich-club coefficients have many connections between nodes of high degree
 \end{itemize}
 
+# Automatic differentiation 
+\begin{itemize}
+\end{itemize}
+
 # Random dictionary
 \begin{itemize}
     \item Gray matter = Composed of the neurons (appears darker due ot higher levels of melanin)

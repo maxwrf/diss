@@ -390,5 +390,4 @@ function generate_models(model::GNM_Weighted)
     end
 end
 
-
 end

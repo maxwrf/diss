@@ -2,13 +2,40 @@ module GNM_Mod
 
 using LinearAlgebra
 using Statistics
-using MAT
 using Distances
+
+using ForwardDiff
+using ExponentialUtilities
+
 include("gnm_utils.jl")
 include("graph_utils.jl")
 
+abstract type GNM end
 
-mutable struct GNM
+mutable struct GNM_Binary <: GNM
+    A_Y::Matrix{Float64}
+    D::Matrix{Float64}
+    A_init::Matrix{Float64}
+    params::Matrix{Float64}
+    i_model::Int
+
+    A_current::Matrix{Float64}
+    K_current::Matrix{Float64}
+    k_current::Vector{Float64}
+    stat::Vector{Float64}
+
+    m::Int
+    m_seed::Int
+    n_nodes::Int
+    u::Vector{Int}
+    v::Vector{Int}
+    b::Matrix{Int}
+    K::Matrix{Float64}
+    energy_Y::Matrix{Float64}
+    epsilon::Float64
+end
+
+mutable struct GNM_Weighted <: GNM
     A_Y::Matrix{Float64}
     D::Matrix{Float64}
     A_init::Matrix{Float64}
@@ -30,46 +57,80 @@ mutable struct GNM
     energy_Y::Matrix{Float64}
     epsilon::Float64
 
-    function GNM(A_Y, D, A_init, params, i_model)
-        epsilon = 1e-5
-
-        # number of edges and nodes
-        m = sum(A_Y) / 2
-        m_seed = sum(A_init) / 2
-        n_nodes = size(A_Y, 2)
-
-        # prepare outputs
-        b = zeros(Int(m), Int(size(params, 1)))
-        K = zeros(Int(size(params, 1)), 4)
-
-        # get upper tri indices, TODO: refactor
-        u = Int[]
-        v = Int[]
-
-        for i in 1:n_nodes
-            for j in (i+1):n_nodes
-                push!(u, i)
-                push!(v, j)
-            end
-        end
-
-        # compute sample energy
-        energy_Y = zeros(4, n_nodes)
-        energy_Y[1, :] = sum(A_Y, dims=1)
-        energy_Y[2, :] = get_clustering_coeff(A_Y, n_nodes)
-        energy_Y[3, :] = betweenness_centrality(A_Y, n_nodes)
-        energy_Y[4, :] = sum((D .* A_Y), dims=1)
-
-        A_current = zeros(n_nodes, n_nodes)
-        K_current = zeros(n_nodes, n_nodes)
-        k_current = zeros(n_nodes)
-        stat = zeros(n_nodes)
-
-        new(A_Y, D, A_init, params, i_model, A_current, K_current, k_current,
-            stat, m, m_seed, n_nodes, u, v, b, K, energy_Y, epsilon)
-    end
+    # specific to weighed model
+    W_Y::Matrix{Float64}
+    start_edge::Int
+    opti_func::Int
+    A_keep::Array{Float64,4}
+    W_keep::Array{Float64,4}
+    rep_vec::Vector{Float64}
 end
 
+function GNM(
+    A_Y::Matrix{Float64},
+    D::Matrix{Float64},
+    A_init::Matrix{Float64},
+    params::Matrix{Float64},
+    i_model::Int,
+    weighted::Bool=false,
+    W_Y::Union{Matrix{Float64},Nothing}=nothing,
+    start_edge::Union{Int,Nothing}=nothing,
+    opti_func::Union{Int,Nothing}=nothing,
+    opti_samples::Union{Int,Nothing}=nothing,
+    opti_resolution::Union{Float64,Nothing}=nothing
+)
+    """
+    Outer constructor for GNM structure
+    """
+    epsilon = 1e-5
+
+    # number of edges and nodes
+    m = sum(A_Y) / 2
+    m_seed = sum(A_init) / 2
+    n_nodes = size(A_Y, 2)
+
+    # prepare outputs
+    b = zeros(Int(m), Int(size(params, 1)))
+    K = zeros(Int(size(params, 1)), 4)
+
+    # get upper tri indices, TODO: refactor
+    u = Int[]
+    v = Int[]
+
+    for i in 1:n_nodes
+        for j in (i+1):n_nodes
+            push!(u, i)
+            push!(v, j)
+        end
+    end
+
+    # compute sample energy
+    energy_Y = zeros(4, n_nodes)
+    energy_Y[1, :] = sum(A_Y, dims=1)
+    energy_Y[2, :] = get_clustering_coeff(A_Y, n_nodes)
+    energy_Y[3, :] = betweenness_centrality(A_Y, n_nodes)
+    energy_Y[4, :] = sum((D .* A_Y), dims=1)
+
+    A_current = zeros(n_nodes, n_nodes)
+    K_current = zeros(n_nodes, n_nodes)
+    k_current = zeros(n_nodes)
+    stat = zeros(n_nodes)
+
+    if !weighted
+        return GNM_Binary(A_Y, D, A_init, params, i_model, A_current, K_current,
+            k_current, stat, m, m_seed, n_nodes, u, v, b, K, energy_Y, epsilon)
+    else
+        A_keep = zeros(size(params, 1), Int(m - m_seed), n_nodes, n_nodes)
+        W_keep = zeros(size(params, 1), Int(m - m_seed), n_nodes, n_nodes)
+        min_val = -opti_samples * opti_resolution
+        n_reps = Int(((-min_val) - min_val) / opti_resolution) + 1
+        rep_vec = [min_val + (i - 1) * opti_resolution for i in 1:n_reps]
+
+        return GNM_Weighted(A_Y, D, A_init, params, i_model, A_current, K_current,
+            k_current, stat, m, m_seed, n_nodes, u, v, b, K, energy_Y, epsilon,
+            W_Y, start_edge, opti_func, A_keep, W_keep, rep_vec)
+    end
+end
 
 function init_K(model::GNM)
     if model.i_model == 1 # spatial
@@ -184,8 +245,7 @@ function update_K(model::GNM, uu::Int, vv::Int)
     return bth
 end
 
-
-function generate_models(model::GNM)
+function generate_models(model::GNM_Binary)
     # start model generation
     for i_param in 1:size(model.params, 1)
         eta, gamma = model.params[i_param, :]
@@ -231,4 +291,80 @@ function generate_models(model::GNM)
         model.K[i_param, 4] = ks_test(model.energy_Y[4, :], energy_Y_head[4, :])
     end
 end
+
+function generate_models(model::GNM_Weighted)
+    # start model generation
+    for i_param in 1:size(model.params, 1)
+        eta, gamma, alpha, omega = model.params[i_param, :]
+        model.A_current = copy(model.A_init)
+        model.k_current = dropdims(sum(model.A_current, dims=1), dims=1)
+        init_K(model)
+
+        # initiate probability
+        Fd = model.D .^ eta
+        Fk = model.K_current .^ gamma
+        Ff = Fd .* Fk .* (model.A_current .== 0)
+        P = [Ff[model.u[i], model.v[i]] for i in 1:length(model.u)]
+
+        for i_edge in (model.m_seed+1):model.m
+            # probabilistically select a new edge
+            C = [0; cumsum(P)]
+            r = sum(C .<= (rand() * C[end]))
+            uu, vv = model.u[r], model.v[r]
+            model.k_current[uu] += 1
+            model.k_current[vv] += 1
+            model.A_current[uu, vv] = model.A_current[vv, uu] = 1
+
+            # update K
+            bth = update_K(model, uu, vv)
+
+            # update the probabilities
+            for bth_i in bth
+                Ff[bth_i, :] = Ff[:, bth_i] = Fd[bth_i, :] .* model.K_current[bth_i, :] .^ gamma .* (model.A_current[bth_i, :] .== 0)
+            end
+            P = [Ff[model.u[i], model.v[i]] for i in 1:length(model.u)]
+
+            model.A_keep[i_param, (i_edge-model.m_seed), :, :] = model.A_current
+
+            if (i_edge >= (model.start_edge + model.m_seed + 1))
+                println("Tune ", i_edge, " / ", model.m)
+                # Init W current
+                if (i_edge == (model.start_edge + model.m_seed + 1))
+                    W_current = copy(model.A_current)
+                else
+                    W_current = model.W_keep[i_param, (i_edge-model.m_seed-1), :, :]
+                    W_current[uu, vv] = W_current[vv, uu] = 1.0
+                end
+
+
+                function jvp(func, primal, tangent)
+                    g(t) = myexp(primal + t * tangent)
+                    jvp_result = ForwardDiff.derivative(g, 0.0)
+                    return jvp_result
+                end
+
+                full_jacobian = jvp(myexp, W_current, exp(W_current))
+
+                # prevent negative weights
+                W_current[W_current.<0] .= 0
+                model.W_keep[i_param, (i_edge-model.m_seed), :, :] = W_current
+            end
+        end
+
+        # evaluate the param combination
+        edge_indices = [Int((idx[1] + 1) * 10^(ceil(log10(idx[2] + 1)))) + idx[2] for idx in findall(==(1), model.A_current)]
+        energy_Y_head = zeros(4, model.n_nodes)
+        energy_Y_head[1, :] = sum(model.A_current, dims=1)
+        energy_Y_head[2, :] = get_clustering_coeff(model.A_current, model.n_nodes)
+        energy_Y_head[3, :] = betweenness_centrality(model.A_current, model.n_nodes)
+        energy_Y_head[4, :] = sum((model.D .* model.A_current), dims=1)
+        model.K[i_param, 1] = ks_test(model.energy_Y[1, :], energy_Y_head[1, :])
+        model.K[i_param, 2] = ks_test(model.energy_Y[2, :], energy_Y_head[2, :])
+        model.K[i_param, 3] = ks_test(model.energy_Y[3, :], energy_Y_head[3, :])
+        model.K[i_param, 4] = ks_test(model.energy_Y[4, :], energy_Y_head[4, :])
+    end
+end
+
+myexp(A) = exponential!(copyto!(similar(A), A), ExpMethodGeneric())
+
 end
