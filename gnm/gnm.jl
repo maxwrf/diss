@@ -350,6 +350,7 @@ function generate_models(model::GNM_Weighted)
                             s = sum(W_synth, dims=2)
                             s[s.==0] .= model.epsilon
                             S = Diagonal(s[:, 1])
+                            # no this needs to be matrix multiplication
                             adj = sqrt(inv(S)) .* W_synth .* sqrt(inv(S))
                             comm = exp(adj)
                         end
