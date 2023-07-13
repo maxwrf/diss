@@ -1,8 +1,9 @@
 __pycache__/
 diss-env/
 data/
-gnm-run/slurm/*
-gnm-analyze/__pycache__/
-gnm-analyze/results/
+cpp-gnms/gnm-run/slurm/*
+cpp-gnms/gnm-analyze/__pycache__/
+cpp-gnms/gnm-analyze/results/
+cpp-gnms/gnm-analyze/results/
 slurm/
 .DS_Store
