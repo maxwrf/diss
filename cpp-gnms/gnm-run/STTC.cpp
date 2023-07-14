@@ -145,12 +145,7 @@ std::vector<std::vector<double>> STTC::tiling(double dt,
                                     spikes.begin() + (int) cumsum[j + 1]);
 
             // compute sttc
-            result[i][j] = result[j][i] = sttc(st1,
-                                               st2,
-                                               n1,
-                                               n2,
-                                               dt,
-                                               time);
+            result[i][j] = result[j][i] = sttc(st1, st2, n1, n2, dt, time);
         }
     }
     return result;
