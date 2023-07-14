@@ -3,8 +3,8 @@ using Distances
 using Statistics
 
 function load_test_data(n_samples::Int=-1)
-    pData = "./test/example_binarised_connectomes.mat"
-    pDist = "./test/dk_coordinates.mat"
+    pData = "/Users/maxwuerfek/code/diss/gnm/test/example_binarised_connectomes.mat"
+    pDist = "/Users/maxwuerfek/code/diss/gnm/test/dk_coordinates.mat"
 
     A = matread(pData)["example_binarised_connectomes"]
     D = matread(pDist)["coordinates"]
@@ -22,7 +22,7 @@ function load_test_data(n_samples::Int=-1)
 end
 
 function load_weight_test_data()
-    pData = "./test-weights/demo_data.mat"
+    pData = "/Users/maxwuerfek/code/diss/gnm/test-weights/demo_data.mat"
     data = matread(pData)
     D = data["demo_data"]["D"]
     A_init = data["demo_data"]["seed"]

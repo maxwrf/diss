@@ -130,12 +130,13 @@ f(w_{i,j}) = (c_{i,k} * d_{i,j})^{\omega}
 \]</span> Where, the communicability matrix is defined as follows. This captures the proportion of signals, that propagate randomly from node i would reach node j over an infinite time horizon. <span class="math display">\[
 c_{i,j} = e^{s^{-1/2}w_{i,j}s^{-1/2}}
 \]</span></p>
-<p>In this demonstration, we will simply work on the matrix exponential differentiation: <span class="math display">\[
-f(W)=e^{W}
+<p>Finally, the update rule is given as: <span class="math display">\[
+w_{i,j} = w_{i,j} - \alpha f'(w_{i,j})
 \]</span></p>
+<p><strong>Question</strong><br> In the code implementation this seems to be bound to zero in Line 110, but there is no upper bound, should it be normalized to range [0,1]?</p>
 <section id="setup" class="level2">
 <h2 class="anchored" data-anchor-id="setup">Setup <a name="setup" href=""></a></h2>
-<div class="cell" data-execution_count="45">
+<div class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">Polynomials</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">ForwardDiff</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">ExponentialUtilities</span></span>
@@ -143,7 +144,7 @@ f(W)=e^{W}
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">BenchmarkTools</span></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">StatsBase</span>: sample</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">include</span>(<span class="st">"test_data.jl"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
+<div class="cell-output cell-output-display" data-execution_count="1">
 <pre><code>load_weight_test_data (generic function with 1 method)</code></pre>
 </div>
 </div>
@@ -153,7 +154,7 @@ f(W)=e^{W}
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>     <span class="fl">0.0</span> <span class="fl">0.2</span> <span class="fl">0.0</span>]</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>demo_edge <span class="op">=</span> [<span class="fu">CartesianIndex</span>(<span class="fl">1</span>, <span class="fl">2</span>)]</span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>W</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
+<div class="cell-output cell-output-display" data-execution_count="2">
 <pre><code>3×3 Matrix{Float64}:
  0.0  0.8  0.0
  0.8  0.0  0.2
@@ -164,13 +165,23 @@ f(W)=e^{W}
 </section>
 <section id="methods" class="level1">
 <h1>Methods <a name="methods" href=""></a></h1>
+<p>Here we will work on different approaches as to compute the derivative. In this demonstration, we will simply work on the matrix exponential differentiation, as the rest of the operation is trivial and computationally cheap.</p>
+<p>For: <span class="math display">\[
+f(W)=e^{W}
+\]</span> Find <span class="math display">\[
+\frac{\delta f}{\delta W_{i,j}}
+\]</span> Or more specifically <span class="math display">\[
+f(W)=\sum_{i,j} e^{W}
+\]</span></p>
+<p>But this also simply boils down to the evaluation of the derivative at one (a matrix of ones at the same size as W for the jacobian vector product).</p>
 <section id="original-tangent-approximation" class="level2">
 <h2 class="anchored" data-anchor-id="original-tangent-approximation">Original tangent approximation <a name="org-tangent" href=""></a></h2>
-<p>Here we are computing the derivative for a single edge. We will use the tangent approximation to compute the derivative. This is the approach used in the Akarca paper.</p>
-<p><strong>Problem 1</strong> As far as I understand, there is a small but significant error in the implementation provided at https://github.com/DanAkarca/weighted_generative_models/blob/main/weighted_generative_model.m in line 197. When fitting the first-order polynomial, the independent variable should not be the range of the differences to the edge, which have been used, but should be the actual values, the edge is taking on.</p>
+<p>Here we are computing the derivative for a single edge. We will use the tangent approximation to compute the derivative. This is the approach used in the Akarca paper and available in the repo, as can be seen below this will not produce the correct result.</p>
+<p><strong>Problem 1</strong><br> As far as I understand, there is a small but significant error in the implementation provided at https://github.com/DanAkarca/weighted_generative_models/blob/main/weighted_generative_model.m in line 197. When fitting the first-order polynomial, the independent variable should not be the range of the differences to the edge, which have been used, but should be the actual values, the edge is taking on.</p>
+<p><strong>Problem 2</strong><br> The second problem is that we will often need to compute the derivative with respect to a value in the matrix, which is currently zero. (This happens easily as the value for any weight has a lower bound of zero which is often hit). Now the approach implemented in the code builds a range of x value by using a value for the number of repititions and resolutions for the tangent approximations, but it multiples the resolution with the current x-value, which will produce a vector of zeros whenever the current value is zero, which will always produce a zero slope and zero derivative approximations - which is wrong.</p>
 <p><strong>Problem 2</strong> In the same implementation the derivative is approximated from the tangent approximation after nudging the edge (i,j) as well as (j,i). In a sense we are computing the derivative with respect to both (i,j) and (j,i) at once. First of all, this will create computational overhead, as the derivatives (i.e., the jacobian) will also always be symmetric. Secondly, this will create a problem when we are trying to compute the gradient, which we currently simply take as the the derivative. But then we update both elements in the W matrix with the same gradient which is the derivative with respect to nudging both (i,j) and (j,i) - thus our update to the objective function is overshooting.</p>
 <p>See line 208 and 208.</p>
-<div class="cell" data-execution_count="66">
+<div class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">paper_tangent_approx</span>(W, edges<span class="op">::</span><span class="dt">Vector{CartesianIndex{2}}</span>, </span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    resolution <span class="op">=</span> <span class="fl">0.01</span>, steps <span class="op">=</span> <span class="fl">5</span>)<span class="op">::</span><span class="dt">Vector{Float64}</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    results <span class="op">=</span> <span class="fu">zeros</span>(<span class="fu">length</span>(edges))</span>
@@ -200,15 +211,15 @@ f(W)=e^{W}
 <span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
 <span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a><span class="fu">paper_tangent_approx</span>(W, demo_edge, <span class="fl">0.01</span>), <span class="fu">paper_tangent_approx</span>(W, demo_edge, <span class="fl">0.2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
+<div class="cell-output cell-output-display" data-execution_count="3">
 <pre><code>([0.03861909629029788], [0.830380354061412])</code></pre>
 </div>
 </div>
 </section>
 <section id="adapted-tangent-approximation" class="level2">
 <h2 class="anchored" data-anchor-id="adapted-tangent-approximation">Adapted tangent approximation <a name="adapted-tangent" href=""></a></h2>
-<div class="cell" data-execution_count="65">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">tangent_approx</span>(f, W<span class="op">::</span><span class="dt">Matrix{Float64}</span>, edges<span class="op">::</span><span class="dt">Vector{CartesianIndex{2}}</span>, </span>
+<div class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">tangent_approx</span>(f<span class="op">::</span><span class="dt">Function</span>, W<span class="op">::</span><span class="dt">Matrix{Float64}</span>, edges<span class="op">::</span><span class="dt">Vector{CartesianIndex{2}}</span>, </span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    resolution <span class="op">=</span> <span class="fl">0.01</span>, steps <span class="op">=</span> <span class="fl">5</span>)<span class="op">::</span><span class="dt">Vector{Float64}</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    results <span class="op">=</span> <span class="fu">zeros</span>(<span class="fu">length</span>(edges))</span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    rep_vec <span class="op">=</span> <span class="fu">collect</span>(<span class="fu">range</span>(<span class="op">-</span>steps<span class="op">*</span>resolution, steps<span class="op">*</span>resolution, step<span class="op">=</span>resolution))</span>
@@ -216,25 +227,27 @@ f(W)=e^{W}
 <span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (i_edge, edge_idx) <span class="kw">in</span> <span class="fu">enumerate</span>(edges)     </span>
 <span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Points for evaluation</span></span>
 <span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>        edge_val <span class="op">=</span> W[edge_idx]</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>        reps <span class="op">=</span> [edge_val <span class="op">*</span> (<span class="fl">1</span> <span class="op">+</span> i) for i <span class="kw">in</span> rep_vec]</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        <span class="co"># For each nudge save difference in communicability </span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>        sum_comm <span class="op">=</span> <span class="fu">zeros</span>(<span class="fu">length</span>(reps))</span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> (i_rep, rep) <span class="kw">in</span> <span class="fu">enumerate</span>(reps)</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>            W_copy <span class="op">=</span> <span class="fu">copy</span>(W)</span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>            W_copy[edge_idx] <span class="op">=</span> rep </span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>            sum_comm[i_rep] <span class="op">=</span> <span class="fu">f</span>(W_copy, edge_idx)</span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">end</span></span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>        results[i_edge] <span class="op">=</span> <span class="fu">fit</span>(reps, sum_comm, <span class="fl">1</span>)[<span class="fl">1</span>]</span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span></span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> results</span>
-<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
-<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>f <span class="op">=</span> (W, _) <span class="op">-&gt;</span> <span class="fu">sum</span>(<span class="fu">exp</span>(W))</span>
-<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="fu">tangent_approx</span>(f, W, demo_edge, <span class="fl">0.01</span>), <span class="fu">tangent_approx</span>(f, W, demo_edge, <span class="fl">0.1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>        sign_edge <span class="op">=</span> <span class="fu">sign</span>(edge_val) <span class="op">==</span> <span class="fl">0</span> ? <span class="fl">1</span> <span class="op">:</span> <span class="fu">sign</span>(edge_val)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>        reps <span class="op">=</span> [edge_val <span class="op">+</span> sign_edge <span class="op">*</span> (<span class="fu">max</span>(<span class="fu">abs</span>(edge_val), <span class="fl">1e-3</span>) <span class="op">*</span> i) for i <span class="kw">in</span> rep_vec]</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        <span class="co"># For each nudge save difference in communicability </span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>        sum_comm <span class="op">=</span> <span class="fu">zeros</span>(<span class="fu">length</span>(reps))</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> (i_rep, rep) <span class="kw">in</span> <span class="fu">enumerate</span>(reps)</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>            W_copy <span class="op">=</span> <span class="fu">copy</span>(W)</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>            W_copy[edge_idx] <span class="op">=</span> rep </span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>            sum_comm[i_rep] <span class="op">=</span> <span class="fu">f</span>(W_copy, edge_idx)</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">end</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>        results[i_edge] <span class="op">=</span> <span class="fu">fit</span>(reps, sum_comm, <span class="fl">1</span>)[<span class="fl">1</span>]</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> results</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>f <span class="op">=</span> (W, _) <span class="op">-&gt;</span> <span class="fu">sum</span>(<span class="fu">exp</span>(W))</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="fu">tangent_approx</span>(f, W, demo_edge, <span class="fl">0.01</span>), <span class="fu">tangent_approx</span>(f, W, demo_edge, <span class="fl">0.1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="4">
 <pre><code>([2.4132596676512077], [2.4141043556312676])</code></pre>
 </div>
 </div>
@@ -264,7 +277,7 @@ f(W)=e^{W}
 <span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>f <span class="op">=</span> W <span class="op">-&gt;</span> <span class="fu">sum</span>(<span class="fu">exp</span>(W))</span>
 <span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="fu">finite_diff</span>(f, W, demo_edge, <span class="fl">0.01</span>), <span class="fu">finite_diff</span>(f, W, demo_edge,<span class="fl">0.2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
+<div class="cell-output cell-output-display" data-execution_count="5">
 <pre><code>([2.413251884607348], [2.4135507160903513])</code></pre>
 </div>
 </div>
@@ -293,7 +306,7 @@ f(W)=e^{W}
 <span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
 <span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a><span class="fu">forward_diff_j</span>(W, demo_edge)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
+<div class="cell-output cell-output-display" data-execution_count="6">
 <pre><code>1-element Vector{Float64}:
  2.4132511356618336</code></pre>
 </div>
@@ -301,7 +314,7 @@ f(W)=e^{W}
 </section>
 <section id="forward-differentiation-with-jacobian-vector-product" class="level2">
 <h2 class="anchored" data-anchor-id="forward-differentiation-with-jacobian-vector-product">Forward Differentiation with Jacobian vector product</h2>
-<div class="cell" data-execution_count="8">
+<div class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">forward_diff_jvp</span>(W<span class="op">::</span><span class="dt">Matrix{Float64}</span>, edges<span class="op">::</span><span class="dt">Vector{CartesianIndex{2}}</span>)<span class="op">::</span><span class="dt">Vector{Float64}</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    tangent <span class="op">=</span> <span class="fu">ones</span>(<span class="fu">size</span>(W))</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">diff_exp</span>(W) <span class="op">=</span> <span class="fu">exponential!</span>(<span class="fu">copyto!</span>(<span class="fu">similar</span>(W), W), <span class="fu">ExpMethodGeneric</span>())</span>
@@ -311,7 +324,7 @@ f(W)=e^{W}
 <span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
 <span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="fu">forward_diff_jvp</span>(W, demo_edge)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
+<div class="cell-output cell-output-display" data-execution_count="7">
 <pre><code>1-element Vector{Float64}:
  2.413251135661834</code></pre>
 </div>
@@ -319,7 +332,7 @@ f(W)=e^{W}
 </section>
 <section id="fréchet-block-enlarge" class="level2">
 <h2 class="anchored" data-anchor-id="fréchet-block-enlarge">Fréchet: Block enlarge</h2>
-<div class="cell" data-execution_count="28">
+<div class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">frechet_block_enlarge</span>(W<span class="op">::</span><span class="dt">Matrix{Float64}</span>, edges<span class="op">::</span><span class="dt">Vector{CartesianIndex{2}}</span>)<span class="op">::</span><span class="dt">Vector{Float64}</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    E <span class="op">=</span> <span class="fu">ones</span>(<span class="fu">size</span>(W))</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> <span class="fu">size</span>(W, <span class="fl">1</span>)</span>
@@ -330,7 +343,7 @@ f(W)=e^{W}
 <span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
 <span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="fu">frechet_block_enlarge</span>(W, demo_edge)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
+<div class="cell-output cell-output-display" data-execution_count="8">
 <pre><code>1-element Vector{Float64}:
  2.413251135661833</code></pre>
 </div>
@@ -365,7 +378,7 @@ The algorithm: $$
 \end{array}\]</span>
 <p>$$</p>
 <p>References:<br> Higham (2008), Functions of Matrices - Theory and Computation”, Chapter 10, Algorithm 10.20 <br> https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.expm_frechet.html#scipy.linalg.expm_frechet <br> https://rdrr.io/cran/expm/man/expmFrechet.html</p>
-<div class="cell" data-execution_count="10">
+<div class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">_diff_pade3</span>(A, E, ident)</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> (<span class="fl">120.0</span>, <span class="fl">60.0</span>, <span class="fl">12.0</span>, <span class="fl">1.0</span>)</span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    A2 <span class="op">=</span> A <span class="op">*</span> A</span>
@@ -456,7 +469,7 @@ The algorithm: $$
 <span id="cb17-88"><a href="#cb17-88" aria-hidden="true" tabindex="-1"></a>        <span class="fl">7.83e-1</span>, <span class="fl">1.23e0</span>, <span class="fl">1.78e0</span>, <span class="fl">2.42e0</span>, <span class="fl">3.13e0</span>, <span class="fl">3.90e0</span>, <span class="fl">4.74e0</span>, <span class="fl">5.63e0</span>,</span>
 <span id="cb17-89"><a href="#cb17-89" aria-hidden="true" tabindex="-1"></a>        <span class="fl">6.56e0</span>, <span class="fl">7.52e0</span>, <span class="fl">8.53e0</span>, <span class="fl">9.56e0</span>, <span class="fl">1.06e1</span>, <span class="fl">1.17e1</span>);</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-execution_count="31">
+<div class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">frechet_algo</span>(A<span class="op">::</span><span class="dt">Matrix{Float64}</span>, edges<span class="op">::</span><span class="dt">Vector{CartesianIndex{2}}</span>)<span class="op">::</span><span class="dt">Vector{Float64}</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    E <span class="op">=</span> <span class="fu">ones</span>(<span class="fu">size</span>(A))</span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> <span class="fu">size</span>(A, <span class="fl">1</span>)</span>
@@ -493,7 +506,7 @@ The algorithm: $$
 <span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
 <span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a><span class="fu">frechet_algo</span>(W, demo_edge)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
+<div class="cell-output cell-output-display" data-execution_count="10">
 <pre><code>1-element Vector{Float64}:
  2.413251135661833</code></pre>
 </div>
@@ -502,7 +515,7 @@ The algorithm: $$
 </section>
 <section id="benchmarking" class="level1">
 <h1>Benchmarking <a name="benchmarking" href=""></a></h1>
-<div class="cell" data-execution_count="32">
+<div class="cell" data-execution_count="11">
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">init_sparse_matrix</span>(n <span class="op">=</span> <span class="fl">100</span>, density <span class="op">=</span> <span class="fl">0.2</span>)</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Initialize a sparse matrix</span></span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    W <span class="op">=</span> <span class="fu">zeros</span>(n, n)</span>
@@ -525,109 +538,126 @@ The algorithm: $$
 <span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a><span class="pp">@btime</span> <span class="fu">frechet_block_enlarge</span>(<span class="op">$</span>W_bench, <span class="op">$</span>edges_bench) </span>
 <span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a><span class="pp">@btime</span> <span class="fu">frechet_algo</span>(<span class="op">$</span>W_bench, <span class="op">$</span>edges_bench);</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>  2.584 s (240215 allocations: 1.80 GiB)</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  97.893 ms (8469 allocations: 66.25 MiB)</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  1.732 s (6067 allocations: 312.60 MiB)</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  1.503 ms (20 allocations: 315.42 KiB)</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  2.672 ms (24 allocations: 609.75 KiB)</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  420.167 μs (220 allocations: 1.86 MiB)</code></pre>
+<pre><code>  581.718 ms (76375 allocations: 430.55 MiB)
+  101.404 ms (8809 allocations: 68.82 MiB)
+  1.727 s (6158 allocations: 312.79 MiB)
+  1.502 ms (20 allocations: 315.55 KiB)
+  2.286 ms (24 allocations: 609.88 KiB)
+  397.250 μs (220 allocations: 1.86 MiB)</code></pre>
 </div>
 </div>
 </section>
 <section id="extension-to-full-objective-function" class="level1">
 <h1>Extension to full objective function</h1>
-<div class="cell" data-execution_count="75">
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># load synthetic data</span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>W_Y, D, A_init <span class="op">=</span> <span class="fu">load_weight_test_data</span>()</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>A_Y <span class="op">=</span> <span class="fu">Float64</span>.(W_Y <span class="op">.&gt;</span> <span class="fl">0</span>);</span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>α <span class="op">=</span> <span class="fl">0.01</span></span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>ω <span class="op">=</span> <span class="fl">0.9</span></span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>m_seed <span class="op">=</span> <span class="fu">Int</span>(<span class="fu">sum</span>(A_init))</span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>resolution <span class="op">=</span> <span class="fl">0.01</span></span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>steps <span class="op">=</span> <span class="fl">5</span></span>
-<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>zero_indices <span class="op">=</span> <span class="fu">findall</span>(<span class="op">==</span>(<span class="fl">0</span>), <span class="fu">triu</span>(A_init, <span class="fl">1</span>))</span>
-<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>edges_to_add <span class="op">=</span> <span class="fu">sample</span>(zero_indices, m_max<span class="op">-</span>m_seed; replace <span class="op">=</span> <span class="cn">false</span>);</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Currently I can successfully compute the objective function derivative without normalization. This brings a tremendous speedup, demonstrated below on the dataset provided by Akarca in the demo repo. Will need to spend some more time on the derivative with the normalization.</p>
+<div class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># load synthetic data</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>W_Y, D, A_init <span class="op">=</span> <span class="fu">load_weight_test_data</span>()</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>A_Y <span class="op">=</span> <span class="fu">Float64</span>.(W_Y <span class="op">.&gt;</span> <span class="fl">0</span>);</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>α <span class="op">=</span> <span class="fl">0.01</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>ω <span class="op">=</span> <span class="fl">0.9</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>ϵ <span class="op">=</span> <span class="fl">1e-5</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>m_seed <span class="op">=</span> <span class="fu">Int</span>(<span class="fu">sum</span>(A_init))</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>m_all <span class="op">=</span> <span class="fu">Int</span>(<span class="fu">sum</span>(A_Y))</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>resolution <span class="op">=</span> <span class="fl">0.01</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>steps <span class="op">=</span> <span class="fl">5</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>zero_indices <span class="op">=</span> <span class="fu">findall</span>(<span class="op">==</span>(<span class="fl">0</span>), <span class="fu">triu</span>(A_init, <span class="fl">1</span>))</span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>edges_to_add <span class="op">=</span> <span class="fu">sample</span>(zero_indices, m_all<span class="op">-</span>m_seed; replace <span class="op">=</span> <span class="cn">false</span>);</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-execution_count="76">
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">test_tangent</span>(m_max)</span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    A_current <span class="op">=</span> <span class="fu">copy</span>(A_init)</span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    W_current <span class="op">=</span> <span class="fu">copy</span>(A_init)</span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    edge_indices <span class="op">=</span> <span class="fu">Vector</span><span class="dt">{CartesianIndex{2}}</span>()</span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>    f <span class="op">=</span> (W, edge_idx) <span class="op">-&gt;</span> (<span class="fu">sum</span>(<span class="fu">exp</span>(W))  <span class="op">*</span> D[edge_idx])<span class="op">^</span>ω</span>
-<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> m <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span>m_max</span>
-<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Get the edge</span></span>
-<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>        edge_idx <span class="op">=</span> edges_to_add[m<span class="op">-</span>m_seed]</span>
-<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>        rev_idx <span class="op">=</span> <span class="fu">CartesianIndex</span>(edge_idx[<span class="fl">2</span>], edge_idx[<span class="fl">1</span>])</span>
-<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>        A_current[edge_idx] <span class="op">=</span> W_current[edge_idx] <span class="op">=</span>  <span class="fl">1</span></span>
-<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>        A_current[rev_idx] <span class="op">=</span> W_current[rev_idx] <span class="op">=</span>  <span class="fl">1</span>    </span>
-<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>        <span class="fu">push!</span>(edge_indices, edge_idx)</span>
-<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>        tangent_d <span class="op">=</span> <span class="fu">tangent_approx</span>(f, W_current, edge_indices, resolution, steps)</span>
-<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>        <span class="co"># println(round.(tangent_d, digits=2))</span></span>
-<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> (i_edge, edge) <span class="kw">in</span> <span class="fu">enumerate</span>(edge_indices)</span>
-<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>            update <span class="op">=</span> <span class="fu">max</span>(<span class="fl">0</span>, (α <span class="op">*</span> tangent_d[i_edge]))</span>
-<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a>            W_current[edge] <span class="op">-=</span> update</span>
-<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a>            W_current[<span class="fu">CartesianIndex</span>(edge[<span class="fl">2</span>], edge[<span class="fl">1</span>])] <span class="op">-=</span> update</span>
-<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">end</span></span>
-<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span></span>
-<span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> W_current</span>
-<span id="cb28-25"><a href="#cb28-25" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">test_tangent</span>(m_max<span class="op">::</span><span class="dt">Int</span>, normalize<span class="op">::</span><span class="dt">Bool</span>, verbose<span class="op">::</span><span class="dt">Bool</span>)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    A_current <span class="op">=</span> <span class="fu">copy</span>(A_init)</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    W_current <span class="op">=</span> <span class="fu">copy</span>(A_init)</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> normalize</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">function</span> <span class="fu">f</span>(W, edge_idx)</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>            node_strengths <span class="op">=</span> <span class="fu">dropdims</span>(<span class="fu">sum</span>(W, dims<span class="op">=</span><span class="fl">2</span>), dims<span class="op">=</span><span class="fl">2</span>)</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>            node_strengths[node_strengths<span class="op">.==</span><span class="fl">0</span>] <span class="op">.=</span> ϵ</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>            norm_fact <span class="op">=</span> <span class="fu">sqrt</span>(<span class="fu">inv</span>(<span class="fu">Diagonal</span>(node_strengths)))</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> (<span class="fu">sum</span>(<span class="fu">exp</span>(norm_fact <span class="op">*</span> W <span class="op">*</span> norm_fact)))</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> (<span class="fu">sum</span>(<span class="fu">exp</span>(norm_fact <span class="op">*</span> W <span class="op">*</span> norm_fact)) <span class="op">*</span> D[edge_idx])<span class="op">^</span>ω</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">end</span></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>    else</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>        f <span class="op">=</span> (W, edge_idx) <span class="op">-&gt;</span> (<span class="fu">sum</span>(<span class="fu">exp</span>(W))  <span class="op">*</span> D[edge_idx])<span class="op">^</span>ω</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">end</span></span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> m <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span>m_max</span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Get the edge</span></span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>        edge_idx <span class="op">=</span> edges_to_add[m<span class="op">-</span>m_seed]</span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a>        rev_idx <span class="op">=</span> <span class="fu">CartesianIndex</span>(edge_idx[<span class="fl">2</span>], edge_idx[<span class="fl">1</span>])</span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a>        A_current[edge_idx] <span class="op">=</span> W_current[edge_idx] <span class="op">=</span>  <span class="fl">1</span></span>
+<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a>        A_current[rev_idx] <span class="op">=</span> W_current[rev_idx] <span class="op">=</span>  <span class="fl">1</span>    </span>
+<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a>        edge_indices <span class="op">=</span> <span class="fu">findall</span>(<span class="op">!=</span>(<span class="fl">0</span>), <span class="fu">triu</span>(A_current, <span class="fl">1</span>))</span>
+<span id="cb23-24"><a href="#cb23-24" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a>        tangent_d <span class="op">=</span> <span class="fu">tangent_approx</span>(f, W_current, edge_indices, resolution, steps)</span>
+<span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> verbose</span>
+<span id="cb23-28"><a href="#cb23-28" aria-hidden="true" tabindex="-1"></a>            <span class="fu">println</span>(<span class="fu">round</span>.(tangent_d, digits<span class="op">=</span><span class="fl">6</span>))</span>
+<span id="cb23-29"><a href="#cb23-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">end</span></span>
+<span id="cb23-30"><a href="#cb23-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-31"><a href="#cb23-31" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> (i_edge, edge) <span class="kw">in</span> <span class="fu">enumerate</span>(edge_indices)</span>
+<span id="cb23-32"><a href="#cb23-32" aria-hidden="true" tabindex="-1"></a>            W_current[edge] <span class="op">-=</span> (α <span class="op">*</span> tangent_d[i_edge])</span>
+<span id="cb23-33"><a href="#cb23-33" aria-hidden="true" tabindex="-1"></a>            W_current[edge] <span class="op">=</span> <span class="fu">max</span>(<span class="fl">0</span>, W_current[edge])</span>
+<span id="cb23-34"><a href="#cb23-34" aria-hidden="true" tabindex="-1"></a>            W_current[<span class="fu">CartesianIndex</span>(edge[<span class="fl">2</span>], edge[<span class="fl">1</span>])] <span class="op">=</span> W_current[edge]</span>
+<span id="cb23-35"><a href="#cb23-35" aria-hidden="true" tabindex="-1"></a>        <span class="cf">end</span></span>
+<span id="cb23-36"><a href="#cb23-36" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span></span>
+<span id="cb23-37"><a href="#cb23-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> W_current</span>
+<span id="cb23-38"><a href="#cb23-38" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-execution_count="77">
-<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">test_frechet_algo</span>(m_max)</span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    A_current <span class="op">=</span> <span class="fu">copy</span>(A_init)</span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    W_current <span class="op">=</span> <span class="fu">copy</span>(A_init)</span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    edge_indices <span class="op">=</span> <span class="fu">Vector</span><span class="dt">{CartesianIndex{2}}</span>()</span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> m <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span>m_max</span>
-<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Get the edge</span></span>
-<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>        edge_idx <span class="op">=</span> edges_to_add[m<span class="op">-</span>m_seed]</span>
-<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>        rev_idx <span class="op">=</span> <span class="fu">CartesianIndex</span>(edge_idx[<span class="fl">2</span>], edge_idx[<span class="fl">1</span>])</span>
-<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>        A_current[edge_idx] <span class="op">=</span> W_current[edge_idx] <span class="op">=</span>  <span class="fl">1</span></span>
-<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>        A_current[rev_idx] <span class="op">=</span> W_current[rev_idx] <span class="op">=</span>  <span class="fl">1</span>    </span>
-<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>        <span class="fu">push!</span>(edge_indices, edge_idx)</span>
-<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>        current <span class="op">=</span> <span class="fu">sum</span>(<span class="fu">exp</span>(W_current))</span>
-<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>        frechet_d <span class="op">=</span> <span class="fu">frechet_algo</span>(W_current, edge_indices)</span>
-<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>        frechet_d <span class="op">=</span> [ω <span class="op">*</span> D[edge]<span class="op">^</span>ω  <span class="op">*</span> frechet_d[i_edge] <span class="op">*</span> current<span class="op">^</span>(ω<span class="op">-</span><span class="fl">1</span>) for (i_edge, edge) <span class="kw">in</span> <span class="fu">enumerate</span>(edge_indices)]</span>
-<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>        <span class="co"># println(round.(frechet_d, digits=2))</span></span>
-<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> (i_edge, edge) <span class="kw">in</span> <span class="fu">enumerate</span>(edge_indices)</span>
-<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a>            update <span class="op">=</span> <span class="fu">max</span>(<span class="fl">0</span>, (α <span class="op">*</span> frechet_d[i_edge]))</span>
-<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a>            W_current[edge] <span class="op">-=</span> update</span>
-<span id="cb29-22"><a href="#cb29-22" aria-hidden="true" tabindex="-1"></a>            W_current[<span class="fu">CartesianIndex</span>(edge[<span class="fl">2</span>], edge[<span class="fl">1</span>])] <span class="op">-=</span> update</span>
-<span id="cb29-23"><a href="#cb29-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">end</span></span>
-<span id="cb29-24"><a href="#cb29-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span></span>
-<span id="cb29-25"><a href="#cb29-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> W_current</span>
-<span id="cb29-26"><a href="#cb29-26" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="14">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">test_frechet_algo</span>(m_max<span class="op">::</span><span class="dt">Int</span>, normalize<span class="op">::</span><span class="dt">Bool</span>, verbose<span class="op">::</span><span class="dt">Bool</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    A_current <span class="op">=</span> <span class="fu">copy</span>(A_init)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    W_current <span class="op">=</span> <span class="fu">copy</span>(A_init)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> m <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span>m_max</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Get the edge</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>        edge_idx <span class="op">=</span> edges_to_add[m<span class="op">-</span>m_seed]</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>        rev_idx <span class="op">=</span> <span class="fu">CartesianIndex</span>(edge_idx[<span class="fl">2</span>], edge_idx[<span class="fl">1</span>])</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>        A_current[edge_idx] <span class="op">=</span> W_current[edge_idx] <span class="op">=</span>  <span class="fl">1</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>        A_current[rev_idx] <span class="op">=</span> W_current[rev_idx] <span class="op">=</span>  <span class="fl">1</span>    </span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>        edge_indices <span class="op">=</span> <span class="fu">findall</span>(<span class="op">!=</span>(<span class="fl">0</span>), <span class="fu">triu</span>(A_current, <span class="fl">1</span>))</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> normalize</span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>            node_strengths <span class="op">=</span> <span class="fu">dropdims</span>(<span class="fu">sum</span>(W_current, dims<span class="op">=</span><span class="fl">2</span>), dims<span class="op">=</span><span class="fl">2</span>)</span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>            node_strengths[node_strengths<span class="op">.==</span><span class="fl">0</span>] <span class="op">.=</span> ϵ</span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>            norm_fact <span class="op">=</span> <span class="fu">Matrix</span>(<span class="fu">sqrt</span>(<span class="fu">inv</span>(<span class="fu">Diagonal</span>(node_strengths))))</span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>            frechet_d <span class="op">=</span> <span class="fu">frechet_algo</span>(norm_fact <span class="op">*</span> W_current <span class="op">*</span> norm_fact, edge_indices)</span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>            <span class="co">#println(round.(frechet_algo(norm_fact, edge_indices), digits=5))</span></span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span> </span>
+<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a>            current_Y <span class="op">=</span> <span class="fu">sum</span>(<span class="fu">exp</span>(W_current))</span>
+<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a>            frechet_d <span class="op">=</span> <span class="fu">frechet_algo</span>(W_current, edge_indices)</span>
+<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a>            frechet_d <span class="op">=</span> [ω <span class="op">*</span> D[edge]<span class="op">^</span>ω  <span class="op">*</span> frechet_d[i_edge] <span class="op">*</span> current_Y<span class="op">^</span>(ω<span class="op">-</span><span class="fl">1</span>) for (i_edge, edge) <span class="kw">in</span> <span class="fu">enumerate</span>(edge_indices)]</span>
+<span id="cb24-23"><a href="#cb24-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">end</span></span>
+<span id="cb24-24"><a href="#cb24-24" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb24-25"><a href="#cb24-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> verbose</span>
+<span id="cb24-26"><a href="#cb24-26" aria-hidden="true" tabindex="-1"></a>            <span class="fu">println</span>(<span class="fu">round</span>.(frechet_d, digits<span class="op">=</span><span class="fl">2</span>))</span>
+<span id="cb24-27"><a href="#cb24-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">end</span></span>
+<span id="cb24-28"><a href="#cb24-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-29"><a href="#cb24-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> (i_edge, edge) <span class="kw">in</span> <span class="fu">enumerate</span>(edge_indices)</span>
+<span id="cb24-30"><a href="#cb24-30" aria-hidden="true" tabindex="-1"></a>            W_current[edge] <span class="op">-=</span> (α <span class="op">*</span> frechet_d[i_edge])</span>
+<span id="cb24-31"><a href="#cb24-31" aria-hidden="true" tabindex="-1"></a>            W_current[edge] <span class="op">=</span> <span class="fu">max</span>(<span class="fl">0</span>, W_current[edge])</span>
+<span id="cb24-32"><a href="#cb24-32" aria-hidden="true" tabindex="-1"></a>            W_current[<span class="fu">CartesianIndex</span>(edge[<span class="fl">2</span>], edge[<span class="fl">1</span>])] <span class="op">=</span> W_current[edge]</span>
+<span id="cb24-33"><a href="#cb24-33" aria-hidden="true" tabindex="-1"></a>        <span class="cf">end</span></span>
+<span id="cb24-34"><a href="#cb24-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span></span>
+<span id="cb24-35"><a href="#cb24-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> W_current</span>
+<span id="cb24-36"><a href="#cb24-36" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-execution_count="80">
-<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>m_max <span class="op">=</span> <span class="fl">20</span></span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="pp">@time</span> W_res_tangent <span class="op">=</span> <span class="fu">test_tangent</span>(m_max);</span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="pp">@time</span> W_res_frechet <span class="op">=</span> <span class="fu">test_frechet_algo</span>(m_max);</span>
-<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(<span class="fu">abs</span>.(W_res_tangent <span class="op">.-</span> W_res_frechet))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="pp">@time</span> W_res_tangent <span class="op">=</span> <span class="fu">test_tangent</span>(<span class="fl">40</span>, <span class="cn">false</span>, <span class="cn">false</span>);</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="pp">@time</span> W_res_frechet <span class="op">=</span> <span class="fu">test_frechet_algo</span>(<span class="fl">40</span>, <span class="cn">false</span>, <span class="cn">false</span>);</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(<span class="fu">abs</span>.(W_res_tangent <span class="op">.-</span> W_res_frechet))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code> 12.316652 seconds (66.69 k allocations: 677.437 MiB, 0.36% gc time)</code></pre>
+<pre><code> 46.037512 seconds (571.76 k allocations: 2.844 GiB, 0.49% gc time, 0.27% compilation time)
+  0.840606 seconds (97.03 k allocations: 120.649 MiB, 2.29% gc time, 5.58% compilation time)</code></pre>
 </div>
-<div class="cell-output cell-output-stdout">
-<pre><code>  0.458034 seconds (8.41 k allocations: 62.937 MiB, 1.11% gc time)</code></pre>
+<div class="cell-output cell-output-display" data-execution_count="15">
+<pre><code>2.4292371921252887e-5</code></pre>
 </div>
-<div class="cell-output cell-output-display">
-<pre><code>0.004211385608813206</code></pre>
 </div>
+<div class="cell" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># @time W_res_tangent = test_tangent(5, true);</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="co"># @time W_res_frechet = test_frechet_algo(5, true);</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 
