@@ -135,19 +135,24 @@ f(W)=e^{W}
 \]</span></p>
 <section id="setup" class="level2">
 <h2 class="anchored" data-anchor-id="setup">Setup <a name="setup" href=""></a></h2>
-<div class="cell" data-execution_count="2">
+<div class="cell" data-execution_count="45">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">Polynomials</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">ForwardDiff</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">ExponentialUtilities</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">LinearAlgebra</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">BenchmarkTools</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">BenchmarkTools</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">StatsBase</span>: sample</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">include</span>(<span class="st">"test_data.jl"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>load_weight_test_data (generic function with 1 method)</code></pre>
 </div>
-<div class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>W <span class="op">=</span> [<span class="fl">0.0</span> <span class="fl">0.8</span> <span class="fl">0.0</span>;</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>     <span class="fl">0.8</span> <span class="fl">0.0</span> <span class="fl">0.2</span>; </span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>     <span class="fl">0.0</span> <span class="fl">0.2</span> <span class="fl">0.0</span>]</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>demo_edge <span class="op">=</span> [<span class="fu">CartesianIndex</span>(<span class="fl">1</span>, <span class="fl">2</span>)]</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>W</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>W <span class="op">=</span> [<span class="fl">0.0</span> <span class="fl">0.8</span> <span class="fl">0.0</span>;</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>     <span class="fl">0.8</span> <span class="fl">0.0</span> <span class="fl">0.2</span>; </span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>     <span class="fl">0.0</span> <span class="fl">0.2</span> <span class="fl">0.0</span>]</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>demo_edge <span class="op">=</span> [<span class="fu">CartesianIndex</span>(<span class="fl">1</span>, <span class="fl">2</span>)]</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>W</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <pre><code>3×3 Matrix{Float64}:
  0.0  0.8  0.0
@@ -165,100 +170,102 @@ f(W)=e^{W}
 <p><strong>Problem 1</strong> As far as I understand, there is a small but significant error in the implementation provided at https://github.com/DanAkarca/weighted_generative_models/blob/main/weighted_generative_model.m in line 197. When fitting the first-order polynomial, the independent variable should not be the range of the differences to the edge, which have been used, but should be the actual values, the edge is taking on.</p>
 <p><strong>Problem 2</strong> In the same implementation the derivative is approximated from the tangent approximation after nudging the edge (i,j) as well as (j,i). In a sense we are computing the derivative with respect to both (i,j) and (j,i) at once. First of all, this will create computational overhead, as the derivatives (i.e., the jacobian) will also always be symmetric. Secondly, this will create a problem when we are trying to compute the gradient, which we currently simply take as the the derivative. But then we update both elements in the W matrix with the same gradient which is the derivative with respect to nudging both (i,j) and (j,i) - thus our update to the objective function is overshooting.</p>
 <p>See line 208 and 208.</p>
-<div class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">paper_tangent_approx</span>(W, edges<span class="op">::</span><span class="dt">Vector{CartesianIndex{2}}</span>, resolution <span class="op">=</span> <span class="fl">0.01</span>, min <span class="op">=</span> <span class="op">-</span><span class="fl">0.25</span>, max <span class="op">=</span> <span class="fl">0.25</span>)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    results <span class="op">=</span> <span class="fu">zeros</span>(<span class="fu">length</span>(edges))</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    rep_vec <span class="op">=</span> <span class="fu">collect</span>(min<span class="op">:</span>resolution<span class="op">:</span>max)</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (i_edge, edge_idx) <span class="kw">in</span> <span class="fu">enumerate</span>(edges)</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Points for evaluation</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        edge_val <span class="op">=</span> W[edge_idx]</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        reps <span class="op">=</span> [edge_val <span class="op">*</span> (<span class="fl">1</span> <span class="op">+</span> i) for i <span class="kw">in</span> rep_vec]</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>        <span class="co"># For each nudge save difference in communicability </span></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        sum_comm <span class="op">=</span> <span class="fu">zeros</span>(<span class="fu">length</span>(reps))</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> (i_rep, rep) <span class="kw">in</span> <span class="fu">enumerate</span>(reps)</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>            W_copy <span class="op">=</span> <span class="fu">copy</span>(W)</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>            W_copy[edge_idx] <span class="op">=</span> W_copy[edge_idx[<span class="fl">2</span>], edge_idx[<span class="fl">1</span>]] <span class="op">=</span> rep</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>            comm <span class="op">=</span> <span class="fu">exp</span>(W_copy)</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>            sum_comm[i_rep] <span class="op">=</span> <span class="fu">sum</span>(comm)</span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">end</span></span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Line 197 in MATLAB code</span></span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fu">length</span>(reps)</span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>        results[i_edge] <span class="op">=</span> <span class="fu">fit</span>(x, sum_comm, <span class="fl">1</span>)[<span class="fl">1</span>]</span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span></span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> results</span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="fu">paper_tangent_approx</span>(W, demo_edge, <span class="fl">0.01</span>), <span class="fu">paper_tangent_approx</span>(W, demo_edge, <span class="fl">0.2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="66">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">paper_tangent_approx</span>(W, edges<span class="op">::</span><span class="dt">Vector{CartesianIndex{2}}</span>, </span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    resolution <span class="op">=</span> <span class="fl">0.01</span>, steps <span class="op">=</span> <span class="fl">5</span>)<span class="op">::</span><span class="dt">Vector{Float64}</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    results <span class="op">=</span> <span class="fu">zeros</span>(<span class="fu">length</span>(edges))</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    rep_vec <span class="op">=</span> <span class="fu">collect</span>(<span class="fu">range</span>(<span class="op">-</span>steps<span class="op">*</span>resolution, steps<span class="op">*</span>resolution, step<span class="op">=</span>resolution))</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (i_edge, edge_idx) <span class="kw">in</span> <span class="fu">enumerate</span>(edges)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Points for evaluation</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        edge_val <span class="op">=</span> W[edge_idx]</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        reps <span class="op">=</span> [edge_val <span class="op">*</span> (<span class="fl">1</span> <span class="op">+</span> i) for i <span class="kw">in</span> rep_vec]</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        <span class="co"># For each nudge save difference in communicability </span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>        sum_comm <span class="op">=</span> <span class="fu">zeros</span>(<span class="fu">length</span>(reps))</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> (i_rep, rep) <span class="kw">in</span> <span class="fu">enumerate</span>(reps)</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>            W_copy <span class="op">=</span> <span class="fu">copy</span>(W)</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>            W_copy[edge_idx] <span class="op">=</span> W_copy[edge_idx[<span class="fl">2</span>], edge_idx[<span class="fl">1</span>]] <span class="op">=</span> rep</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>            comm <span class="op">=</span> <span class="fu">exp</span>(W_copy)</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>            sum_comm[i_rep] <span class="op">=</span> <span class="fu">sum</span>(comm)</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">end</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Line 197 in MATLAB code</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fu">length</span>(reps)</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>        results[i_edge] <span class="op">=</span> <span class="fu">fit</span>(x, sum_comm, <span class="fl">1</span>)[<span class="fl">1</span>]</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> results</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a><span class="fu">paper_tangent_approx</span>(W, demo_edge, <span class="fl">0.01</span>), <span class="fu">paper_tangent_approx</span>(W, demo_edge, <span class="fl">0.2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<pre><code>([0.038767237882607476], [0.7456781939183535])</code></pre>
+<pre><code>([0.03861909629029788], [0.830380354061412])</code></pre>
 </div>
 </div>
 </section>
 <section id="adapted-tangent-approximation" class="level2">
 <h2 class="anchored" data-anchor-id="adapted-tangent-approximation">Adapted tangent approximation <a name="adapted-tangent" href=""></a></h2>
-<div class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">tangent_approx</span>(W, edges<span class="op">::</span><span class="dt">Vector{CartesianIndex{2}}</span>, </span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    resolution <span class="op">=</span> <span class="fl">0.01</span>, min <span class="op">=</span> <span class="op">-</span><span class="fl">0.25</span>, max <span class="op">=</span> <span class="fl">0.25</span>)<span class="op">::</span><span class="dt">Vector{Float64}</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    results <span class="op">=</span> <span class="fu">zeros</span>(<span class="fu">length</span>(edges))</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    rep_vec <span class="op">=</span> <span class="fu">collect</span>(min<span class="op">:</span>resolution<span class="op">:</span>max)</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (i_edge, edge_idx) <span class="kw">in</span> <span class="fu">enumerate</span>(edges)     </span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Points for evaluation</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        edge_val <span class="op">=</span> W[edge_idx]</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        reps <span class="op">=</span> [edge_val <span class="op">*</span> (<span class="fl">1</span> <span class="op">+</span> i) for i <span class="kw">in</span> rep_vec]</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        <span class="co"># For each nudge save difference in communicability </span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>        sum_comm <span class="op">=</span> <span class="fu">zeros</span>(<span class="fu">length</span>(reps))</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> (i_rep, rep) <span class="kw">in</span> <span class="fu">enumerate</span>(reps)</span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>            W_copy <span class="op">=</span> <span class="fu">copy</span>(W)</span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>            W_copy[edge_idx] <span class="op">=</span> W_copy[edge_idx[<span class="fl">2</span>], edge_idx[<span class="fl">1</span>]] <span class="op">=</span> rep</span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>            comm <span class="op">=</span> <span class="fu">exp</span>(W_copy)</span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>            sum_comm[i_rep] <span class="op">=</span> <span class="fu">sum</span>(comm)</span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">end</span></span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>        results[i_edge] <span class="op">=</span> <span class="fu">fit</span>(reps, sum_comm, <span class="fl">1</span>)[<span class="fl">1</span>]</span>
-<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span></span>
-<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> results</span>
-<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
-<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="fu">tangent_approx</span>(W, demo_edge, <span class="fl">0.01</span>), <span class="fu">tangent_approx</span>(W, demo_edge, <span class="fl">0.1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="65">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">tangent_approx</span>(f, W<span class="op">::</span><span class="dt">Matrix{Float64}</span>, edges<span class="op">::</span><span class="dt">Vector{CartesianIndex{2}}</span>, </span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    resolution <span class="op">=</span> <span class="fl">0.01</span>, steps <span class="op">=</span> <span class="fl">5</span>)<span class="op">::</span><span class="dt">Vector{Float64}</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    results <span class="op">=</span> <span class="fu">zeros</span>(<span class="fu">length</span>(edges))</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    rep_vec <span class="op">=</span> <span class="fu">collect</span>(<span class="fu">range</span>(<span class="op">-</span>steps<span class="op">*</span>resolution, steps<span class="op">*</span>resolution, step<span class="op">=</span>resolution))</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (i_edge, edge_idx) <span class="kw">in</span> <span class="fu">enumerate</span>(edges)     </span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Points for evaluation</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>        edge_val <span class="op">=</span> W[edge_idx]</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>        reps <span class="op">=</span> [edge_val <span class="op">*</span> (<span class="fl">1</span> <span class="op">+</span> i) for i <span class="kw">in</span> rep_vec]</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        <span class="co"># For each nudge save difference in communicability </span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>        sum_comm <span class="op">=</span> <span class="fu">zeros</span>(<span class="fu">length</span>(reps))</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> (i_rep, rep) <span class="kw">in</span> <span class="fu">enumerate</span>(reps)</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>            W_copy <span class="op">=</span> <span class="fu">copy</span>(W)</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>            W_copy[edge_idx] <span class="op">=</span> rep </span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>            sum_comm[i_rep] <span class="op">=</span> <span class="fu">f</span>(W_copy, edge_idx)</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">end</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>        results[i_edge] <span class="op">=</span> <span class="fu">fit</span>(reps, sum_comm, <span class="fl">1</span>)[<span class="fl">1</span>]</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> results</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>f <span class="op">=</span> (W, _) <span class="op">-&gt;</span> <span class="fu">sum</span>(<span class="fu">exp</span>(W))</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="fu">tangent_approx</span>(f, W, demo_edge, <span class="fl">0.01</span>), <span class="fu">tangent_approx</span>(f, W, demo_edge, <span class="fl">0.1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<pre><code>([4.8459047353259335], [4.851647952441173])</code></pre>
+<pre><code>([2.4132596676512077], [2.4141043556312676])</code></pre>
 </div>
 </div>
 </section>
 <section id="finite-difference-method" class="level2">
 <h2 class="anchored" data-anchor-id="finite-difference-method">Finite difference method <a name="finite-diff" href=""></a></h2>
-<p>Compute the approximate derivative using the finite difference method. https://en.wikipedia.org/wiki/Finite_difference_method</p>
+<p>Compute the approximate derivative using the finite difference method. At the moment, this is a significantly faster but less accurate method than the tangent approximation. Only implemented to be potentially extended to complex step approximation.</p>
+<p>References:<br> https://en.wikipedia.org/wiki/Finite_difference_method</p>
 <div class="cell" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">finite_diff</span>(W, edges<span class="op">::</span><span class="dt">Vector{CartesianIndex{2}}</span>, delta<span class="op">::</span><span class="dt">Float64</span>)<span class="op">::</span><span class="dt">Vector{Float64}</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    results <span class="op">=</span> <span class="fu">zeros</span>(<span class="fu">length</span>(edges))</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (i_edge, edge_idx) <span class="kw">in</span> <span class="fu">enumerate</span>(edges) </span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Evaluate the function at two nearby points</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        W_copy <span class="op">=</span> <span class="fu">copy</span>(W)</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        W_copy[edge_idx]  <span class="op">=</span> W_copy[edge_idx] <span class="op">+</span> delta</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>        f_plus_delta <span class="op">=</span> <span class="fu">sum</span>(<span class="fu">exp</span>(W_copy))</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>        W_copy[edge_idx]  <span class="op">=</span> W_copy[edge_idx] <span class="op">-</span> <span class="fl">2</span><span class="op">*</span>delta</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>        f_minus_delta <span class="op">=</span> <span class="fu">sum</span>(<span class="fu">exp</span>(W_copy))</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Calculate the derivative approximation</span></span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>        results[i_edge] <span class="op">=</span> (f_plus_delta <span class="op">-</span> f_minus_delta) <span class="op">/</span> (<span class="fl">2</span> <span class="op">*</span> delta)</span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span></span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> results</span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="fu">finite_diff</span>(W, demo_edge, <span class="fl">0.01</span>)<span class="op">*</span><span class="fl">2</span>, <span class="fu">finite_diff</span>(W, demo_edge,<span class="fl">0.2</span>)<span class="op">*</span><span class="fl">2</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">finite_diff</span>(f, W, edges<span class="op">::</span><span class="dt">Vector{CartesianIndex{2}}</span>, delta<span class="op">::</span><span class="dt">Float64</span>)<span class="op">::</span><span class="dt">Vector{Float64}</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    results <span class="op">=</span> <span class="fu">zeros</span>(<span class="fu">length</span>(edges))</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (i_edge, edge_idx) <span class="kw">in</span> <span class="fu">enumerate</span>(edges) </span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Evaluate the function at two nearby points</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>        W_copy <span class="op">=</span> <span class="fu">copy</span>(W)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        W_copy[edge_idx] <span class="op">=</span> W_copy[edge_idx] <span class="op">+</span> delta</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>        f_plus_delta <span class="op">=</span> <span class="fu">sum</span>(<span class="fu">exp</span>(W_copy))</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>        W_copy[edge_idx]  <span class="op">=</span> W_copy[edge_idx] <span class="op">-</span> <span class="fl">2</span><span class="op">*</span>delta</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>        f_minus_delta <span class="op">=</span> <span class="fu">sum</span>(<span class="fu">exp</span>(W_copy))</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Calculate the derivative approximation</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>        results[i_edge] <span class="op">=</span> (f_plus_delta <span class="op">-</span> f_minus_delta) <span class="op">/</span> (<span class="fl">2</span> <span class="op">*</span> delta)</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> results</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>f <span class="op">=</span> W <span class="op">-&gt;</span> <span class="fu">sum</span>(<span class="fu">exp</span>(W))</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="fu">finite_diff</span>(f, W, demo_edge, <span class="fl">0.01</span>), <span class="fu">finite_diff</span>(f, W, demo_edge,<span class="fl">0.2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<pre><code>([4.826503769214696], [4.827101432180703])</code></pre>
+<pre><code>([2.413251884607348], [2.4135507160903513])</code></pre>
 </div>
 </div>
 </section>
@@ -266,231 +273,236 @@ f(W)=e^{W}
 <h2 class="anchored" data-anchor-id="forward-differentiation">Forward Differentiation</h2>
 <p>Results are derived in the numerator layout, which means that the dimensionality of the input is added to the right</p>
 <div class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">forward_diff_j</span>(W<span class="op">::</span><span class="dt">Matrix{Float64}</span>, edges<span class="op">::</span><span class="dt">Vector{CartesianIndex{2}}</span>)<span class="op">::</span><span class="dt">Vector{Float64}</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Column indices for retrieval</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    indices <span class="op">=</span> <span class="fu">collect</span>(<span class="fu">CartesianIndices</span>(W))</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    index_vec <span class="op">=</span> <span class="fu">sort</span>(<span class="fu">vec</span>(indices), by <span class="op">=</span> x <span class="op">-&gt;</span> x[<span class="fl">1</span>])</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">diff_exp</span>(W) <span class="op">=</span> <span class="fu">exponential!</span>(<span class="fu">copyto!</span>(<span class="fu">similar</span>(W), W), <span class="fu">ExpMethodGeneric</span>())</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    J <span class="op">=</span> ForwardDiff.<span class="fu">jacobian</span>(diff_exp, W)</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    results <span class="op">=</span> <span class="fu">zeros</span>(<span class="fu">length</span>(edges))</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    tangent <span class="op">=</span> <span class="fu">vec</span>(<span class="fu">permutedims</span>(<span class="fu">exp</span>(W), [<span class="fl">2</span>, <span class="fl">1</span>]))</span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (i_edge, edge) <span class="kw">in</span> <span class="fu">enumerate</span>(edges)</span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>        <span class="co"># we get all partial derivative positions that are non-zero</span></span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>        Jₓ <span class="op">=</span> J[<span class="op">:</span>, <span class="fu">findfirst</span>(x <span class="op">-&gt;</span> x <span class="op">==</span> edge, index_vec)]</span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>        results[i_edge] <span class="op">=</span> <span class="fu">dot</span>(Jₓ, tangent)</span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span></span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> results <span class="op">.*</span> <span class="fl">2</span></span>
-<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
-<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="fu">forward_diff_j</span>(W, demo_edge)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">forward_diff_j</span>(W<span class="op">::</span><span class="dt">Matrix{Float64}</span>, edges<span class="op">::</span><span class="dt">Vector{CartesianIndex{2}}</span>)<span class="op">::</span><span class="dt">Vector{Float64}</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Column indices for retrieval</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    indices <span class="op">=</span> <span class="fu">collect</span>(<span class="fu">CartesianIndices</span>(W))</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    index_vec <span class="op">=</span> <span class="fu">sort</span>(<span class="fu">vec</span>(indices), by <span class="op">=</span> x <span class="op">-&gt;</span> x[<span class="fl">1</span>])</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">diff_exp</span>(W) <span class="op">=</span> <span class="fu">exponential!</span>(<span class="fu">copyto!</span>(<span class="fu">similar</span>(W), W), <span class="fu">ExpMethodGeneric</span>())</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    J <span class="op">=</span> ForwardDiff.<span class="fu">jacobian</span>(diff_exp, W)</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    results <span class="op">=</span> <span class="fu">zeros</span>(<span class="fu">length</span>(edges))</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    tangent <span class="op">=</span> <span class="fu">vec</span>(<span class="fu">permutedims</span>(<span class="fu">exp</span>(W), [<span class="fl">2</span>, <span class="fl">1</span>]))</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (i_edge, edge) <span class="kw">in</span> <span class="fu">enumerate</span>(edges)</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>        <span class="co"># we get all partial derivative positions that are non-zero</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>        Jₓ <span class="op">=</span> J[<span class="op">:</span>, <span class="fu">findfirst</span>(x <span class="op">-&gt;</span> x <span class="op">==</span> edge, index_vec)]</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>        results[i_edge] <span class="op">=</span> <span class="fu">sum</span>(Jₓ)</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> results</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a><span class="fu">forward_diff_j</span>(W, demo_edge)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <pre><code>1-element Vector{Float64}:
- 4.8612290825962985</code></pre>
+ 2.4132511356618336</code></pre>
 </div>
 </div>
 </section>
 <section id="forward-differentiation-with-jacobian-vector-product" class="level2">
 <h2 class="anchored" data-anchor-id="forward-differentiation-with-jacobian-vector-product">Forward Differentiation with Jacobian vector product</h2>
-<div class="cell" data-execution_count="15">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">forward_diff_jvp</span>(W<span class="op">::</span><span class="dt">Matrix{Float64}</span>, edges<span class="op">::</span><span class="dt">Vector{CartesianIndex{2}}</span>)<span class="op">::</span><span class="dt">Vector{Float64}</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    tangent <span class="op">=</span> <span class="fu">exp</span>(W)</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">diff_exp</span>(W) <span class="op">=</span> <span class="fu">exponential!</span>(<span class="fu">copyto!</span>(<span class="fu">similar</span>(W), W), <span class="fu">ExpMethodGeneric</span>())</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">g</span>(t) <span class="op">=</span> <span class="fu">diff_exp</span>(W <span class="op">+</span> t <span class="op">*</span> tangent)</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    JVP <span class="op">=</span> ForwardDiff.<span class="fu">derivative</span>(g, <span class="fl">0.0</span>)</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> JVP[edges] <span class="op">.*</span> <span class="fl">2</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="fu">forward_diff_jvp</span>(W, demo_edge)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">forward_diff_jvp</span>(W<span class="op">::</span><span class="dt">Matrix{Float64}</span>, edges<span class="op">::</span><span class="dt">Vector{CartesianIndex{2}}</span>)<span class="op">::</span><span class="dt">Vector{Float64}</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    tangent <span class="op">=</span> <span class="fu">ones</span>(<span class="fu">size</span>(W))</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">diff_exp</span>(W) <span class="op">=</span> <span class="fu">exponential!</span>(<span class="fu">copyto!</span>(<span class="fu">similar</span>(W), W), <span class="fu">ExpMethodGeneric</span>())</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">g</span>(t) <span class="op">=</span> <span class="fu">diff_exp</span>(W <span class="op">+</span> t <span class="op">*</span> tangent)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    JVP <span class="op">=</span> ForwardDiff.<span class="fu">derivative</span>(g, <span class="fl">0.0</span>)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> JVP[edges]</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="fu">forward_diff_jvp</span>(W, demo_edge)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <pre><code>1-element Vector{Float64}:
- 4.861229082596298</code></pre>
+ 2.413251135661834</code></pre>
 </div>
 </div>
 </section>
 <section id="fréchet-block-enlarge" class="level2">
 <h2 class="anchored" data-anchor-id="fréchet-block-enlarge">Fréchet: Block enlarge</h2>
-<div class="cell" data-execution_count="23">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">frechet_block_enlarge</span>(W<span class="op">::</span><span class="dt">Matrix{Float64}</span>, edges<span class="op">::</span><span class="dt">Vector{CartesianIndex{2}}</span>)<span class="op">::</span><span class="dt">Vector{Float64}</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    E <span class="op">=</span> <span class="fu">exp</span>(W)</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> <span class="fu">size</span>(W, <span class="fl">1</span>)</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    M <span class="op">=</span> [W E; <span class="fu">zeros</span>(<span class="fu">size</span>(W)) W]</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    expm_M <span class="op">=</span> <span class="fu">exp</span>(M) </span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    frechet_AE <span class="op">=</span> expm_M[<span class="fl">1</span><span class="op">:</span>n, n<span class="op">+</span><span class="fl">1</span><span class="op">:</span><span class="kw">end</span>]</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> frechet_AE[edges] <span class="op">.*</span> <span class="fl">2</span></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="fu">frechet_block_enlarge</span>(W, demo_edge)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-execution_count="28">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">frechet_block_enlarge</span>(W<span class="op">::</span><span class="dt">Matrix{Float64}</span>, edges<span class="op">::</span><span class="dt">Vector{CartesianIndex{2}}</span>)<span class="op">::</span><span class="dt">Vector{Float64}</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    E <span class="op">=</span> <span class="fu">ones</span>(<span class="fu">size</span>(W))</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> <span class="fu">size</span>(W, <span class="fl">1</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    M <span class="op">=</span> [W E; <span class="fu">zeros</span>(<span class="fu">size</span>(W)) W]</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    expm_M <span class="op">=</span> <span class="fu">exp</span>(M) </span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    frechet_AE <span class="op">=</span> expm_M[<span class="fl">1</span><span class="op">:</span>n, n<span class="op">+</span><span class="fl">1</span><span class="op">:</span><span class="kw">end</span>]</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> frechet_AE[edges]</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="fu">frechet_block_enlarge</span>(W, demo_edge)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <pre><code>1-element Vector{Float64}:
- 4.861229082596298</code></pre>
+ 2.413251135661833</code></pre>
 </div>
 </div>
 </section>
 <section id="fréchet-scaling-pade-squaring" class="level2">
 <h2 class="anchored" data-anchor-id="fréchet-scaling-pade-squaring">Fréchet: Scaling-Pade-Squaring</h2>
-<p>Higham (2008): Functions of Matrices - Theory and Computation”, Chapter 10, Algorithm 10.20</p>
-<p>Also inspired by https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.expm_frechet.html#scipy.linalg.expm_frechet.</p>
-<p>Also inspired by https://rdrr.io/cran/expm/man/expmFrechet.html</p>
-<div class="cell" data-execution_count="11">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">_diff_pade3</span>(A, E, ident)</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> (<span class="fl">120.0</span>, <span class="fl">60.0</span>, <span class="fl">12.0</span>, <span class="fl">1.0</span>)</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    A2 <span class="op">=</span> A <span class="op">*</span> A</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    M2 <span class="op">=</span> A <span class="op">*</span> E <span class="op">+</span> E <span class="op">*</span> A</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    U <span class="op">=</span> A <span class="op">*</span> (b[<span class="fl">4</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">2</span>] <span class="op">*</span> ident)</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    V <span class="op">=</span> b[<span class="fl">3</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">1</span>] <span class="op">*</span> ident</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    Lu <span class="op">=</span> A <span class="op">*</span> (b[<span class="fl">4</span>] <span class="op">*</span> M2) <span class="op">+</span> E <span class="op">*</span> (b[<span class="fl">4</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">2</span>] <span class="op">*</span> ident)</span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    Lv <span class="op">=</span> b[<span class="fl">3</span>] <span class="op">*</span> M2</span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> U, V, Lu, Lv</span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">_diff_pade5</span>(A, E, ident)</span>
-<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> (<span class="fl">30240.0</span>, <span class="fl">15120.0</span>, <span class="fl">3360.0</span>, <span class="fl">420.0</span>, <span class="fl">30.0</span>, <span class="fl">1.0</span>)</span>
-<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    A2 <span class="op">=</span> A <span class="op">*</span> A</span>
-<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>    M2 <span class="op">=</span> A <span class="op">*</span> E <span class="op">+</span> E <span class="op">*</span> A</span>
-<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>    A4 <span class="op">=</span> A2 <span class="op">*</span> A2</span>
-<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>    M4 <span class="op">=</span> A2 <span class="op">*</span> M2 <span class="op">+</span> M2 <span class="op">*</span> A2</span>
-<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>    U <span class="op">=</span> A <span class="op">*</span> (b[<span class="fl">6</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">4</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">2</span>] <span class="op">*</span> ident)</span>
-<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>    V <span class="op">=</span> b[<span class="fl">5</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">3</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">1</span>] <span class="op">*</span> ident</span>
-<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>    Lu <span class="op">=</span> A <span class="op">*</span> (b[<span class="fl">6</span>] <span class="op">*</span> M4 <span class="op">+</span> b[<span class="fl">4</span>] <span class="op">*</span> M2) <span class="op">+</span> E <span class="op">*</span> (b[<span class="fl">6</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">4</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">2</span>] <span class="op">*</span> ident)</span>
-<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>    Lv <span class="op">=</span> b[<span class="fl">5</span>] <span class="op">*</span> M4 <span class="op">+</span> b[<span class="fl">3</span>] <span class="op">*</span> M2</span>
-<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> U, V, Lu, Lv</span>
-<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
-<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">_diff_pade7</span>(A, E, ident)</span>
-<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> (<span class="fl">17297280.0</span>, <span class="fl">8648640.0</span>, <span class="fl">1995840.0</span>, <span class="fl">277200.0</span>, <span class="fl">25200.0</span>, <span class="fl">1512.0</span>, <span class="fl">56.0</span>, <span class="fl">1.0</span>)</span>
-<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>    A2 <span class="op">=</span> A <span class="op">*</span> A</span>
-<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>    M2 <span class="op">=</span> A <span class="op">*</span> E <span class="op">+</span> E <span class="op">*</span> A</span>
-<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>    A4 <span class="op">=</span> A2 <span class="op">*</span> A2</span>
-<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a>    M4 <span class="op">=</span> A2 <span class="op">*</span> M2 <span class="op">+</span> M2 <span class="op">*</span> A2</span>
-<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a>    A6 <span class="op">=</span> A2 <span class="op">*</span> A4</span>
-<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a>    M6 <span class="op">=</span> A4 <span class="op">*</span> M2 <span class="op">+</span> M4 <span class="op">*</span> A2</span>
-<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a>    U <span class="op">=</span> A <span class="op">*</span> (b[<span class="fl">8</span>] <span class="op">*</span> A6 <span class="op">+</span> b[<span class="fl">6</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">4</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">2</span>] <span class="op">*</span> ident)</span>
-<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a>    V <span class="op">=</span> b[<span class="fl">7</span>] <span class="op">*</span> A6 <span class="op">+</span> b[<span class="fl">5</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">3</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">1</span>] <span class="op">*</span> ident</span>
-<span id="cb16-35"><a href="#cb16-35" aria-hidden="true" tabindex="-1"></a>    Lu <span class="op">=</span> A <span class="op">*</span> (b[<span class="fl">8</span>] <span class="op">*</span> M6 <span class="op">+</span> b[<span class="fl">6</span>] <span class="op">*</span> M4 <span class="op">+</span> b[<span class="fl">4</span>] <span class="op">*</span> M2) <span class="op">+</span> E <span class="op">*</span> (b[<span class="fl">8</span>] <span class="op">*</span> A6 <span class="op">+</span> b[<span class="fl">6</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">4</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">2</span>] <span class="op">*</span> ident)</span>
-<span id="cb16-36"><a href="#cb16-36" aria-hidden="true" tabindex="-1"></a>    Lv <span class="op">=</span> b[<span class="fl">7</span>] <span class="op">*</span> M6 <span class="op">+</span> b[<span class="fl">5</span>] <span class="op">*</span> M4 <span class="op">+</span> b[<span class="fl">3</span>] <span class="op">*</span> M2</span>
-<span id="cb16-37"><a href="#cb16-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> U, V, Lu, Lv</span>
-<span id="cb16-38"><a href="#cb16-38" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
-<span id="cb16-39"><a href="#cb16-39" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-40"><a href="#cb16-40" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">_diff_pade9</span>(A, E, ident)</span>
-<span id="cb16-41"><a href="#cb16-41" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> (<span class="fl">17643225600.0</span>, <span class="fl">8821612800.0</span>, <span class="fl">2075673600.0</span>, <span class="fl">302702400.0</span>, <span class="fl">30270240.0</span>, <span class="fl">2162160.0</span>, <span class="fl">110880.0</span>, <span class="fl">3960.0</span>, <span class="fl">90.0</span>, <span class="fl">1.0</span>)</span>
-<span id="cb16-42"><a href="#cb16-42" aria-hidden="true" tabindex="-1"></a>    A2 <span class="op">=</span> A <span class="op">*</span> A</span>
-<span id="cb16-43"><a href="#cb16-43" aria-hidden="true" tabindex="-1"></a>    M2 <span class="op">=</span> A <span class="op">*</span> E <span class="op">+</span> E <span class="op">*</span> A</span>
-<span id="cb16-44"><a href="#cb16-44" aria-hidden="true" tabindex="-1"></a>    A4 <span class="op">=</span> A2 <span class="op">*</span> A2</span>
-<span id="cb16-45"><a href="#cb16-45" aria-hidden="true" tabindex="-1"></a>    M4 <span class="op">=</span> A2 <span class="op">*</span> M2 <span class="op">+</span> M2 <span class="op">*</span> A2</span>
-<span id="cb16-46"><a href="#cb16-46" aria-hidden="true" tabindex="-1"></a>    A6 <span class="op">=</span> A2 <span class="op">*</span> A4</span>
-<span id="cb16-47"><a href="#cb16-47" aria-hidden="true" tabindex="-1"></a>    M6 <span class="op">=</span> A4 <span class="op">*</span> M2 <span class="op">+</span> M4 <span class="op">*</span> A2</span>
-<span id="cb16-48"><a href="#cb16-48" aria-hidden="true" tabindex="-1"></a>    A8 <span class="op">=</span> A4 <span class="op">*</span> A4</span>
-<span id="cb16-49"><a href="#cb16-49" aria-hidden="true" tabindex="-1"></a>    M8 <span class="op">=</span> A4 <span class="op">*</span> M4 <span class="op">+</span> M4 <span class="op">*</span> A4</span>
-<span id="cb16-50"><a href="#cb16-50" aria-hidden="true" tabindex="-1"></a>    U <span class="op">=</span> A <span class="op">*</span> (b[<span class="fl">10</span>] <span class="op">*</span> A8 <span class="op">+</span> b[<span class="fl">8</span>] <span class="op">*</span> A6 <span class="op">+</span> b[<span class="fl">6</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">4</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">2</span>] <span class="op">*</span> ident)</span>
-<span id="cb16-51"><a href="#cb16-51" aria-hidden="true" tabindex="-1"></a>    V <span class="op">=</span> b[<span class="fl">9</span>] <span class="op">*</span> A8 <span class="op">+</span> b[<span class="fl">7</span>] <span class="op">*</span> A6 <span class="op">+</span> b[<span class="fl">5</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">3</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">1</span>] <span class="op">*</span> ident</span>
-<span id="cb16-52"><a href="#cb16-52" aria-hidden="true" tabindex="-1"></a>    Lu <span class="op">=</span> A <span class="op">*</span> (b[<span class="fl">10</span>] <span class="op">*</span> M8 <span class="op">+</span> b[<span class="fl">8</span>] <span class="op">*</span> M6 <span class="op">+</span> b[<span class="fl">6</span>] <span class="op">*</span> M4 <span class="op">+</span> b[<span class="fl">4</span>] <span class="op">*</span> M2) <span class="op">+</span> E <span class="op">*</span> (b[<span class="fl">10</span>] <span class="op">*</span> A8 <span class="op">+</span> b[<span class="fl">8</span>] <span class="op">*</span> A6 <span class="op">+</span> b[<span class="fl">6</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">4</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">2</span>] <span class="op">*</span> ident)</span>
-<span id="cb16-53"><a href="#cb16-53" aria-hidden="true" tabindex="-1"></a>    Lv <span class="op">=</span> b[<span class="fl">9</span>] <span class="op">*</span> M8 <span class="op">+</span> b[<span class="fl">7</span>] <span class="op">*</span> M6 <span class="op">+</span> b[<span class="fl">5</span>] <span class="op">*</span> M4 <span class="op">+</span> b[<span class="fl">3</span>] <span class="op">*</span> M2</span>
-<span id="cb16-54"><a href="#cb16-54" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> U, V, Lu, Lv</span>
-<span id="cb16-55"><a href="#cb16-55" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
-<span id="cb16-56"><a href="#cb16-56" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-57"><a href="#cb16-57" aria-hidden="true" tabindex="-1"></a>ell_table_61 <span class="op">=</span> (</span>
-<span id="cb16-58"><a href="#cb16-58" aria-hidden="true" tabindex="-1"></a>        <span class="cn">nothing</span>,</span>
-<span id="cb16-59"><a href="#cb16-59" aria-hidden="true" tabindex="-1"></a>        <span class="fl">2.11e-8</span>,</span>
-<span id="cb16-60"><a href="#cb16-60" aria-hidden="true" tabindex="-1"></a>        <span class="fl">3.56e-4</span>,</span>
-<span id="cb16-61"><a href="#cb16-61" aria-hidden="true" tabindex="-1"></a>        <span class="fl">1.08e-2</span>,</span>
-<span id="cb16-62"><a href="#cb16-62" aria-hidden="true" tabindex="-1"></a>        <span class="fl">6.49e-2</span>,</span>
-<span id="cb16-63"><a href="#cb16-63" aria-hidden="true" tabindex="-1"></a>        <span class="fl">2.00e-1</span>,</span>
-<span id="cb16-64"><a href="#cb16-64" aria-hidden="true" tabindex="-1"></a>        <span class="fl">4.37e-1</span>,</span>
-<span id="cb16-65"><a href="#cb16-65" aria-hidden="true" tabindex="-1"></a>        <span class="fl">7.83e-1</span>,</span>
-<span id="cb16-66"><a href="#cb16-66" aria-hidden="true" tabindex="-1"></a>        <span class="fl">1.23e0</span>,</span>
-<span id="cb16-67"><a href="#cb16-67" aria-hidden="true" tabindex="-1"></a>        <span class="fl">1.78e0</span>,</span>
-<span id="cb16-68"><a href="#cb16-68" aria-hidden="true" tabindex="-1"></a>        <span class="fl">2.42e0</span>,</span>
-<span id="cb16-69"><a href="#cb16-69" aria-hidden="true" tabindex="-1"></a>        <span class="co"># 11</span></span>
-<span id="cb16-70"><a href="#cb16-70" aria-hidden="true" tabindex="-1"></a>        <span class="fl">3.13e0</span>,</span>
-<span id="cb16-71"><a href="#cb16-71" aria-hidden="true" tabindex="-1"></a>        <span class="fl">3.90e0</span>,</span>
-<span id="cb16-72"><a href="#cb16-72" aria-hidden="true" tabindex="-1"></a>        <span class="fl">4.74e0</span>,</span>
-<span id="cb16-73"><a href="#cb16-73" aria-hidden="true" tabindex="-1"></a>        <span class="fl">5.63e0</span>,</span>
-<span id="cb16-74"><a href="#cb16-74" aria-hidden="true" tabindex="-1"></a>        <span class="fl">6.56e0</span>,</span>
-<span id="cb16-75"><a href="#cb16-75" aria-hidden="true" tabindex="-1"></a>        <span class="fl">7.52e0</span>,</span>
-<span id="cb16-76"><a href="#cb16-76" aria-hidden="true" tabindex="-1"></a>        <span class="fl">8.53e0</span>,</span>
-<span id="cb16-77"><a href="#cb16-77" aria-hidden="true" tabindex="-1"></a>        <span class="fl">9.56e0</span>,</span>
-<span id="cb16-78"><a href="#cb16-78" aria-hidden="true" tabindex="-1"></a>        <span class="fl">1.06e1</span>,</span>
-<span id="cb16-79"><a href="#cb16-79" aria-hidden="true" tabindex="-1"></a>        <span class="fl">1.17e1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display">
-<pre><code>(nothing, 2.11e-8, 0.000356, 0.0108, 0.0649, 0.2, 0.437, 0.783, 1.23, 1.78, 2.42, 3.13, 3.9, 4.74, 5.63, 6.56, 7.52, 8.53, 9.56, 10.6, 11.7)</code></pre>
+The algorithm: $$
+<span class="math display">\[\begin{array}{l}
+\text{for } m = [3, 5, 7, 9] \\
+\quad \quad \text{if } ||A||_{1} \leq \theta_{m} \\
+\quad \quad \quad \quad r_{m}(A) \quad \text{ \textit{form Pade approximant to A}} \\
+\quad \quad \quad \quad U, V     \quad \text{ \textit{Evaluate U and V, see below for }} r_{13} \\
+\quad \quad \quad \quad s=0 \\
+\quad \quad \quad \quad   \text{break} \\
+\quad \quad \text{end} \\
+\text{end} \\
+
+\text{if } ||A||_{1} \geq  \theta_{m[-1]} \\
+\quad \quad s = \text{ceil}(\log_{2}(||A||_{1}/ \theta_{13})) \\
+\quad \quad A = A/2^{s} \\
+\quad \quad A_{2} = A^{2}, A_{4} = A_{2}^{2}, A_{6} = A_{2}A_{4}\\
+\quad \quad U = A[A_{6}(b_{13} A_{6} + b_{11} A_{4} + b_{9} A_{2}) + b_{7} A_{6} + b_{5} A_{4} + b_{3} A_{2} + b_{1} I]\\
+\quad \quad V = A_{6}(b_{12}A_{6} + b_{10}A_{4} + b_{8}A_{2}) + b_{6}A_{6} + b_{4}A_{4} + b_{2}A_{2} + b_{0}I\\
+\text{end} \\
+
+\text{Solve } (-U+V)r_{m}(A) = U + V \text{ for } r_{m} \\
+\text{for } k = 1:s \\
+\quad \quad r_{m} = r_{m}*r_{m} \\
+\text{end} \\
+\text{return } r_{m} \\
+\end{array}\]</span>
+<p>$$</p>
+<p>References:<br> Higham (2008), Functions of Matrices - Theory and Computation”, Chapter 10, Algorithm 10.20 <br> https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.expm_frechet.html#scipy.linalg.expm_frechet <br> https://rdrr.io/cran/expm/man/expmFrechet.html</p>
+<div class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">_diff_pade3</span>(A, E, ident)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> (<span class="fl">120.0</span>, <span class="fl">60.0</span>, <span class="fl">12.0</span>, <span class="fl">1.0</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    A2 <span class="op">=</span> A <span class="op">*</span> A</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    M2 <span class="op">=</span> A <span class="op">*</span> E <span class="op">+</span> E <span class="op">*</span> A</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    U <span class="op">=</span> A <span class="op">*</span> (b[<span class="fl">4</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">2</span>] <span class="op">*</span> ident)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    V <span class="op">=</span> b[<span class="fl">3</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">1</span>] <span class="op">*</span> ident</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    Lu <span class="op">=</span> A <span class="op">*</span> (b[<span class="fl">4</span>] <span class="op">*</span> M2) <span class="op">+</span> E <span class="op">*</span> (b[<span class="fl">4</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">2</span>] <span class="op">*</span> ident)</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    Lv <span class="op">=</span> b[<span class="fl">3</span>] <span class="op">*</span> M2</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> U, V, Lu, Lv</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">_diff_pade5</span>(A, E, ident)</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> (<span class="fl">30240.0</span>, <span class="fl">15120.0</span>, <span class="fl">3360.0</span>, <span class="fl">420.0</span>, <span class="fl">30.0</span>, <span class="fl">1.0</span>)</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    A2 <span class="op">=</span> A <span class="op">*</span> A</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>    M2 <span class="op">=</span> A <span class="op">*</span> E <span class="op">+</span> E <span class="op">*</span> A</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>    A4 <span class="op">=</span> A2 <span class="op">*</span> A2</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    M4 <span class="op">=</span> A2 <span class="op">*</span> M2 <span class="op">+</span> M2 <span class="op">*</span> A2</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>    U <span class="op">=</span> A <span class="op">*</span> (b[<span class="fl">6</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">4</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">2</span>] <span class="op">*</span> ident)</span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>    V <span class="op">=</span> b[<span class="fl">5</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">3</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">1</span>] <span class="op">*</span> ident</span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>    Lu <span class="op">=</span> A <span class="op">*</span> (b[<span class="fl">6</span>] <span class="op">*</span> M4 <span class="op">+</span> b[<span class="fl">4</span>] <span class="op">*</span> M2) <span class="op">+</span> E <span class="op">*</span> (b[<span class="fl">6</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">4</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">2</span>] <span class="op">*</span> ident)</span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>    Lv <span class="op">=</span> b[<span class="fl">5</span>] <span class="op">*</span> M4 <span class="op">+</span> b[<span class="fl">3</span>] <span class="op">*</span> M2</span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> U, V, Lu, Lv</span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">_diff_pade7</span>(A, E, ident)</span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> (<span class="fl">17297280.0</span>, <span class="fl">8648640.0</span>, <span class="fl">1995840.0</span>, <span class="fl">277200.0</span>, <span class="fl">25200.0</span>, <span class="fl">1512.0</span>, <span class="fl">56.0</span>, <span class="fl">1.0</span>)</span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a>    A2 <span class="op">=</span> A <span class="op">*</span> A</span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a>    M2 <span class="op">=</span> A <span class="op">*</span> E <span class="op">+</span> E <span class="op">*</span> A</span>
+<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a>    A4 <span class="op">=</span> A2 <span class="op">*</span> A2</span>
+<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a>    M4 <span class="op">=</span> A2 <span class="op">*</span> M2 <span class="op">+</span> M2 <span class="op">*</span> A2</span>
+<span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a>    A6 <span class="op">=</span> A2 <span class="op">*</span> A4</span>
+<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a>    M6 <span class="op">=</span> A4 <span class="op">*</span> M2 <span class="op">+</span> M4 <span class="op">*</span> A2</span>
+<span id="cb17-33"><a href="#cb17-33" aria-hidden="true" tabindex="-1"></a>    U <span class="op">=</span> A <span class="op">*</span> (b[<span class="fl">8</span>] <span class="op">*</span> A6 <span class="op">+</span> b[<span class="fl">6</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">4</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">2</span>] <span class="op">*</span> ident)</span>
+<span id="cb17-34"><a href="#cb17-34" aria-hidden="true" tabindex="-1"></a>    V <span class="op">=</span> b[<span class="fl">7</span>] <span class="op">*</span> A6 <span class="op">+</span> b[<span class="fl">5</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">3</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">1</span>] <span class="op">*</span> ident</span>
+<span id="cb17-35"><a href="#cb17-35" aria-hidden="true" tabindex="-1"></a>    Lu <span class="op">=</span> A <span class="op">*</span> (b[<span class="fl">8</span>] <span class="op">*</span> M6 <span class="op">+</span> b[<span class="fl">6</span>] <span class="op">*</span> M4 <span class="op">+</span> b[<span class="fl">4</span>] <span class="op">*</span> M2) <span class="op">+</span> E <span class="op">*</span> (b[<span class="fl">8</span>] <span class="op">*</span> A6 <span class="op">+</span> b[<span class="fl">6</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">4</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">2</span>] <span class="op">*</span> ident)</span>
+<span id="cb17-36"><a href="#cb17-36" aria-hidden="true" tabindex="-1"></a>    Lv <span class="op">=</span> b[<span class="fl">7</span>] <span class="op">*</span> M6 <span class="op">+</span> b[<span class="fl">5</span>] <span class="op">*</span> M4 <span class="op">+</span> b[<span class="fl">3</span>] <span class="op">*</span> M2</span>
+<span id="cb17-37"><a href="#cb17-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> U, V, Lu, Lv</span>
+<span id="cb17-38"><a href="#cb17-38" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
+<span id="cb17-39"><a href="#cb17-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-40"><a href="#cb17-40" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">_diff_pade9</span>(A, E, ident)</span>
+<span id="cb17-41"><a href="#cb17-41" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> (<span class="fl">17643225600.0</span>, <span class="fl">8821612800.0</span>, <span class="fl">2075673600.0</span>, <span class="fl">302702400.0</span>, <span class="fl">30270240.0</span>, </span>
+<span id="cb17-42"><a href="#cb17-42" aria-hidden="true" tabindex="-1"></a>         <span class="fl">2162160.0</span>, <span class="fl">110880.0</span>, <span class="fl">3960.0</span>, <span class="fl">90.0</span>, <span class="fl">1.0</span>)</span>
+<span id="cb17-43"><a href="#cb17-43" aria-hidden="true" tabindex="-1"></a>    A2 <span class="op">=</span> A <span class="op">*</span> A</span>
+<span id="cb17-44"><a href="#cb17-44" aria-hidden="true" tabindex="-1"></a>    M2 <span class="op">=</span> A <span class="op">*</span> E <span class="op">+</span> E <span class="op">*</span> A</span>
+<span id="cb17-45"><a href="#cb17-45" aria-hidden="true" tabindex="-1"></a>    A4 <span class="op">=</span> A2 <span class="op">*</span> A2</span>
+<span id="cb17-46"><a href="#cb17-46" aria-hidden="true" tabindex="-1"></a>    M4 <span class="op">=</span> A2 <span class="op">*</span> M2 <span class="op">+</span> M2 <span class="op">*</span> A2</span>
+<span id="cb17-47"><a href="#cb17-47" aria-hidden="true" tabindex="-1"></a>    A6 <span class="op">=</span> A2 <span class="op">*</span> A4</span>
+<span id="cb17-48"><a href="#cb17-48" aria-hidden="true" tabindex="-1"></a>    M6 <span class="op">=</span> A4 <span class="op">*</span> M2 <span class="op">+</span> M4 <span class="op">*</span> A2</span>
+<span id="cb17-49"><a href="#cb17-49" aria-hidden="true" tabindex="-1"></a>    A8 <span class="op">=</span> A4 <span class="op">*</span> A4</span>
+<span id="cb17-50"><a href="#cb17-50" aria-hidden="true" tabindex="-1"></a>    M8 <span class="op">=</span> A4 <span class="op">*</span> M4 <span class="op">+</span> M4 <span class="op">*</span> A4</span>
+<span id="cb17-51"><a href="#cb17-51" aria-hidden="true" tabindex="-1"></a>    U <span class="op">=</span> A <span class="op">*</span> (b[<span class="fl">10</span>] <span class="op">*</span> A8 <span class="op">+</span> b[<span class="fl">8</span>] <span class="op">*</span> A6 <span class="op">+</span> b[<span class="fl">6</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">4</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">2</span>] <span class="op">*</span> ident)</span>
+<span id="cb17-52"><a href="#cb17-52" aria-hidden="true" tabindex="-1"></a>    V <span class="op">=</span> b[<span class="fl">9</span>] <span class="op">*</span> A8 <span class="op">+</span> b[<span class="fl">7</span>] <span class="op">*</span> A6 <span class="op">+</span> b[<span class="fl">5</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">3</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">1</span>] <span class="op">*</span> ident</span>
+<span id="cb17-53"><a href="#cb17-53" aria-hidden="true" tabindex="-1"></a>    Lu <span class="op">=</span> A <span class="op">*</span> (b[<span class="fl">10</span>] <span class="op">*</span> M8 <span class="op">+</span> b[<span class="fl">8</span>] <span class="op">*</span> M6 <span class="op">+</span> b[<span class="fl">6</span>] <span class="op">*</span> M4 <span class="op">+</span> b[<span class="fl">4</span>] <span class="op">*</span> M2) <span class="op">+</span> E <span class="op">*</span> (b[<span class="fl">10</span>] <span class="op">*</span> A8 <span class="op">+</span> b[<span class="fl">8</span>] <span class="op">*</span> A6 <span class="op">+</span> b[<span class="fl">6</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">4</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">2</span>] <span class="op">*</span> ident)</span>
+<span id="cb17-54"><a href="#cb17-54" aria-hidden="true" tabindex="-1"></a>    Lv <span class="op">=</span> b[<span class="fl">9</span>] <span class="op">*</span> M8 <span class="op">+</span> b[<span class="fl">7</span>] <span class="op">*</span> M6 <span class="op">+</span> b[<span class="fl">5</span>] <span class="op">*</span> M4 <span class="op">+</span> b[<span class="fl">3</span>] <span class="op">*</span> M2</span>
+<span id="cb17-55"><a href="#cb17-55" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> U, V, Lu, Lv</span>
+<span id="cb17-56"><a href="#cb17-56" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
+<span id="cb17-57"><a href="#cb17-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-58"><a href="#cb17-58" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">_diff_pade13</span>(A, E, ident)</span>
+<span id="cb17-59"><a href="#cb17-59" aria-hidden="true" tabindex="-1"></a>    <span class="co"># pade order 13</span></span>
+<span id="cb17-60"><a href="#cb17-60" aria-hidden="true" tabindex="-1"></a>    A2 <span class="op">=</span> A <span class="op">*</span> A</span>
+<span id="cb17-61"><a href="#cb17-61" aria-hidden="true" tabindex="-1"></a>    M2 <span class="op">=</span> A <span class="op">*</span> E <span class="op">+</span> E <span class="op">*</span> A</span>
+<span id="cb17-62"><a href="#cb17-62" aria-hidden="true" tabindex="-1"></a>    A4 <span class="op">=</span> A2 <span class="op">*</span> A2</span>
+<span id="cb17-63"><a href="#cb17-63" aria-hidden="true" tabindex="-1"></a>    M4 <span class="op">=</span> A2 <span class="op">*</span> M2 <span class="op">+</span> M2 <span class="op">*</span> A2</span>
+<span id="cb17-64"><a href="#cb17-64" aria-hidden="true" tabindex="-1"></a>    A6 <span class="op">=</span> A2 <span class="op">*</span> A4</span>
+<span id="cb17-65"><a href="#cb17-65" aria-hidden="true" tabindex="-1"></a>    M6 <span class="op">=</span> A4 <span class="op">*</span> M2 <span class="op">+</span> M4 <span class="op">*</span> A2</span>
+<span id="cb17-66"><a href="#cb17-66" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> (<span class="fl">64764752532480000</span>., <span class="fl">32382376266240000</span>., <span class="fl">7771770303897600</span>.,</span>
+<span id="cb17-67"><a href="#cb17-67" aria-hidden="true" tabindex="-1"></a>            <span class="fl">1187353796428800</span>., <span class="fl">129060195264000</span>., <span class="fl">10559470521600</span>.,</span>
+<span id="cb17-68"><a href="#cb17-68" aria-hidden="true" tabindex="-1"></a>            <span class="fl">670442572800</span>., <span class="fl">33522128640</span>., <span class="fl">1323241920</span>., <span class="fl">40840800</span>., <span class="fl">960960</span>.,</span>
+<span id="cb17-69"><a href="#cb17-69" aria-hidden="true" tabindex="-1"></a>            <span class="fl">16380</span>., <span class="fl">182</span>., <span class="fl">1</span>.)</span>
+<span id="cb17-70"><a href="#cb17-70" aria-hidden="true" tabindex="-1"></a>    W1 <span class="op">=</span> b[<span class="fl">14</span>] <span class="op">*</span> A6 <span class="op">+</span> b[<span class="fl">12</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">10</span>] <span class="op">*</span> A2</span>
+<span id="cb17-71"><a href="#cb17-71" aria-hidden="true" tabindex="-1"></a>    W2 <span class="op">=</span> b[<span class="fl">8</span>] <span class="op">*</span> A6 <span class="op">+</span> b[<span class="fl">6</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">4</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">2</span>] <span class="op">*</span> ident</span>
+<span id="cb17-72"><a href="#cb17-72" aria-hidden="true" tabindex="-1"></a>    Z1 <span class="op">=</span> b[<span class="fl">13</span>] <span class="op">*</span> A6 <span class="op">+</span> b[<span class="fl">11</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">9</span>] <span class="op">*</span> A2</span>
+<span id="cb17-73"><a href="#cb17-73" aria-hidden="true" tabindex="-1"></a>    Z2 <span class="op">=</span> b[<span class="fl">7</span>] <span class="op">*</span> A6 <span class="op">+</span> b[<span class="fl">5</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">3</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">1</span>] <span class="op">*</span> ident</span>
+<span id="cb17-74"><a href="#cb17-74" aria-hidden="true" tabindex="-1"></a>    W <span class="op">=</span> A6 <span class="op">*</span> W1 <span class="op">+</span> W2</span>
+<span id="cb17-75"><a href="#cb17-75" aria-hidden="true" tabindex="-1"></a>    U <span class="op">=</span> A <span class="op">*</span> W</span>
+<span id="cb17-76"><a href="#cb17-76" aria-hidden="true" tabindex="-1"></a>    V <span class="op">=</span> A6 <span class="op">*</span> Z1 <span class="op">+</span> Z2</span>
+<span id="cb17-77"><a href="#cb17-77" aria-hidden="true" tabindex="-1"></a>    Lw1 <span class="op">=</span> b[<span class="fl">14</span>] <span class="op">*</span> M6 <span class="op">+</span> b[<span class="fl">12</span>] <span class="op">*</span> M4 <span class="op">+</span> b[<span class="fl">10</span>] <span class="op">*</span> M2</span>
+<span id="cb17-78"><a href="#cb17-78" aria-hidden="true" tabindex="-1"></a>    Lw2 <span class="op">=</span> b[<span class="fl">8</span>] <span class="op">*</span> M6 <span class="op">+</span> b[<span class="fl">6</span>] <span class="op">*</span> M4 <span class="op">+</span> b[<span class="fl">4</span>] <span class="op">*</span> M2</span>
+<span id="cb17-79"><a href="#cb17-79" aria-hidden="true" tabindex="-1"></a>    Lz1 <span class="op">=</span> b[<span class="fl">13</span>] <span class="op">*</span> M6 <span class="op">+</span> b[<span class="fl">11</span>] <span class="op">*</span> M4 <span class="op">+</span> b[<span class="fl">9</span>] <span class="op">*</span> M2</span>
+<span id="cb17-80"><a href="#cb17-80" aria-hidden="true" tabindex="-1"></a>    Lz2 <span class="op">=</span> b[<span class="fl">7</span>] <span class="op">*</span> M6 <span class="op">+</span> b[<span class="fl">5</span>] <span class="op">*</span> M4 <span class="op">+</span> b[<span class="fl">3</span>] <span class="op">*</span> M2</span>
+<span id="cb17-81"><a href="#cb17-81" aria-hidden="true" tabindex="-1"></a>    Lw <span class="op">=</span> A6 <span class="op">*</span> Lw1 <span class="op">+</span> M6 <span class="op">*</span> W1 <span class="op">+</span> Lw2</span>
+<span id="cb17-82"><a href="#cb17-82" aria-hidden="true" tabindex="-1"></a>    Lu <span class="op">=</span> A <span class="op">*</span> Lw <span class="op">+</span> E <span class="op">*</span> W</span>
+<span id="cb17-83"><a href="#cb17-83" aria-hidden="true" tabindex="-1"></a>    Lv <span class="op">=</span> A6 <span class="op">*</span> Lz1 <span class="op">+</span> M6 <span class="op">*</span> Z1 <span class="op">+</span> Lz2</span>
+<span id="cb17-84"><a href="#cb17-84" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> U, V, Lu, Lv</span>
+<span id="cb17-85"><a href="#cb17-85" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
+<span id="cb17-86"><a href="#cb17-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-87"><a href="#cb17-87" aria-hidden="true" tabindex="-1"></a>ell_table_61 <span class="op">=</span> (<span class="cn">nothing</span>, <span class="fl">2.11e-8</span>, <span class="fl">3.56e-4</span>, <span class="fl">1.08e-2</span>, <span class="fl">6.49e-2</span>, <span class="fl">2.00e-1</span>, <span class="fl">4.37e-1</span>,</span>
+<span id="cb17-88"><a href="#cb17-88" aria-hidden="true" tabindex="-1"></a>        <span class="fl">7.83e-1</span>, <span class="fl">1.23e0</span>, <span class="fl">1.78e0</span>, <span class="fl">2.42e0</span>, <span class="fl">3.13e0</span>, <span class="fl">3.90e0</span>, <span class="fl">4.74e0</span>, <span class="fl">5.63e0</span>,</span>
+<span id="cb17-89"><a href="#cb17-89" aria-hidden="true" tabindex="-1"></a>        <span class="fl">6.56e0</span>, <span class="fl">7.52e0</span>, <span class="fl">8.53e0</span>, <span class="fl">9.56e0</span>, <span class="fl">1.06e1</span>, <span class="fl">1.17e1</span>);</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</div>
-<div class="cell" data-execution_count="40">
+<div class="cell" data-execution_count="31">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">frechet_algo</span>(A<span class="op">::</span><span class="dt">Matrix{Float64}</span>, edges<span class="op">::</span><span class="dt">Vector{CartesianIndex{2}}</span>)<span class="op">::</span><span class="dt">Vector{Float64}</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    E <span class="op">=</span> <span class="fu">exp</span>(A)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    E <span class="op">=</span> <span class="fu">ones</span>(<span class="fu">size</span>(A))</span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> <span class="fu">size</span>(A, <span class="fl">1</span>)</span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    s <span class="op">=</span> <span class="cn">nothing</span></span>
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    ident <span class="op">=</span> <span class="fu">Matrix</span><span class="dt">{Float64}</span>(I, n, n)</span>
 <span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    A_norm_1 <span class="op">=</span> <span class="fu">norm</span>(A, <span class="fl">1</span>)</span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    m_pade_pairs <span class="op">=</span> [</span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>        (<span class="fl">3</span>, _diff_pade3),</span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>        (<span class="fl">5</span>, _diff_pade5),</span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>        (<span class="fl">7</span>, _diff_pade7),</span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>        (<span class="fl">9</span>, _diff_pade9)</span>
-<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    ]</span>
-<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (m, pade) <span class="kw">in</span> m_pade_pairs</span>
-<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> A_norm_1 <span class="op">&lt;=</span> ell_table_61[m]</span>
-<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>            U, V, Lu, Lv <span class="op">=</span> <span class="fu">pade</span>(A, E, ident)</span>
-<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>            s <span class="op">=</span> <span class="fl">0</span></span>
-<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span></span>
-<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">end</span></span>
-<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span></span>
-<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> s <span class="op">==</span> <span class="cn">nothing</span></span>
-<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>        <span class="co"># scaling</span></span>
-<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>        s <span class="op">=</span> <span class="fu">max</span>(<span class="fl">0</span>, <span class="fu">ceil</span>(<span class="dt">Int</span>, <span class="fu">log2</span>(A_norm_1 <span class="op">/</span> ell_table_61[<span class="fl">13</span>])))</span>
-<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>        A <span class="op">*=</span> <span class="fl">2.0</span><span class="op">^-</span>s</span>
-<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>        E <span class="op">*=</span> <span class="fl">2.0</span><span class="op">^-</span>s</span>
-<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>        <span class="co"># pade order 13</span></span>
-<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a>        A2 <span class="op">=</span> A <span class="op">*</span> A</span>
-<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>        M2 <span class="op">=</span> A <span class="op">*</span> E <span class="op">+</span> E <span class="op">*</span> A</span>
-<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>        A4 <span class="op">=</span> A2 <span class="op">*</span> A2</span>
-<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a>        M4 <span class="op">=</span> A2 <span class="op">*</span> M2 <span class="op">+</span> M2 <span class="op">*</span> A2</span>
-<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a>        A6 <span class="op">=</span> A2 <span class="op">*</span> A4</span>
-<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a>        M6 <span class="op">=</span> A4 <span class="op">*</span> M2 <span class="op">+</span> M4 <span class="op">*</span> A2</span>
-<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a>        b <span class="op">=</span> (<span class="fl">64764752532480000</span>., <span class="fl">32382376266240000</span>., <span class="fl">7771770303897600</span>.,</span>
-<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a>                <span class="fl">1187353796428800</span>., <span class="fl">129060195264000</span>., <span class="fl">10559470521600</span>.,</span>
-<span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a>                <span class="fl">670442572800</span>., <span class="fl">33522128640</span>., <span class="fl">1323241920</span>., <span class="fl">40840800</span>., <span class="fl">960960</span>.,</span>
-<span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a>                <span class="fl">16380</span>., <span class="fl">182</span>., <span class="fl">1</span>.)</span>
-<span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a>        W1 <span class="op">=</span> b[<span class="fl">14</span>] <span class="op">*</span> A6 <span class="op">+</span> b[<span class="fl">12</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">10</span>] <span class="op">*</span> A2</span>
-<span id="cb18-37"><a href="#cb18-37" aria-hidden="true" tabindex="-1"></a>        W2 <span class="op">=</span> b[<span class="fl">8</span>] <span class="op">*</span> A6 <span class="op">+</span> b[<span class="fl">6</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">4</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">2</span>] <span class="op">*</span> ident</span>
-<span id="cb18-38"><a href="#cb18-38" aria-hidden="true" tabindex="-1"></a>        Z1 <span class="op">=</span> b[<span class="fl">13</span>] <span class="op">*</span> A6 <span class="op">+</span> b[<span class="fl">11</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">9</span>] <span class="op">*</span> A2</span>
-<span id="cb18-39"><a href="#cb18-39" aria-hidden="true" tabindex="-1"></a>        Z2 <span class="op">=</span> b[<span class="fl">7</span>] <span class="op">*</span> A6 <span class="op">+</span> b[<span class="fl">5</span>] <span class="op">*</span> A4 <span class="op">+</span> b[<span class="fl">3</span>] <span class="op">*</span> A2 <span class="op">+</span> b[<span class="fl">1</span>] <span class="op">*</span> ident</span>
-<span id="cb18-40"><a href="#cb18-40" aria-hidden="true" tabindex="-1"></a>        W <span class="op">=</span> A6 <span class="op">*</span> W1 <span class="op">+</span> W2</span>
-<span id="cb18-41"><a href="#cb18-41" aria-hidden="true" tabindex="-1"></a>        U <span class="op">=</span> A <span class="op">*</span> W</span>
-<span id="cb18-42"><a href="#cb18-42" aria-hidden="true" tabindex="-1"></a>        V <span class="op">=</span> A6 <span class="op">*</span> Z1 <span class="op">+</span> Z2</span>
-<span id="cb18-43"><a href="#cb18-43" aria-hidden="true" tabindex="-1"></a>        Lw1 <span class="op">=</span> b[<span class="fl">14</span>] <span class="op">*</span> M6 <span class="op">+</span> b[<span class="fl">12</span>] <span class="op">*</span> M4 <span class="op">+</span> b[<span class="fl">10</span>] <span class="op">*</span> M2</span>
-<span id="cb18-44"><a href="#cb18-44" aria-hidden="true" tabindex="-1"></a>        Lw2 <span class="op">=</span> b[<span class="fl">8</span>] <span class="op">*</span> M6 <span class="op">+</span> b[<span class="fl">6</span>] <span class="op">*</span> M4 <span class="op">+</span> b[<span class="fl">4</span>] <span class="op">*</span> M2</span>
-<span id="cb18-45"><a href="#cb18-45" aria-hidden="true" tabindex="-1"></a>        Lz1 <span class="op">=</span> b[<span class="fl">13</span>] <span class="op">*</span> M6 <span class="op">+</span> b[<span class="fl">11</span>] <span class="op">*</span> M4 <span class="op">+</span> b[<span class="fl">9</span>] <span class="op">*</span> M2</span>
-<span id="cb18-46"><a href="#cb18-46" aria-hidden="true" tabindex="-1"></a>        Lz2 <span class="op">=</span> b[<span class="fl">7</span>] <span class="op">*</span> M6 <span class="op">+</span> b[<span class="fl">5</span>] <span class="op">*</span> M4 <span class="op">+</span> b[<span class="fl">3</span>] <span class="op">*</span> M2</span>
-<span id="cb18-47"><a href="#cb18-47" aria-hidden="true" tabindex="-1"></a>        Lw <span class="op">=</span> A6 <span class="op">*</span> Lw1 <span class="op">+</span> M6 <span class="op">*</span> W1 <span class="op">+</span> Lw2</span>
-<span id="cb18-48"><a href="#cb18-48" aria-hidden="true" tabindex="-1"></a>        Lu <span class="op">=</span> A <span class="op">*</span> Lw <span class="op">+</span> E <span class="op">*</span> W</span>
-<span id="cb18-49"><a href="#cb18-49" aria-hidden="true" tabindex="-1"></a>        Lv <span class="op">=</span> A6 <span class="op">*</span> Lz1 <span class="op">+</span> M6 <span class="op">*</span> Z1 <span class="op">+</span> Lz2</span>
-<span id="cb18-50"><a href="#cb18-50" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span></span>
-<span id="cb18-51"><a href="#cb18-51" aria-hidden="true" tabindex="-1"></a>    <span class="co"># factor once and solve twice</span></span>
-<span id="cb18-52"><a href="#cb18-52" aria-hidden="true" tabindex="-1"></a>    lu_piv <span class="op">=</span> <span class="fu">lu</span>(<span class="op">-</span>U <span class="op">+</span> V)</span>
-<span id="cb18-53"><a href="#cb18-53" aria-hidden="true" tabindex="-1"></a>    R <span class="op">=</span> lu_piv <span class="op">\</span> (U <span class="op">+</span> V)</span>
-<span id="cb18-54"><a href="#cb18-54" aria-hidden="true" tabindex="-1"></a>    L <span class="op">=</span> lu_piv <span class="op">\</span> (Lu <span class="op">+</span> Lv <span class="op">+</span> ((Lu <span class="op">-</span> Lv) <span class="op">*</span> R))</span>
-<span id="cb18-55"><a href="#cb18-55" aria-hidden="true" tabindex="-1"></a>    <span class="co"># squaring</span></span>
-<span id="cb18-56"><a href="#cb18-56" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> k <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span>s</span>
-<span id="cb18-57"><a href="#cb18-57" aria-hidden="true" tabindex="-1"></a>        L <span class="op">=</span> R <span class="op">*</span> L <span class="op">+</span> L <span class="op">*</span> R</span>
-<span id="cb18-58"><a href="#cb18-58" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span></span>
-<span id="cb18-59"><a href="#cb18-59" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> L[edges] <span class="op">.*</span><span class="fl">2</span></span>
-<span id="cb18-60"><a href="#cb18-60" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
-<span id="cb18-61"><a href="#cb18-61" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-62"><a href="#cb18-62" aria-hidden="true" tabindex="-1"></a><span class="fu">frechet_algo</span>(W, demo_edge)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    m_pade_pairs <span class="op">=</span> [(<span class="fl">3</span>, _diff_pade3),(<span class="fl">5</span>, _diff_pade5),(<span class="fl">7</span>, _diff_pade7),(<span class="fl">9</span>, _diff_pade9)]</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (m, pade) <span class="kw">in</span> m_pade_pairs</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> A_norm_1 <span class="op">&lt;=</span> ell_table_61[m]</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>            U, V, Lu, Lv <span class="op">=</span> <span class="fu">pade</span>(A, E, ident)</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>            s <span class="op">=</span> <span class="fl">0</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">end</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> s <span class="op">==</span> <span class="cn">nothing</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>        <span class="co"># scaling</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>        s <span class="op">=</span> <span class="fu">max</span>(<span class="fl">0</span>, <span class="fu">ceil</span>(<span class="dt">Int</span>, <span class="fu">log2</span>(A_norm_1 <span class="op">/</span> ell_table_61[<span class="fl">13</span>])))</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>        A <span class="op">*=</span> <span class="fl">2.0</span><span class="op">^-</span>s</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>        E <span class="op">*=</span> <span class="fl">2.0</span><span class="op">^-</span>s</span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>        U, V, Lu, Lv <span class="op">=</span> <span class="fu">_diff_pade13</span>(A, E, ident)</span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span></span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>    <span class="co"># factor once and solve twice</span></span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>    lu_piv <span class="op">=</span> <span class="fu">lu</span>(<span class="op">-</span>U <span class="op">+</span> V)</span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>    R <span class="op">=</span> lu_piv <span class="op">\</span> (U <span class="op">+</span> V)</span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a>    L <span class="op">=</span> lu_piv <span class="op">\</span> (Lu <span class="op">+</span> Lv <span class="op">+</span> ((Lu <span class="op">-</span> Lv) <span class="op">*</span> R))</span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>    <span class="co"># repeated squaring</span></span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> k <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span>s</span>
+<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a>        L <span class="op">=</span> R <span class="op">*</span> L <span class="op">+</span> L <span class="op">*</span> R</span>
+<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a>        R<span class="op">=</span> R <span class="op">*</span> R</span>
+<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span></span>
+<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> L[edges]</span>
+<span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span>
+<span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a><span class="fu">frechet_algo</span>(W, demo_edge)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <pre><code>1-element Vector{Float64}:
- 4.861229082596298</code></pre>
+ 2.413251135661833</code></pre>
 </div>
 </div>
 </section>
 </section>
 <section id="benchmarking" class="level1">
 <h1>Benchmarking <a name="benchmarking" href=""></a></h1>
-<div class="cell" data-execution_count="8">
+<div class="cell" data-execution_count="32">
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">init_sparse_matrix</span>(n <span class="op">=</span> <span class="fl">100</span>, density <span class="op">=</span> <span class="fl">0.2</span>)</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Initialize a sparse matrix</span></span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    W <span class="op">=</span> <span class="fu">zeros</span>(n, n)</span>
@@ -504,45 +516,117 @@ f(W)=e^{W}
 <span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>W_bench <span class="op">=</span> <span class="fu">init_sparse_matrix</span>(<span class="fl">50</span>, <span class="fl">0.10</span>)</span>
 <span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>edges_bench <span class="op">=</span> <span class="fu">findall</span>(x <span class="op">-&gt;</span> x <span class="op">!=</span> <span class="fl">0</span>, W_bench)</span>
-<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a><span class="pp">@btime</span> <span class="fu">tangent_approx</span>(<span class="op">$</span>W_bench, <span class="op">$</span>edges_bench, <span class="fl">0.01</span>)</span>
-<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a><span class="pp">@btime</span> <span class="fu">finite_diff</span>(<span class="op">$</span>W_bench, <span class="op">$</span>edges_bench, <span class="fl">0.1</span>)</span>
-<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a><span class="pp">@btime</span> <span class="fu">forward_diff_j</span>(<span class="op">$</span>W_bench, <span class="op">$</span>edges_bench)</span>
-<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a><span class="pp">@btime</span> <span class="fu">forward_diff_jvp</span>(<span class="op">$</span>W_bench, <span class="op">$</span>edges_bench)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>f <span class="op">=</span> (W, _) <span class="op">-&gt;</span> <span class="fu">sum</span>(<span class="fu">exp</span>(W))</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a><span class="pp">@btime</span> <span class="fu">tangent_approx</span>(f, <span class="op">$</span>W_bench, <span class="op">$</span>edges_bench, <span class="fl">0.01</span>) </span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a><span class="pp">@btime</span> <span class="fu">finite_diff</span>(f, <span class="op">$</span>W_bench, <span class="op">$</span>edges_bench, <span class="fl">0.1</span>) </span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a><span class="pp">@btime</span> <span class="fu">forward_diff_j</span>(<span class="op">$</span>W_bench, <span class="op">$</span>edges_bench) </span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a><span class="pp">@btime</span> <span class="fu">forward_diff_jvp</span>(<span class="op">$</span>W_bench, <span class="op">$</span>edges_bench) </span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a><span class="pp">@btime</span> <span class="fu">frechet_block_enlarge</span>(<span class="op">$</span>W_bench, <span class="op">$</span>edges_bench) </span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a><span class="pp">@btime</span> <span class="fu">frechet_algo</span>(<span class="op">$</span>W_bench, <span class="op">$</span>edges_bench);</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>  2.608 s (279080 allocations: 1.83 GiB)</code></pre>
+<pre><code>  2.584 s (240215 allocations: 1.80 GiB)</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>  88.504 ms (7743 allocations: 60.52 MiB)</code></pre>
+<pre><code>  97.893 ms (8469 allocations: 66.25 MiB)</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>  1.728 s (5961 allocations: 312.16 MiB)</code></pre>
+<pre><code>  1.732 s (6067 allocations: 312.60 MiB)</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>  1.700 ms (39 allocations: 432.30 KiB)</code></pre>
+<pre><code>  1.503 ms (20 allocations: 315.42 KiB)</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  2.672 ms (24 allocations: 609.75 KiB)</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  420.167 μs (220 allocations: 1.86 MiB)</code></pre>
+</div>
+</div>
+</section>
+<section id="extension-to-full-objective-function" class="level1">
+<h1>Extension to full objective function</h1>
+<div class="cell" data-execution_count="75">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># load synthetic data</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>W_Y, D, A_init <span class="op">=</span> <span class="fu">load_weight_test_data</span>()</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>A_Y <span class="op">=</span> <span class="fu">Float64</span>.(W_Y <span class="op">.&gt;</span> <span class="fl">0</span>);</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>α <span class="op">=</span> <span class="fl">0.01</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>ω <span class="op">=</span> <span class="fl">0.9</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>m_seed <span class="op">=</span> <span class="fu">Int</span>(<span class="fu">sum</span>(A_init))</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>resolution <span class="op">=</span> <span class="fl">0.01</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>steps <span class="op">=</span> <span class="fl">5</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>zero_indices <span class="op">=</span> <span class="fu">findall</span>(<span class="op">==</span>(<span class="fl">0</span>), <span class="fu">triu</span>(A_init, <span class="fl">1</span>))</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>edges_to_add <span class="op">=</span> <span class="fu">sample</span>(zero_indices, m_max<span class="op">-</span>m_seed; replace <span class="op">=</span> <span class="cn">false</span>);</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="76">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">test_tangent</span>(m_max)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    A_current <span class="op">=</span> <span class="fu">copy</span>(A_init)</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    W_current <span class="op">=</span> <span class="fu">copy</span>(A_init)</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    edge_indices <span class="op">=</span> <span class="fu">Vector</span><span class="dt">{CartesianIndex{2}}</span>()</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>    f <span class="op">=</span> (W, edge_idx) <span class="op">-&gt;</span> (<span class="fu">sum</span>(<span class="fu">exp</span>(W))  <span class="op">*</span> D[edge_idx])<span class="op">^</span>ω</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> m <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span>m_max</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Get the edge</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>        edge_idx <span class="op">=</span> edges_to_add[m<span class="op">-</span>m_seed]</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>        rev_idx <span class="op">=</span> <span class="fu">CartesianIndex</span>(edge_idx[<span class="fl">2</span>], edge_idx[<span class="fl">1</span>])</span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>        A_current[edge_idx] <span class="op">=</span> W_current[edge_idx] <span class="op">=</span>  <span class="fl">1</span></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>        A_current[rev_idx] <span class="op">=</span> W_current[rev_idx] <span class="op">=</span>  <span class="fl">1</span>    </span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>        <span class="fu">push!</span>(edge_indices, edge_idx)</span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>        tangent_d <span class="op">=</span> <span class="fu">tangent_approx</span>(f, W_current, edge_indices, resolution, steps)</span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>        <span class="co"># println(round.(tangent_d, digits=2))</span></span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> (i_edge, edge) <span class="kw">in</span> <span class="fu">enumerate</span>(edge_indices)</span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>            update <span class="op">=</span> <span class="fu">max</span>(<span class="fl">0</span>, (α <span class="op">*</span> tangent_d[i_edge]))</span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a>            W_current[edge] <span class="op">-=</span> update</span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a>            W_current[<span class="fu">CartesianIndex</span>(edge[<span class="fl">2</span>], edge[<span class="fl">1</span>])] <span class="op">-=</span> update</span>
+<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">end</span></span>
+<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span></span>
+<span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> W_current</span>
+<span id="cb28-25"><a href="#cb28-25" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="77">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">test_frechet_algo</span>(m_max)</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    A_current <span class="op">=</span> <span class="fu">copy</span>(A_init)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    W_current <span class="op">=</span> <span class="fu">copy</span>(A_init)</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    edge_indices <span class="op">=</span> <span class="fu">Vector</span><span class="dt">{CartesianIndex{2}}</span>()</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> m <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span>m_max</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Get the edge</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>        edge_idx <span class="op">=</span> edges_to_add[m<span class="op">-</span>m_seed]</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>        rev_idx <span class="op">=</span> <span class="fu">CartesianIndex</span>(edge_idx[<span class="fl">2</span>], edge_idx[<span class="fl">1</span>])</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>        A_current[edge_idx] <span class="op">=</span> W_current[edge_idx] <span class="op">=</span>  <span class="fl">1</span></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>        A_current[rev_idx] <span class="op">=</span> W_current[rev_idx] <span class="op">=</span>  <span class="fl">1</span>    </span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>        <span class="fu">push!</span>(edge_indices, edge_idx)</span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>        current <span class="op">=</span> <span class="fu">sum</span>(<span class="fu">exp</span>(W_current))</span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>        frechet_d <span class="op">=</span> <span class="fu">frechet_algo</span>(W_current, edge_indices)</span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>        frechet_d <span class="op">=</span> [ω <span class="op">*</span> D[edge]<span class="op">^</span>ω  <span class="op">*</span> frechet_d[i_edge] <span class="op">*</span> current<span class="op">^</span>(ω<span class="op">-</span><span class="fl">1</span>) for (i_edge, edge) <span class="kw">in</span> <span class="fu">enumerate</span>(edge_indices)]</span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>        <span class="co"># println(round.(frechet_d, digits=2))</span></span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> (i_edge, edge) <span class="kw">in</span> <span class="fu">enumerate</span>(edge_indices)</span>
+<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a>            update <span class="op">=</span> <span class="fu">max</span>(<span class="fl">0</span>, (α <span class="op">*</span> frechet_d[i_edge]))</span>
+<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a>            W_current[edge] <span class="op">-=</span> update</span>
+<span id="cb29-22"><a href="#cb29-22" aria-hidden="true" tabindex="-1"></a>            W_current[<span class="fu">CartesianIndex</span>(edge[<span class="fl">2</span>], edge[<span class="fl">1</span>])] <span class="op">-=</span> update</span>
+<span id="cb29-23"><a href="#cb29-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">end</span></span>
+<span id="cb29-24"><a href="#cb29-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end</span></span>
+<span id="cb29-25"><a href="#cb29-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> W_current</span>
+<span id="cb29-26"><a href="#cb29-26" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span>;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="80">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>m_max <span class="op">=</span> <span class="fl">20</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="pp">@time</span> W_res_tangent <span class="op">=</span> <span class="fu">test_tangent</span>(m_max);</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="pp">@time</span> W_res_frechet <span class="op">=</span> <span class="fu">test_frechet_algo</span>(m_max);</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(<span class="fu">abs</span>.(W_res_tangent <span class="op">.-</span> W_res_frechet))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> 12.316652 seconds (66.69 k allocations: 677.437 MiB, 0.36% gc time)</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  0.458034 seconds (8.41 k allocations: 62.937 MiB, 1.11% gc time)</code></pre>
 </div>
 <div class="cell-output cell-output-display">
-<pre><code>241-element Vector{Float64}:
-  9.435189136678718
-  5.195743270503177
- 13.467930447408666
-  4.729657826331669
- 37.97108049898049
- 35.63246316466708
- 40.14988627804099
- 52.20936212065478
- 61.064680835548295
- 22.35336492281464
-  ⋮
- 14.609734107238188
- 17.08779448253476
- 34.43686560573628
- 11.032408188686084
- 22.008071742700885
- 25.426604501682263
-  6.7603142647465155
-  7.540743730991197
- 20.12146474452763</code></pre>
+<pre><code>0.004211385608813206</code></pre>
 </div>
 </div>
 </section>
