@@ -50,6 +50,7 @@ SpikeTrain::SpikeTrain(std::string FILE_NAME_,
 
     // Constructing the matrices
     initAdjacencyMatrices(numElectrodes);
+    int asdas = 0;
 }
 
 void SpikeTrain::initAdjacencyMatrices(int numElectrodes) {

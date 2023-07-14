@@ -6,7 +6,12 @@ struct Spike_Set
     spike_trains::Vector{Spike_Train}
     D::Matrix{Float64}
 
-    function Spike_Set(dir_path::String, mea_type::Int, dset_type::Int)
+    function Spike_Set(
+        dir_path::String,
+        mea_type::Int,
+        dset_type::Int,
+        n_samples::Int
+    )
         h5_files = filter(name -> endswith(name, ".h5"), readdir(dir_path))
 
         # construct all info that is consistenrt across all spike trains
@@ -14,7 +19,10 @@ struct Spike_Set
         D = pairwise(Euclidean(), all_electrode_pos, all_electrode_pos)
 
         # construct the spike trains
-        h5_files = h5_files[1:2]
+        if n_samples != -1
+            h5_files = h5_files[1:n_samples]
+        end
+
         spike_trains = Vector{Spike_Train}()
         for h5_file in h5_files
             push!(spike_trains,
@@ -67,5 +75,5 @@ end
 
 
 
-x = Spike_Set("/Users/maxwuerfek/code/diss/data/Charlesworth2015", 1, 1)
+x = Spike_Set("/Users/maxwuerfek/code/diss/data/Charlesworth2015", 1, 1, -1)
 
