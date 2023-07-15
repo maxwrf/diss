@@ -5,7 +5,8 @@ using Plots
 
 include("gnm_utils.jl")
 
-function plot_landscape(df)
+function plot_landscape(df, group_res_p::String)
+
     plots = []
 
     for model in unique(df.model)
@@ -30,7 +31,10 @@ function plot_landscape(df)
         yticks=(1:10:101, string.(0:0.1:1)), c=:viridis)
 
     plot(plots..., bar, layout=l, size=(1600, 2000))
-    savefig("/Users/maxwuerfek/code/diss/jl/test/landscape.png")
+
+    #save
+    out_name = replace(group_res_p, r"\.h5$" => ".png")
+    savefig(out_name)
 end
 
 function analyze(group_res_p::String)
@@ -39,7 +43,7 @@ function analyze(group_res_p::String)
     have a different numeber of sampels as each sample model combi is run as a 
     single job on the HPC - and can time out.
     """
-    file = (group_res_p, "r")
+    file = h5open(group_res_p, "r")
 
     # read meta data for the group
     meta_group = file["meta"]
@@ -53,7 +57,11 @@ function analyze(group_res_p::String)
     K_all = []
     for (model_id, _) in MODELS
         # 3D Array: n_sampels x params x 4
-        push!(K_all, read(results_group, model_id))
+        try
+            push!(K_all, read(results_group, string(model_id)))
+        catch KeyError
+            println("Model $model_id not found in $group_res_p.")
+        end
     end
 
     # prepare df of all results
@@ -61,22 +69,25 @@ function analyze(group_res_p::String)
     for (i_model, K_model) in enumerate(K_all)
         # compute K max
         K_model_max = maximum(K_model, dims=ndims(K_model))
-        K_model_max = dropdims(K_max, dims=ndims(K_model))
+        K_model_max = dropdims(K_model_max, dims=ndims(K_model))
 
         # prepare df for that model
         df = DataFrame()
         df.sample = repeat(collect(1:size(K_model, 1)), size(K_model, 2))
         df.model = repeat([i_model], size(K_model, 1) * size(K_model, 2))
-        df.eta = repeat(param_space[:, 1], size(K, 1))
-        df.gamma = repeat(param_space[:, 2], size(K, 1))
-        df.KS_K = vec(permutedims(K[:, :, 1], [2, 1]))
-        df.KS_C = vec(permutedims(K[:, :, 2], [2, 1]))
-        df.KS_B = vec(permutedims(K[:, :, 3], [2, 1]))
-        df.KS_E = vec(permutedims(K[:, :, 4], [2, 1]))
+        df.eta = repeat(param_space[:, 1], size(K_model, 1))
+        df.gamma = repeat(param_space[:, 2], size(K_model, 1))
+        df.KS_K = vec(permutedims(K_model[:, :, 1], [2, 1]))
+        df.KS_C = vec(permutedims(K_model[:, :, 2], [2, 1]))
+        df.KS_B = vec(permutedims(K_model[:, :, 3], [2, 1]))
+        df.KS_E = vec(permutedims(K_model[:, :, 4], [2, 1]))
         df.KS_MAX = vec(permutedims(K_model_max, [2, 1]))
-    end
 
-    plot_landscape(df)
+        push!(df_all, df)
+    end
+    df_all = vcat(df_all...)
+
+    plot_landscape(df_all, group_res_p)
 end
 
 

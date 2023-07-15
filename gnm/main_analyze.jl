@@ -5,9 +5,9 @@ function main(result_dir::String)
     group_res_ps = map(name -> joinpath(result_dir, name), group_res_ps)
 
     for group_res_p in group_res_ps
-        analyze(res_files)
+        analyze(group_res_p)
     end
 end
 
 
-main()
+main("/Users/maxwuerfek/code/diss/gnm/results/Charlesworth2015/")

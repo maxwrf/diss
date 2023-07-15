@@ -5,6 +5,6 @@ cpp-gnms/gnm-run/slurm/*
 cpp-gnms/gnm-analyze/results/*
 cpp-gnms/gnm-analyze/__pycache__/
 gnm/slurm/*
-gnm-analysis/results/*
+gnm/results/*
 .DS_Store
 .vscode/

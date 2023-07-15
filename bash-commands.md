@@ -9,3 +9,7 @@ ssh mw894@ssh.maths.cam.ac.uk "tar -czvf - /store/DAMTPEGLEN/mw894/slurm/Xu2011/
 ```bash
 rm /store/DAMTPEGLEN/mw894/slurm/*.out
 ```
+
+``` bash
+ scp mw894@ssh.maths.cam.ac.uk:"/store/DAMTPEGLEN/mw894/slurm/Charlesworth2015/*.h5" ./
+```
