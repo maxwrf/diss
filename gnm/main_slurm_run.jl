@@ -7,6 +7,7 @@ function main()
     if length(ARGS) != 1
         error("Please provide a data file path.")
     end
+    file_path = ARGS[1]
 
     # read data
     file = h5open(file_path, "r")
@@ -20,12 +21,12 @@ function main()
     d_set_id = read_attribute(meta_group, "data_set_id")
     data_set_name = read_attribute(meta_group, "data_set_name")
     group_id = read_attribute(meta_group, "group_id")
-    model_idx = read_attribute(meta_group, "model_idx")
+    model_id = read_attribute(meta_group, "model_id")
     model_name = read_attribute(meta_group, "model_name")
     close(file)
 
     # run model
-    model = GNM_Mod.GNM(A_Y, D, A_init, param_space, model_idx)
+    model = GNM_Mod.GNM(A_Y, D, A_init, param_space, model_id)
     GNM_Mod.generate_models(model)
 
     # save results
@@ -39,11 +40,10 @@ function main()
     attributes(meta_group)["data_set_id"] = d_set_id
     attributes(meta_group)["data_set_name"] = data_set_name
     attributes(meta_group)["group_id"] = group_id
-    attributes(meta_group)["model_idx"] = model_idx
+    attributes(meta_group)["model_id"] = model_id
     attributes(meta_group)["model_name"] = model_name
 
     close(file)
 end
 
-
-#test = "/Users/maxwuerfek/code/diss/gnm/slurm/Charlesworth2015/sample_292_model_6.dat"
+main()
