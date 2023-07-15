@@ -5,11 +5,6 @@ include("gnm_utils.jl")
 using .GNM_Mod
 
 function main()
-    models = ["spatial", "neighbors", "matching", "clu-avg", "clu-min",
-        "clu-max", "clu-dist", "clu-prod", "deg-avg", "deg-min", "deg-max",
-        "deg-dist", "deg-prod"
-    ]
-
     As, D, A_inits = load_test_data(2)
     params = generate_param_space(1000)
 

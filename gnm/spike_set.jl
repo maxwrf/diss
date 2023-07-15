@@ -10,7 +10,9 @@ struct Spike_Set
         dir_path::String,
         mea_type::Int,
         dset_type::Int,
-        n_samples::Int
+        n_samples::Int,
+        dt::Float64,
+        corr_cutoff::Float64
     )
         h5_files = filter(name -> endswith(name, ".h5"), readdir(dir_path))
 
@@ -30,7 +32,9 @@ struct Spike_Set
                     joinpath(dir_path, h5_file),
                     mea_type,
                     dset_type,
-                    all_electrodes
+                    all_electrodes,
+                    dt,
+                    corr_cutoff
                 )
             )
         end
@@ -72,8 +76,3 @@ function get_electode_positions(mea_type::Int)
 
     return electrodes, electrode_pos
 end
-
-
-
-x = Spike_Set("/Users/maxwuerfek/code/diss/data/Charlesworth2015", 1, 1, -1)
-

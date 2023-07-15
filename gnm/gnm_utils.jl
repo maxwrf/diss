@@ -1,5 +1,21 @@
 using HDF5
 
+const MODELS = Dict(
+    1 => "spatial",
+    2 => "neighbors",
+    3 => "matching",
+    4 => "clu-avg",
+    5 => "clu-min",
+    6 => "clu-max",
+    7 => "clu-dist",
+    8 => "clu-prod",
+    9 => "deg-avg",
+    10 => "deg-min",
+    11 => "deg-max",
+    12 => "deg-dist",
+    13 => "deg-prod"
+)
+
 function ks_test(x, y)
     """
     Computes the Kolmogorov-Smirnov (KS) between two arrays.

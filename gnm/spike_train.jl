@@ -2,6 +2,7 @@ using HDF5
 include("sttc.jl")
 
 struct Spike_Train
+    file_path::String
     spikes::Vector{Float64}
     spike_counts::Vector{Float64}
     num_sample_electrodes::Int
@@ -17,7 +18,10 @@ struct Spike_Train
         file_path::String,
         dset_type::Int,
         mea_type::Int,
-        all_electrodes::Vector{Tuple{Int,Int}})
+        all_electrodes::Vector{Tuple{Int,Int}},
+        dt::Float64,
+        corr_cutoff::Float64
+    )
 
         # read the h5 data
         file = h5open(file_path, "r")
@@ -36,17 +40,18 @@ struct Spike_Train
         close(file)
 
         # prepare the samples
-        dt = 0.05
         sttc = sttc_tiling(dt, recording_time, spikes, spike_counts)
         sample_electrode_names, sttc, A_Y, A_init, m = prepare_sample(
             mea_type,
             sample_electrode_names,
             all_electrodes,
-            sttc
+            sttc,
+            corr_cutoff
         )
 
         # construct the sample
         new(
+            file_path,
             spikes,
             spike_counts,
             length(spike_counts),
@@ -65,7 +70,9 @@ function prepare_sample(
     mea_type::Int,
     sample_electrode_names::Vector{String},
     all_electrodes::Vector{Tuple{Int,Int}},
-    sttc::Matrix{Float64})
+    sttc::Matrix{Float64},
+    corr_cutoff::Float64
+)
 
     # For the samples find the electrod names as tuples
     # Then identify the position of thes on the mea (needs all electrodes)
@@ -94,12 +101,11 @@ function prepare_sample(
     sample_electrode_idx = findall(in(sample_electrodes), all_electrodes)
 
     # Fill the adjacency matrix and the initial adjacency matrix
-    sttc_cutoff = 0.2
     A_Y = zeros(length(all_electrodes), length(all_electrodes))
     A_init = zeros(length(all_electrodes), length(all_electrodes))
     for i in 1:length(sample_electrodes)
         for j in (i+1):length(sample_electrodes)
-            if sttc[i, j] > sttc_cutoff
+            if sttc[i, j] > corr_cutoff
                 A_Y[sample_electrode_idx[i], sample_electrode_idx[j]] = 1
                 A_Y[sample_electrode_idx[j], sample_electrode_idx[i]] = 1
 
