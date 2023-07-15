@@ -1,3 +1,4 @@
+using Printf
 include("spike_set.jl")
 include("gnm_utils.jl")
 
@@ -19,9 +20,11 @@ function generate_inputs(
         mkdir(out_dir)
     end
 
+    file_num = 0
     for (i_spike_train, spike_train) in enumerate(spike_set.spike_trains)
         for (model_id, model_name) in MODELS
-            out_file = out_dir * "/sample_" * string(i_spike_train) * "_model_" * string(model_id) * ".dat"
+            file_num += 1
+            out_file = out_dir * "/sample_" * @sprintf("%05d", file_num) * ".dat"
             file = h5open(out_file, "w")
 
             # write the data
@@ -41,6 +44,7 @@ function generate_inputs(
             close(file)
         end
     end
+    println("Prepared ", file_num, " files for slurm run.")
 end
 
 function combine_res_files(in_dir::String)
@@ -81,12 +85,13 @@ function combine_res_files(in_dir::String)
     # write the combined results
     unique_group_ids = unique(group_ids)
     for group_id in unique_group_ids
-        # one file for every group with meta data in common
+        # one file for every group with meta data in common & params in common
         file = h5open(joinpath(in_dir, "group_" * string(group_id) * ".h5"), "w")
         meta_group = create_group(file, "meta")
         attributes(meta_group)["data_set_id"] = d_set_id
         attributes(meta_group)["data_set_name"] = data_set_name
         attributes(meta_group)["group_id"] = group_id
+        write(file, "param_space", param_space)
 
         # one dataset for every model in the results group
         result_group = create_group(file, "results")

@@ -1,11 +1,11 @@
 include("slurm.jl")
 
 const PARAMS = Dict(
-    "cluster" => false,
+    "cluster" => true,
     "d_set" => 1,
     "corr_cutoff" => 0.2,
     "n_samples" => -1,
-    "n_runs" => 10,
+    "n_runs" => 10000,
     "dt" => 0.05
 )
 
@@ -41,7 +41,12 @@ function main()
         out_dir = "/Users/maxwuerfek/code/diss/gnm/slurm/" * DATA_SETS[PARAMS["d_set"]]
     end
 
-    generate_inputs(
+    println("Dataset: ", DATA_SETS[PARAMS["d_set"]])
+    println("MEA type: ", MEA_TYPES[mea_type])
+    println("Runs: ", PARAMS["n_runs"])
+    println("Samples: ", PARAMS["n_samples"])
+
+    @time generate_inputs(
         in_dir,
         out_dir,
         PARAMS["n_samples"],

@@ -45,16 +45,21 @@ end
 
 function get_electode_positions(mea_type::Int)
     # load all data specific to the mea
-    if mea_type == 1
+    if mea_type == 1 # MCS_8x8_200um
         row_num_electrodes = 8
         electrode_dist = 200
         from_top_right = true
         exclude_electrodes = [(1, 1), (1, 8), (8, 1), (8, 8)]
         start_dist_multiplier = 1
-    elseif mea_type == 2
-        # TODO
-    elseif mea_type == 3
-        # TODO
+    elseif mea_type == 2 # MCS_8x8_100um
+        row_num_electrodes = 8
+        electrode_dist = 200
+        from_top_right = true
+        exclude_electrodes = [(1, 1), (1, 8), (8, 1), (8, 8)]
+        start_dist_multiplier = 1
+    elseif mea_type == 3 # APS_64x64_42um
+        row_num_electrodes = 64
+        electrode_dist = 42
     else
         error("mea_type not supported")
     end

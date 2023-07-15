@@ -3,11 +3,15 @@ include("gnm.jl")
 using HDF5
 using .GNM_Mod
 
-function main()
-    if length(ARGS) != 1
+function main(test_path::Union{String,Nothing}=nothing)
+    if length(ARGS) == 1
+        file_path = ARGS[1]
+    elseif test_path !== nothing
+        file_path = test_path
+    else
         error("Please provide a data file path.")
     end
-    file_path = ARGS[1]
+
 
     # read data
     file = h5open(file_path, "r")
@@ -25,9 +29,16 @@ function main()
     model_name = read_attribute(meta_group, "model_name")
     close(file)
 
+    println("Dataset: ", data_set_name)
+    println("Group ID: ", group_id)
+    println("Model: ", model_name)
+    println("Runs: ", size(param_space, 1))
+    println("M: ", sum(A_Y) / 2)
+    println("M init: ", sum(A_init) / 2)
+
     # run model
     model = GNM_Mod.GNM(A_Y, D, A_init, param_space, model_id)
-    GNM_Mod.generate_models(model)
+    @time GNM_Mod.generate_models(model)
 
     # save results
     res_file_path = replace(file_path, r"\.dat$" => ".res")
@@ -46,4 +57,5 @@ function main()
     close(file)
 end
 
-main()
+
+main("/store/DAMTPEGLEN/mw894/slurm/Charlesworth2015/sample_00001.dat")
