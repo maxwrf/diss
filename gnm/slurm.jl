@@ -26,20 +26,20 @@ function generate_inputs(
 
             # write the data
             write(file, "A_Y", spike_train.A_Y)
-            write(file, "A_init", spike_train.A_Y)
+            write(file, "A_init", spike_train.A_init)
             write(file, "D", spike_set.D)
             write(file, "param_space", param_space)
 
             # write the meta data
             meta_group = create_group(file, "meta")
+            attributes(meta_group)["data_set_id"] = d_set_id
+            attributes(meta_group)["data_set_name"] = DATA_SETS[d_set_id]
+            attributes(meta_group)["group_id"] = spike_train.group_id
             attributes(meta_group)["model_idx"] = model_idx
             attributes(meta_group)["model_name"] = model_name
-            attributes(meta_group)["group_id"] = spike_train.group_id
-            attributes(meta_group)["m"] = spike_train.m
-            attributes(meta_group)["data_set_id"] = d_set_id
-            attributes(meta_group)["data_set"] = DATA_SETS[d_set_id]
 
             close(file)
         end
     end
 end
+

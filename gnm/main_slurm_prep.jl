@@ -5,7 +5,7 @@ const PARAMS = Dict(
     "d_set" => 1,
     "corr_cutoff" => 0.2,
     "n_samples" => -1,
-    "n_runs" => 10000,
+    "n_runs" => 10,
     "dt" => 0.05
 )
 
