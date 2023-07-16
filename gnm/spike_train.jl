@@ -34,8 +34,9 @@ struct Spike_Train
             age = read(file, "meta/age")[1]
             region = read(file, "meta/region")[1]
             group_id = region * string(age)
-        elseif (dset_type == 2)
-            # TODO
+        elseif (dset_type == 3)
+            age = read(file, "meta/age")[1]
+            group_id = string(age)
         end
         close(file)
 
@@ -54,7 +55,7 @@ struct Spike_Train
             file_path,
             spikes,
             spike_counts,
-            length(spike_counts),
+            length(sample_electrode_names),
             sample_electrode_names,
             group_id,
             recording_time,
@@ -79,7 +80,7 @@ function prepare_sample(
     # Sometimes electrodes are invalid and need to be removed
     removal_indices = []
     sample_electrodes = Vector{Tuple{Int,Int}}()
-    if (mea_type == 1)
+    if (mea_type == 1 || mea_type == 2)
         for (i_active_electrode, sample_electrode_name) in enumerate(sample_electrode_names)
             if (sample_electrode_name[6] == 'a' || sample_electrode_name[6] == 'A')
                 x = Int(sample_electrode_name[4]) - Int('0')
@@ -89,7 +90,7 @@ function prepare_sample(
                 push!(removal_indices, i_active_electrode)
             end
         end
-    elseif (mea_type == 2) # TODO
+    elseif (mea_type == 3) # TODO
     end
 
     # Remove the invalid electrodes

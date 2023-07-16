@@ -13,3 +13,8 @@ rm /store/DAMTPEGLEN/mw894/slurm/*.out
 ``` bash
  scp mw894@ssh.maths.cam.ac.uk:"/store/DAMTPEGLEN/mw894/slurm/Charlesworth2015/*.h5" ./
 ```
+
+```bash
+tmux: source /local/data/mphilcompbio/2022/mw894/gi2_a3_data/software/miniconda3/etc/profile.d/conda.sh
+```
+

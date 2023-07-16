@@ -36,7 +36,7 @@ function generate_inputs(
             continue
         end
         spike_sets_prepared += 1
-        println(file_name, " ", m, "/", m_max, " connections.")
+        println(file_name, " ", m, "/", m_max, "(", round(m / m_max * 100, digits=1), "%) connections.")
 
         # fo every sample and every model one slurm file is prepared
         for (model_id, model_name) in MODELS

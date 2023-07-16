@@ -230,9 +230,7 @@ function test_frechet_algo(m_max::Int, normalize::Bool)
         end
 
         println(round.(frechet_d, digits=5))
-        xxx = frechet_algo(W_current, ones(size(W_current)), edge_indices)
-        println(round.(xxx, digits=5))
-        println(round.(frechet_d ./ xxx, digits=5))
+        println(forward_diff_jvp(W_current, edge_indices))
         println()
         push!(fix, frechet_d)
 
@@ -245,6 +243,23 @@ function test_frechet_algo(m_max::Int, normalize::Bool)
     return W_current, fix
 end;
 
+function forward_diff_jvp(W::Matrix{Float64}, edges::Vector{CartesianIndex{2}})::Vector{Float64}
+    tangent = ones(size(W))
+    function diff_exp(W)
+        node_strengths = dropdims(sum(W, dims=2), dims=2)
+        node_strengths[node_strengths.==0] .= ϵ
+        norm_fact = Matrix(sqrt(inv(Diagonal(node_strengths))))
+        temp = norm_fact * W * norm_fact
+        return exponential!(copyto!(similar(temp), temp), ExpMethodGeneric())
+    end
+
+    g(t) = diff_exp(W + t * tangent)
+    JVP = ForwardDiff.derivative(g, 0.0)
+    return JVP[edges]
+end
+
+
+
 # load synthetic data
 W_Y, D, A_init = load_weight_test_data()
 A_Y = Float64.(W_Y .> 0);
@@ -256,7 +271,7 @@ m_all = Int(sum(A_Y))
 resolution = 0.01
 steps = 5
 
-zero_indices = findall(==(0), triu(A_init, 1))
+zero_indices = (findall(==(1), triu(abs.(A_init .- 1), 1)))
 edges_to_add = sample(zero_indices, m_all - m_seed; replace=false);
 
 @time W_res_frechet, fix_f = test_frechet_algo(10, true);

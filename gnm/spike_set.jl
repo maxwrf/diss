@@ -30,8 +30,8 @@ struct Spike_Set
             push!(spike_trains,
                 Spike_Train(
                     joinpath(dir_path, h5_file),
-                    mea_type,
                     dset_type,
+                    mea_type,
                     all_electrodes,
                     dt,
                     corr_cutoff

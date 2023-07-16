@@ -37,7 +37,7 @@ SpikeSet::SpikeSet(std::string path_,
 
                 hd5FileNames.push_back(f);
                 spikeTrains.push_back(SpikeTrain(
-                        "/Users/maxwuerfek/code/diss/data/Charlesworth2015/C57_CTX_G2CEPHYS1_DIV07_TC01_A.h5", //path + "/" + f,
+                        path + "/" + f,
                         electrodes,
                         numElectrodes,
                         dt,
