@@ -21,7 +21,24 @@ function generate_inputs(
     end
 
     file_num = 0
+    spike_sets_prepared = 0
+    spike_sets_skipped = 0
     for (i_spike_train, spike_train) in enumerate(spike_set.spike_trains)
+        # get the number of connections in A_Y
+        file_name = basename(spike_train.file_path)
+        m = sum(spike_train.A_Y) / 2
+        m_max = (60 * 60 - 60) / 2
+
+        # if with the current dt and corr cutoff there are no connections, skip
+        if m == 0
+            println(file_name, " no connections, skipping.")
+            spike_sets_skipped += 1
+            continue
+        end
+        spike_sets_prepared += 1
+        println(file_name, " ", m, "/", m_max, " connections.")
+
+        # fo every sample and every model one slurm file is prepared
         for (model_id, model_name) in MODELS
             file_num += 1
             out_file = out_dir * "/sample_" * @sprintf("%05d", file_num) * ".dat"
@@ -44,6 +61,8 @@ function generate_inputs(
             close(file)
         end
     end
+    println("Skipped ", spike_sets_skipped, " spike sets for slurm run.")
+    println("Prepared ", spike_sets_prepared, " spike sets for slurm run.")
     println("Prepared ", file_num, " files for slurm run.")
 end
 

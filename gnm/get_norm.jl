@@ -4,7 +4,9 @@ using ExponentialUtilities
 using LinearAlgebra
 using BenchmarkTools
 using StatsBase: sample
+using Random
 include("test_data.jl")
+Random.seed!(123)
 
 function tangent_approx(f::Function, W::Matrix{Float64}, edges::Vector{CartesianIndex{2}},
     resolution=0.01, steps=5)::Vector{Float64}
@@ -138,6 +140,8 @@ function test_tangent(m_max::Int, normalize::Bool)
         f = (W, edge_idx) -> (sum(exp(W)) * D[edge_idx])^ω
     end
 
+    fix = []
+
     for m in 1:m_max
         # Get the edge
         edge_idx = edges_to_add[m-m_seed]
@@ -147,7 +151,8 @@ function test_tangent(m_max::Int, normalize::Bool)
         edge_indices = findall(!=(0), triu(A_current, 1))
 
         tangent_d = tangent_approx(f, W_current, edge_indices, resolution, steps)
-        println(round.(tangent_d, digits=6))
+        println(round.(tangent_d, digits=10))
+        push!(fix, tangent_d)
 
         for (i_edge, edge) in enumerate(edge_indices)
             W_current[edge] -= (α * tangent_d[i_edge])
@@ -155,11 +160,10 @@ function test_tangent(m_max::Int, normalize::Bool)
             W_current[CartesianIndex(edge[2], edge[1])] = W_current[edge]
         end
     end
-    return W_current
+    return W_current, fix
 end;
 
-function frechet_algo(A::Matrix{Float64}, edges::Vector{CartesianIndex{2}})::Vector{Float64}
-    E = ones(size(A))
+function frechet_algo(A::Matrix{Float64}, E::Matrix{Float64}, edges::Vector{CartesianIndex{2}})::Vector{Float64}
     n = size(A, 1)
     s = nothing
     ident = Matrix{Float64}(I, n, n)
@@ -194,9 +198,15 @@ function frechet_algo(A::Matrix{Float64}, edges::Vector{CartesianIndex{2}})::Vec
 end
 
 
+
+
+
+
 function test_frechet_algo(m_max::Int, normalize::Bool)
     A_current = copy(A_init)
     W_current = copy(A_init)
+
+    fix = []
 
     for m in 1:m_max
         # Get the edge
@@ -210,7 +220,7 @@ function test_frechet_algo(m_max::Int, normalize::Bool)
             node_strengths = dropdims(sum(W_current, dims=2), dims=2)
             node_strengths[node_strengths.==0] .= ϵ
             norm_fact = Matrix(sqrt(inv(Diagonal(node_strengths))))
-            frechet_d = frechet_algo(norm_fact * W_current * norm_fact, edge_indices)
+            frechet_d = frechet_algo(norm_fact * W_current * norm_fact, ones(size(W_current)), edge_indices)
             #println(round.(frechet_algo(norm_fact, edge_indices), digits=5))
 
         else
@@ -219,7 +229,12 @@ function test_frechet_algo(m_max::Int, normalize::Bool)
             frechet_d = [ω * D[edge]^ω * frechet_d[i_edge] * current_Y^(ω - 1) for (i_edge, edge) in enumerate(edge_indices)]
         end
 
-        println(round.(frechet_d, digits=5), "\n")
+        println(round.(frechet_d, digits=5))
+        xxx = frechet_algo(W_current, ones(size(W_current)), edge_indices)
+        println(round.(xxx, digits=5))
+        println(round.(frechet_d ./ xxx, digits=5))
+        println()
+        push!(fix, frechet_d)
 
         for (i_edge, edge) in enumerate(edge_indices)
             W_current[edge] -= (α * frechet_d[i_edge])
@@ -227,7 +242,7 @@ function test_frechet_algo(m_max::Int, normalize::Bool)
             W_current[CartesianIndex(edge[2], edge[1])] = W_current[edge]
         end
     end
-    return W_current
+    return W_current, fix
 end;
 
 # load synthetic data
@@ -244,5 +259,5 @@ steps = 5
 zero_indices = findall(==(0), triu(A_init, 1))
 edges_to_add = sample(zero_indices, m_all - m_seed; replace=false);
 
-@time W_res_frechet = test_frechet_algo(10, true);
-@time W_res_tangent = test_tangent(10, true);
+@time W_res_frechet, fix_f = test_frechet_algo(10, true);
+@time W_res_tangent, fix_t = test_tangent(10, true);

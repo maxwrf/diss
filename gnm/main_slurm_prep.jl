@@ -1,7 +1,7 @@
 include("slurm.jl")
 
 const PARAMS = Dict(
-    "cluster" => true,
+    "cluster" => false,
     "d_set" => 1,
     "corr_cutoff" => 0.2,
     "n_samples" => -1,

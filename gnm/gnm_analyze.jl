@@ -9,8 +9,8 @@ function plot_landscape(df, group_res_p::String)
 
     plots = []
 
-    for model in unique(df.model)
-        data = filter(row -> row.model == model, df)[:, ["sample", "eta", "gamma", "KS_MAX"]]
+    for (model_id, model_name) in MODELS
+        data = filter(row -> row.model_id == model_id, df)[:, ["sample", "eta", "gamma", "KS_MAX"]]
         grouped_data = combine(groupby(data, [:eta, :gamma]), :KS_MAX => mean)
         landscape = reshape(grouped_data.KS_MAX_mean,
             (length(unique(data.eta)), length(unique(data.gamma))))
@@ -18,7 +18,7 @@ function plot_landscape(df, group_res_p::String)
             clim=(0, 1),
             c=:viridis,
             legend=:none,
-            title="Model " * string(model),
+            title="Model " * string(model_name),
             xticks=:none,
             yticks=:none
         )
@@ -63,6 +63,8 @@ function analyze(group_res_p::String)
             println("Model $model_id not found in $group_res_p.")
         end
     end
+    close(file)
+
 
     # prepare df of all results
     df_all = []
@@ -74,7 +76,7 @@ function analyze(group_res_p::String)
         # prepare df for that model
         df = DataFrame()
         df.sample = repeat(collect(1:size(K_model, 1)), size(K_model, 2))
-        df.model = repeat([i_model], size(K_model, 1) * size(K_model, 2))
+        df.model_id = repeat([i_model], size(K_model, 1) * size(K_model, 2))
         df.eta = repeat(param_space[:, 1], size(K_model, 1))
         df.gamma = repeat(param_space[:, 2], size(K_model, 1))
         df.KS_K = vec(permutedims(K_model[:, :, 1], [2, 1]))

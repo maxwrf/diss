@@ -1,6 +1,6 @@
-using HDF5
+using HDF5, DataStructures
 
-const MODELS = Dict(
+const MODELS = OrderedDict(
     1 => "spatial",
     2 => "neighbors",
     3 => "matching",
@@ -59,11 +59,4 @@ function generate_param_space(n_runs::Int=100,
     end
 
     return params
-end
-
-function save_K(dir, K, params)
-    h5open(dir * "results.h5", "w") do file
-        write(file, "K", K)
-        write(file, "params", params)
-    end
 end
