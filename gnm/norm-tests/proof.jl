@@ -1,4 +1,7 @@
-using LinearAlgebra, ExponentialUtilities, ForwardDiff, Polynomials
+using LinearAlgebra: Diagonal
+using ExponentialUtilities
+using ForwardDiff: gradient
+using Polynomials: fit
 
 W = [0.0 0.8 0.0
     0.8 0.0 0.2
@@ -12,7 +15,7 @@ W = [0.0 0.8 0.0
 # display(W ./ norm_fact)
 # display(S * W * S)
 
-function f(W, _)
+function f(W)
     node_strengths = dropdims(sum(W, dims=2), dims=2)
     node_strengths[node_strengths.==0] .= 1e-5
     S = sqrt(inv(Diagonal(node_strengths)))
@@ -36,7 +39,7 @@ function tangent_approx(f::Function, W::Matrix{Float64}, edges::Vector{Cartesian
         for (i_rep, rep) in enumerate(reps)
             W_copy = copy(W)
             W_copy[edge_idx] = rep
-            sum_comm[i_rep] = f(W_copy, edge_idx)
+            sum_comm[i_rep] = f(W_copy)
         end
 
         results[i_edge] = fit(reps, sum_comm, 1)[1]
@@ -85,9 +88,11 @@ end
 
 
 
-tangent_approx(f, W, vec(collect(CartesianIndices(W))), 0.01)
-ForwardDiff.gradient(f, W)
+t_result = tangent_approx(f, W, vec(collect(CartesianIndices(W))), 0.01);
+g_result = gradient(f, W);
 
+display(t_result)
+display(g_result)
 
 #TODO: Frechet
 # W = [1 0.2
@@ -108,7 +113,3 @@ ForwardDiff.gradient(f, W)
 #     return sum(S * W * S)
 # end
 # X = ForwardDiff.gradient(f, W)
-
-
-
-
