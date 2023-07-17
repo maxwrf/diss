@@ -76,17 +76,12 @@ function forward_diff_jvp(
     W::Matrix{Float64},
     edges::Vector{CartesianIndex{2}}
 )
-    node_strengths = dropdims(sum(W, dims=2), dims=2)
-    println(size(dropdims(sum(W, dims=2), dims=2)))
-    node_strengths[node_strengths.==0] .= 1e-5
-    norm_fact = sqrt.(node_strengths .* node_strengths')
-    temp = W .* norm_fact
-    tangent = norm_fact
+    tangent = ones(size(W))
 
-    display(tangent)
     function diff_exp(W)
         node_strengths = dropdims(sum(W, dims=2), dims=2)
         node_strengths[node_strengths.==0] .= 1e-5
+        # is approx if cloese to zero not == 0 
         norm_fact = sqrt.(node_strengths .* node_strengths')
         temp = W .* norm_fact
         return exponential!(copyto!(similar(temp), temp), ExpMethodGeneric())
@@ -94,7 +89,6 @@ function forward_diff_jvp(
 
     g(t) = diff_exp(W + t * tangent)
     JVP = ForwardDiff.derivative(g, 0.0)
-    display(JVP)
     return JVP[edges]
 end
 
@@ -124,8 +118,6 @@ function test(m_max::Int, normalize::Bool)
     end
     return W_current
 end;
-
-
 
 
 

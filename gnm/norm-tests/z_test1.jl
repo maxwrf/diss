@@ -197,11 +197,6 @@ function frechet_algo(A::Matrix{Float64}, E::Matrix{Float64}, edges::Vector{Cart
     return L[edges]
 end
 
-
-
-
-
-
 function test_frechet_algo(m_max::Int, normalize::Bool)
     A_current = copy(A_init)
     W_current = copy(A_init)
@@ -230,8 +225,7 @@ function test_frechet_algo(m_max::Int, normalize::Bool)
         end
 
         println(round.(frechet_d, digits=5))
-        println(forward_diff_jvp(W_current, edge_indices))
-        println()
+
         push!(fix, frechet_d)
 
         for (i_edge, edge) in enumerate(edge_indices)
@@ -243,20 +237,6 @@ function test_frechet_algo(m_max::Int, normalize::Bool)
     return W_current, fix
 end;
 
-function forward_diff_jvp(W::Matrix{Float64}, edges::Vector{CartesianIndex{2}})::Vector{Float64}
-    tangent = ones(size(W))
-    function diff_exp(W)
-        node_strengths = dropdims(sum(W, dims=2), dims=2)
-        node_strengths[node_strengths.==0] .= ϵ
-        norm_fact = Matrix(sqrt(inv(Diagonal(node_strengths))))
-        temp = norm_fact * W * norm_fact
-        return exponential!(copyto!(similar(temp), temp), ExpMethodGeneric())
-    end
-
-    g(t) = diff_exp(W + t * tangent)
-    JVP = ForwardDiff.derivative(g, 0.0)
-    return JVP[edges]
-end
 
 
 

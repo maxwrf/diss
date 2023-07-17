@@ -10,4 +10,4 @@ function main(result_dir::String)
 end
 
 
-main("/Users/maxwuerfek/code/diss/gnm/test/")
+main("/Users/maxwuerfek/code/diss/gnm/results/Demas2006")

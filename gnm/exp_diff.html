@@ -109,19 +109,6 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 
-<section id="table-of-contents" class="level1">
-<h1>Table of contents</h1>
-<ol type="1">
-<li><a href="#intro">Introduction</a></li>
-<li><a href="#setup">Setup</a></li>
-<li><a href="#methods">Methods</a>
-<ol type="1">
-<li><a href="#org-tangent">Original tangent approximation</a></li>
-<li><a href="#adapted-tangent">Adapted tangent approximation</a></li>
-<li><a href="#finite-diff">Finite difference approximation</a></li>
-</ol></li>
-</ol>
-</section>
 <section id="introduction-differentiation-of-matrix-exp-for-weighted-gnms" class="level1">
 <h1>Introduction: Differentiation of matrix exp for weighted GNMs <a name="intro" href=""></a></h1>
 <p>From: https://www.biorxiv.org/content/10.1101/2023.06.23.546237v1?med=mas.</p>
@@ -538,18 +525,18 @@ The algorithm: $$
 <span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a><span class="pp">@btime</span> <span class="fu">frechet_block_enlarge</span>(<span class="op">$</span>W_bench, <span class="op">$</span>edges_bench) </span>
 <span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a><span class="pp">@btime</span> <span class="fu">frechet_algo</span>(<span class="op">$</span>W_bench, <span class="op">$</span>edges_bench);</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>  581.718 ms (76375 allocations: 430.55 MiB)
-  101.404 ms (8809 allocations: 68.82 MiB)
-  1.727 s (6158 allocations: 312.79 MiB)
-  1.502 ms (20 allocations: 315.55 KiB)
-  2.286 ms (24 allocations: 609.88 KiB)
-  397.250 μs (220 allocations: 1.86 MiB)</code></pre>
+<pre><code>  484.198 ms (63159 allocations: 356.33 MiB)
+  83.581 ms (7275 allocations: 56.95 MiB)
+  1.729 s (5871 allocations: 311.89 MiB)
+  1.503 ms (20 allocations: 315.22 KiB)
+  2.183 ms (24 allocations: 609.55 KiB)
+  387.750 μs (211 allocations: 1.78 MiB)</code></pre>
 </div>
 </div>
 </section>
 <section id="extension-to-full-objective-function" class="level1">
 <h1>Extension to full objective function</h1>
-<p>Currently I can successfully compute the objective function derivative without normalization. This brings a tremendous speedup, demonstrated below on the dataset provided by Akarca in the demo repo. Will need to spend some more time on the derivative with the normalization.</p>
+<p>Currently I can successfully compute the objective function derivative without normalization. This brings a tremendous speedup, demonstrated below on the dataset provided by Akarca in the demo repo. Taking the derivative of the normalized version turns out to be more tricky than expected.</p>
 <div class="cell" data-execution_count="12">
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># load synthetic data</span></span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>W_Y, D, A_init <span class="op">=</span> <span class="fu">load_weight_test_data</span>()</span>
@@ -562,7 +549,7 @@ The algorithm: $$
 <span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>resolution <span class="op">=</span> <span class="fl">0.01</span></span>
 <span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>steps <span class="op">=</span> <span class="fl">5</span></span>
 <span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>zero_indices <span class="op">=</span> <span class="fu">findall</span>(<span class="op">==</span>(<span class="fl">0</span>), <span class="fu">triu</span>(A_init, <span class="fl">1</span>))</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>zero_indices <span class="op">=</span> (<span class="fu">findall</span>(<span class="op">==</span>(<span class="fl">1</span>), <span class="fu">triu</span>(<span class="fu">abs</span>.(A_init <span class="op">.-</span> <span class="fl">1</span>), <span class="fl">1</span>)))</span>
 <span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>edges_to_add <span class="op">=</span> <span class="fu">sample</span>(zero_indices, m_all<span class="op">-</span>m_seed; replace <span class="op">=</span> <span class="cn">false</span>);</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell" data-execution_count="13">
@@ -648,11 +635,11 @@ The algorithm: $$
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="pp">@time</span> W_res_frechet <span class="op">=</span> <span class="fu">test_frechet_algo</span>(<span class="fl">40</span>, <span class="cn">false</span>, <span class="cn">false</span>);</span>
 <span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(<span class="fu">abs</span>.(W_res_tangent <span class="op">.-</span> W_res_frechet))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code> 46.037512 seconds (571.76 k allocations: 2.844 GiB, 0.49% gc time, 0.27% compilation time)
-  0.840606 seconds (97.03 k allocations: 120.649 MiB, 2.29% gc time, 5.58% compilation time)</code></pre>
+<pre><code> 45.547745 seconds (571.76 k allocations: 2.844 GiB, 0.40% gc time, 0.30% compilation time)
+  0.817142 seconds (96.97 k allocations: 119.661 MiB, 1.95% gc time, 4.79% compilation time)</code></pre>
 </div>
 <div class="cell-output cell-output-display" data-execution_count="15">
-<pre><code>2.4292371921252887e-5</code></pre>
+<pre><code>1.0692452463212376e-5</code></pre>
 </div>
 </div>
 <div class="cell" data-execution_count="16">
