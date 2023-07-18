@@ -14,7 +14,7 @@ format:
       - left=20mm
       - right=20mm
 bibliography: ref.bib
-jupyter: python3
+#jupyter: python3
 ---
 
 # Brain Formation and structure
@@ -164,8 +164,6 @@ The models include:
 \end{itemize}
 
 # Automatic differentiation 
-\begin{itemize}
-\end{itemize}
 
 # Random dictionary
 \begin{itemize}
