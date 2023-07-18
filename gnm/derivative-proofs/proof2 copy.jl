@@ -101,15 +101,8 @@ ell_table_61 = (nothing, 2.11e-8, 3.56e-4, 1.08e-2, 6.49e-2, 2.00e-1, 4.37e-1,
     6.56e0, 7.52e0, 8.53e0, 9.56e0, 1.06e1, 1.17e1
 );
 
-function f(W)
-    node_strengths = dropdims(sum(W, dims=2), dims=2)
-    node_strengths[node_strengths.==0] .= 1e-5
-    norm_fact = sqrt.(node_strengths * node_strengths')
-    return sum(exponential!(copyto!(similar(W), W ./ norm_fact), ExpMethodGeneric()))
-end
 
 function frechet_algo(A::Matrix{Float64}, E::Matrix{Float64})
-
     n = size(A, 1)
     s = nothing
     ident = Matrix{Float64}(I, n, n)
@@ -144,64 +137,39 @@ function frechet_algo(A::Matrix{Float64}, E::Matrix{Float64})
 end
 
 
-g_result = gradient(f, W);
 
-
-display(g_result)
-
-#TODO: Frechet
 
 node_strengths = dropdims(sum(W, dims=2), dims=2)
 node_strengths[node_strengths.==0] .= 1e-5
-norm_fact = sqrt.(node_strengths * node_strengths')
-R, L = frechet_algo(W ./ norm_fact, ones(size(W)))
-display(R)
+S = sqrt(inv(Diagonal(node_strengths)))
+R, L = frechet_algo(S * W * S, [1.0 0; 0 0])
+#display(R)
 display(L)
 
 
-X = gradient(f, W)
 
-function forward_diff_jvp(W::Matrix{Float64}, tangent)
-    function f(W)
-        node_strengths = dropdims(sum(W, dims=2), dims=2)
-        node_strengths[node_strengths.==0] .= 1e-5
-        S = sqrt(inv(Diagonal(node_strengths)))
-        return sum(exponential!(copyto!(similar(W), S * W * S), ExpMethodGeneric()))
-    end
 
-    g(t) = f(W + t * tangent)
-    JVP = derivative(g, 0.0)
-    return JVP
+
+function func_gx(W)
+    node_strengths = dropdims(sum(W, dims=2), dims=2)
+    node_strengths[node_strengths.==0] .= 1e-5
+    S = sqrt(inv(Diagonal(node_strengths)))
+    return S * W * S
 end
 
-function forward_diff_j(W::Matrix{Float64})::Vector{Float64}
-    # Column indices for retrieval
-    indices = collect(CartesianIndices(W))
-    index_vec = sort(vec(indices), by=x -> x[1])
-
-    function f(W)
-        node_strengths = dropdims(sum(W, dims=2), dims=2)
-        node_strengths[node_strengths.==0] .= 1e-5
-        S = sqrt(inv(Diagonal(node_strengths)))
-        return exponential!(copyto!(similar(W), S * W * S), ExpMethodGeneric())
-    end
-    J = jacobian(f, W)
-
-    results = zeros(length(index_vec))
-    display(J)
-    tangent = vec(permutedims(exp(W), [2, 1]))
-    for (i_edge, edge) in enumerate(index_vec)
-        # we get all partial derivative positions that are non-zero
-        Jₓ = J[:, findfirst(x -> x == edge, index_vec)]
-        results[i_edge] = sum(Jₓ)
-    end
-
-    return results
+function func_fg(W)
+    return exponential!(copyto!(similar(W), W), ExpMethodGeneric())
 end
 
-forward_diff_j(W)
+function forward_diff_j(f::Function, W::Matrix{Float64})
+    return jacobian(f, W)
+end
 
-forward_diff_jvp(W, [0 1 0; 0 0 0; 0 0 0])
+
+dgx = forward_diff_j(func_gx, W)
+dfg = forward_diff_j(func_fg, S * W * S)
+sum(dfg * dgx, dims=1)
+
 
 
 
