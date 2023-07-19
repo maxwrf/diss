@@ -1,14 +1,20 @@
+"""
+This file demonstrates that using the vector chain rule and the frechet derivative
+it is possible to compute the full derivative correctly and faster than with all 
+other methods.
+
+Author: Max Würfel
+Date: July 18, 2023
+"""
+
 using LinearAlgebra: Diagonal, I, norm, lu
 using ExponentialUtilities
-using ForwardDiff: gradient, derivative, jacobian
+using ForwardDiff: jacobian
 using Polynomials: fit
 
 W = [0.0 0.8 0.0
     0.8 0.0 0.2
     0.0 0.2 0.0]
-
-W = [1 0.2
-    0.2 0]
 
 function _diff_pade3(A, E, ident)
     b = (120.0, 60.0, 12.0, 1.0)
@@ -101,7 +107,6 @@ ell_table_61 = (nothing, 2.11e-8, 3.56e-4, 1.08e-2, 6.49e-2, 2.00e-1, 4.37e-1,
     6.56e0, 7.52e0, 8.53e0, 9.56e0, 1.06e1, 1.17e1
 );
 
-
 function frechet_algo(A::Matrix{Float64}, E::Matrix{Float64})
     n = size(A, 1)
     s = nothing
@@ -136,63 +141,102 @@ function frechet_algo(A::Matrix{Float64}, E::Matrix{Float64})
     return R, L
 end
 
-# Frechet
-node_strengths = dropdims(sum(W, dims=2), dims=2)
-node_strengths[node_strengths.==0] .= 1e-5
-S = sqrt(inv(Diagonal(node_strengths)))
-R, L = frechet_algo(S * W * S, [1.0 0; 0 0])
-#display(R)
-display(L)
-
-
-# Jacobian proof
-
-function func_gx(W)
-    node_strengths = dropdims(sum(W, dims=2), dims=2)
-    node_strengths[node_strengths.==0] .= 1e-5
-    S = sqrt(inv(Diagonal(node_strengths)))
-    return S * W * S
-end
-
-function func_gx2(W)
-    node_strengths = dropdims(sum(W, dims=2), dims=2)
-    node_strengths[node_strengths.==0] .= 1e-5
-    norm_fact = sqrt.(node_strengths * node_strengths')
-    return W ./ norm_fact
-end
-
-function func_fg(W)
-    return exponential!(copyto!(similar(W), W), ExpMethodGeneric())
-end
-
-function forward_diff_j(f::Function, W::Matrix{Float64})
-    return jacobian(f, W)
-end
-
-
-dgx = forward_diff_j(func_gx, W)
-dfg = forward_diff_j(func_fg, S * W * S)
-sum(dfg' * dgx, dims=1)
-
-forward_diff_j(func_gx2, W)
-
-function compute_derivative(W, node_strengths, edge)
+function compute_gx(W, node_strengths, edge)
     derivatives = zeros(size(W))
 
+    node = edge[2]
     # Only need to fill the derivatives in row and column of edge
-    r_idxs = [(CartesianIndex(edge[1], k), "row") for k in 1:size(W, 1)]
-    c_idxs = [(CartesianIndex(k, edge[2]), "col") for k in 1:size(W, 1)]
+    r_idxs = [CartesianIndex(node, k) for k in 1:size(W, 1)]
+    c_idxs = [CartesianIndex(k, node) for k in 1:size(W, 1) if k != node]
+    wrt_edges = vcat(c_idxs, r_idxs)
 
-    idxs = vcat(r_idxs, c_idxs)
+    for wrt_edge in wrt_edges
+        wrt_node = wrt_edge[1] == node ? wrt_edge[2] : wrt_edge[1]
 
-    for (idx, type) in idxs
-        row = idx[1]
-        col = idx[2]
-        numerator = type == "row" ? W[idx] * node_strengths[row] : W[idx] * node_strengths[col]
-        denominator = 2 * (node_strengths[row] * node_strengths[col])^(3 / 2)
-        derivatives[idx] = -(numerator / denominator)
+        if wrt_edge == edge
+            # derivative to the same edge
+            if edge[1] != edge[2]
+                # if the edge is not on the diagonal
+                numerator = (2 * node_strengths[node] - W[edge]) * node_strengths[wrt_node]
+                denominator = 2 * (node_strengths[wrt_node] * node_strengths[node])^(3 / 2)
+            else
+                # if the edge is on the diagonal
+                numerator = node_strengths[node] - W[edge]
+                denominator = node_strengths[node] * sqrt(node_strengths[node]^(2))
+            end
+        else
+            # derivative to other edges
+            if (wrt_edge[1] == node) && (wrt_edge[2] == node)
+                # if the wrt edge is on the diagonal
+                numerator = -W[wrt_edge] * node_strengths[node]
+                denominator = (node_strengths[node]^2)^(3 / 2)
+            else
+                # if the wrt edge is not on the diagonal
+                numerator = -(W[wrt_edge] * node_strengths[wrt_node])
+                denominator = 2 * (node_strengths[wrt_node] * node_strengths[node])^(3 / 2)
+            end
+        end
+        derivatives[wrt_edge] = (numerator / denominator)
     end
     return derivatives
 end
 
-compute_derivative(W, node_strengths, CartesianIndex(1, 1))
+#vec(compute_derivative(W, node_strengths, CartesianIndex(1, 3))')
+
+
+# Proof of combined frechet matrix expo derivative and symbolic 
+function full_obj_frechet(W)
+    # compute the normalized weight matrix
+    node_strengths = dropdims(sum(W, dims=2), dims=2)
+    node_strengths[node_strengths.==0] .= 1e-5
+    S = sqrt(inv(Diagonal(node_strengths)))
+    SWS = S * W * S
+
+    # store results
+    dfg = zeros((length(W), length(W)))
+    dgx = zeros((length(W), length(W)))
+
+    indices = sort(vec(collect(CartesianIndices(W))), by=x -> x[1])
+
+    for (n, idx) in enumerate(indices)
+        tangent = zeros(size(W))
+        tangent[idx] = 1.0
+        R, L = frechet_algo(SWS, tangent)
+        dfg[:, n] = vec(L)
+        dgx[:, n] = vec(compute_gx(W, node_strengths, idx)')
+    end
+
+    return sum(dfg' * dgx, dims=1)
+end
+
+display(full_obj_frechet(W));
+
+### JVP to proof
+function full_obj_jvp(W)
+    # compute the normalized weight matrix
+    node_strengths = dropdims(sum(W, dims=2), dims=2)
+    node_strengths[node_strengths.==0] .= 1e-5
+    S = sqrt(inv(Diagonal(node_strengths)))
+    SWS = S * W * S
+
+    function func_gx(W)
+        node_strengths = dropdims(sum(W, dims=2), dims=2)
+        node_strengths[node_strengths.==0] .= 1e-5
+        S = sqrt(inv(Diagonal(node_strengths)))
+        return S * W * S
+    end
+
+    function func_fg(W)
+        return exponential!(copyto!(similar(W), W), ExpMethodGeneric())
+    end
+
+    function forward_diff_j(f::Function, W::Matrix{Float64})
+        return jacobian(f, W)
+    end
+
+    dgx = forward_diff_j(func_gx, W)
+    dfg = forward_diff_j(func_fg, SWS)
+    return sum(dfg' * dgx, dims=1)
+end
+
+full_obj_jvp(W)
