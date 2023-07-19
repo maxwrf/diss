@@ -1,20 +1,7 @@
-"""
-This file demonstrates that using the vector chain rule and the frechet derivative
-it is possible to compute the full derivative correctly and faster than with all 
-other methods.
-
-Author: Max Würfel
-Date: July 18, 2023
-"""
-
-using LinearAlgebra: Diagonal, I, norm, lu
-using ExponentialUtilities
+using LinearAlgebra: triu, Diagonal, I, norm, lu
+using StatsBase: sample
 using ForwardDiff: jacobian
-using Polynomials: fit
-
-W = [0.0 0.8 0.0
-    0.8 0.0 0.2
-    0.0 0.2 0.0]
+using ExponentialUtilities
 
 function _diff_pade3(A, E, ident)
     b = (120.0, 60.0, 12.0, 1.0)
@@ -120,7 +107,7 @@ function frechet_algo(A::Matrix{Float64}, E::Matrix{Float64})
             break
         end
     end
-    if s == nothing
+    if s == (nothing)
         # scaling
         s = max(0, ceil(Int, log2(A_norm_1 / ell_table_61[13])))
         A *= 2.0^-s
@@ -181,11 +168,7 @@ function compute_gx(W, node_strengths, edge)
     return derivatives
 end
 
-#vec(compute_derivative(W, node_strengths, CartesianIndex(1, 3))')
-
-
-# Proof of combined frechet matrix expo derivative and symbolic 
-function full_obj_frechet(W)
+function full_obj_frechet(W, d_edges)
     # compute the normalized weight matrix
     node_strengths = dropdims(sum(W, dims=2), dims=2)
     node_strengths[node_strengths.==0] .= 1e-5
@@ -194,48 +177,130 @@ function full_obj_frechet(W)
 
     # store results
     dfg = zeros((length(W), length(W)))
-    dgx = zeros((length(W), length(W)))
+    dgx = zeros((length(W), length(d_edges)))
+    n_dgx = 1
 
+    # get the dgxs
     indices = sort(vec(collect(CartesianIndices(W))), by=x -> x[1])
-
-    for (n, idx) in enumerate(indices)
+    for (i_edge, edge) in enumerate(indices)
         tangent = zeros(size(W))
-        tangent[idx] = 1.0
+        tangent[edge] = 1.0
+
+        # compute dfg
         R, L = frechet_algo(SWS, tangent)
-        dfg[:, n] = vec(L)
-        dgx[:, n] = vec(compute_gx(W, node_strengths, idx)')
+        dfg[:, i_edge] = vec(L)
+
+        # only need the dgxs for the d_edges in questions
+        if edge in d_edges
+            dgx[:, n_dgx] = vec(compute_gx(W, node_strengths, edge)')
+            n_dgx += 1
+        end
     end
-    return sum(dfg' * dgx, dims=1)
+
+    # chain for final derivative
+    dfh = dropdims(sum(dfg' * dgx, dims=1), dims=1)
+    return dfh
 end
 
-display(full_obj_frechet(W));
 
-### JVP to proof
-function full_obj_jvp(W)
-    # compute the normalized weight matrix
-    node_strengths = dropdims(sum(W, dims=2), dims=2)
-    node_strengths[node_strengths.==0] .= 1e-5
-    S = sqrt(inv(Diagonal(node_strengths)))
-    SWS = S * W * S
+# function full_obj_jvp(W, idxs)
+#     # compute the normalized weight matrix
+#     node_strengths = dropdims(sum(W, dims=2), dims=2)
+#     node_strengths[node_strengths.==0] .= 1e-5
+#     S = sqrt(inv(Diagonal(node_strengths)))
+#     SWS = S * W * S
 
-    function func_gx(W)
-        node_strengths = dropdims(sum(W, dims=2), dims=2)
-        node_strengths[node_strengths.==0] .= 1e-5
-        S = sqrt(inv(Diagonal(node_strengths)))
-        return S * W * S
+#     function func_gx(W)
+#         node_strengths = dropdims(sum(W, dims=2), dims=2)
+#         node_strengths[node_strengths.==0] .= 1e-5
+#         S = sqrt(inv(Diagonal(node_strengths)))
+#         return S * W * S
+#     end
+
+#     function func_fg(W)
+#         return exponential!(copyto!(similar(W), W), ExpMethodGeneric())
+#     end
+
+#     function forward_diff_j(f::Function, W::Matrix{Float64})
+#         return jacobian(f, W)
+#     end
+
+#     dgx = forward_diff_j(func_gx, W)
+#     dfg = forward_diff_j(func_fg, SWS)
+
+
+#     for idx in idxs
+
+#         idx_here = idx[1] + ((idx[2] - 1) * 8)
+#         println("--JVP--")
+#         # println(size(dgx), size(dfg))
+#         # println(dfg[:, idx_here])
+#         # println(dfg[idx_here, :])
+#         # println(dgx[:, idx_here])
+#         println(sum(dfg' * dgx, dims=1)[idx_here])
+#         println("----")
+#     end
+
+#     return sum(dfg' * dgx, dims=1)
+# end
+
+
+function test_model(
+    A_init::Matrix{Float64},
+    m_max::Int)
+    A_current = copy(A_init)
+    W_current = copy(A_init)
+
+    for m in 1:m_max
+        # Get the edge, order of added edges is fixed
+        edge_idx = edges_to_add[m-m_seed]
+        rev_idx = CartesianIndex(edge_idx[2], edge_idx[1])
+        A_current[edge_idx] = W_current[edge_idx] = 1
+        A_current[rev_idx] = W_current[rev_idx] = 1
+        edge_indices = findall(!=(0), triu(A_current, 1))
+
+        # temp
+        # x = dropdims(full_obj_jvp(W_current, edge_indices), dims=1)
+
+        current_Y = sum(exp(W_current))
+        frechet_d = full_obj_frechet(W_current, edge_indices)
+        println(frechet_d)
+        derivative = [ω * D[edge]^ω * frechet_d[i_edge] * current_Y^(ω - 1) for (i_edge, edge) in enumerate(edge_indices)]
+
+
+        # Update W matrix
+        for (i_edge, edge) in enumerate(edge_indices)
+            W_current[edge] -= (α * derivative[i_edge])
+            W_current[edge] = max(0, W_current[edge])
+            W_current[CartesianIndex(edge[2], edge[1])] = W_current[edge]
+        end
     end
-
-    function func_fg(W)
-        return exponential!(copyto!(similar(W), W), ExpMethodGeneric())
-    end
-
-    function forward_diff_j(f::Function, W::Matrix{Float64})
-        return jacobian(f, W)
-    end
-
-    dgx = forward_diff_j(func_gx, W)
-    dfg = forward_diff_j(func_fg, SWS)
-    return sum(dfg' * dgx, dims=1)
+    return W_current
 end
 
-full_obj_jvp(W)
+# load synthetic data
+include("test_data.jl")
+W_Y, D, A_init = load_weight_test_data()
+A_Y = Float64.(W_Y .> 0);
+
+A_init = A_init
+A_Y = A_Y
+
+α = 0.01
+ω = 0.9
+ϵ = 1e-5
+m_seed = Int(sum(A_init))
+m_all = Int(sum(A_Y))
+resolution = 0.01
+steps = 5
+zero_indices = (findall(==(1), triu(abs.(A_init .- 1), 1)))
+edges_to_add = sample(zero_indices, m_all - m_seed; replace=false);
+
+test_model(A_init, 5)
+
+
+A_init
+
+
+
+frechet_block_enlarge(A_init)
