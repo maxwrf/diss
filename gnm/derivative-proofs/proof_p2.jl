@@ -1,3 +1,12 @@
+"""
+This file demonstrates that using the jacobian vector product as part of the
+forward differentiation, it is possible to achieve the same result as using
+the tangent approximation or ForwardDiff.jl's gradient function, but faster.
+
+Author: Max Würfel
+Date: July 18, 2023
+"""
+
 using LinearAlgebra: Diagonal, I, norm, lu
 using ExponentialUtilities
 using ForwardDiff: gradient, derivative, jacobian
@@ -33,17 +42,21 @@ function forward_diff_jvp(W::Matrix{Float64}, tangent)
     return JVP
 end
 
-jvp_results = zeros(size(W))
-for edge in collect(CartesianIndices(W))
-    tangent = zeros(size(W))
-    tangent[edge] = 1.0
-    jvp_results[edge] = forward_diff_jvp(W, tangent)
+function jvp_all_edges(W::Matrix{Float64})
+    result = zeros(size(W))
+    for edge in collect(CartesianIndices(W))
+        tangent = zeros(size(W))
+        tangent[edge] = 1.0
+        result[edge] = forward_diff_jvp(W, tangent)
+    end
+    return result
 end
 
-
+jvp_results = jvp_all_edges(W)
+display(jvp_results)
 
 # side note
-function forward_diff_j(W::Matrix{Float64})::Vector{Float64}
+function forward_diff_j(W::Matrix{Float64})
     # Column indices for retrieval
     indices = collect(CartesianIndices(W))
     index_vec = sort(vec(indices), by=x -> x[1])
@@ -56,16 +69,8 @@ function forward_diff_j(W::Matrix{Float64})::Vector{Float64}
     end
     J = jacobian(f, W)
 
-    results = zeros(length(index_vec))
-    display(J)
-    tangent = vec(permutedims(exp(W), [2, 1]))
-    for (i_edge, edge) in enumerate(index_vec)
-        # we get all partial derivative positions that are non-zero
-        Jₓ = J[:, findfirst(x -> x == edge, index_vec)]
-        results[i_edge] = sum(Jₓ)
-    end
 
-    return results
+    return J
 end
 
 forward_diff_j(W)

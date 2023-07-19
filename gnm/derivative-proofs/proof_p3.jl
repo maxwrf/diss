@@ -136,9 +136,7 @@ function frechet_algo(A::Matrix{Float64}, E::Matrix{Float64})
     return R, L
 end
 
-
-
-
+# Frechet
 node_strengths = dropdims(sum(W, dims=2), dims=2)
 node_strengths[node_strengths.==0] .= 1e-5
 S = sqrt(inv(Diagonal(node_strengths)))
@@ -147,14 +145,20 @@ R, L = frechet_algo(S * W * S, [1.0 0; 0 0])
 display(L)
 
 
-
-
+# Jacobian proof
 
 function func_gx(W)
     node_strengths = dropdims(sum(W, dims=2), dims=2)
     node_strengths[node_strengths.==0] .= 1e-5
     S = sqrt(inv(Diagonal(node_strengths)))
     return S * W * S
+end
+
+function func_gx2(W)
+    node_strengths = dropdims(sum(W, dims=2), dims=2)
+    node_strengths[node_strengths.==0] .= 1e-5
+    norm_fact = sqrt.(node_strengths * node_strengths')
+    return W ./ norm_fact
 end
 
 function func_fg(W)
@@ -168,8 +172,27 @@ end
 
 dgx = forward_diff_j(func_gx, W)
 dfg = forward_diff_j(func_fg, S * W * S)
-sum(dfg * dgx, dims=1)
+sum(dfg' * dgx, dims=1)
 
+forward_diff_j(func_gx2, W)
 
+function compute_derivative(W, node_strengths, edge)
+    derivatives = zeros(size(W))
 
+    # Only need to fill the derivatives in row and column of edge
+    r_idxs = [(CartesianIndex(edge[1], k), "row") for k in 1:size(W, 1)]
+    c_idxs = [(CartesianIndex(k, edge[2]), "col") for k in 1:size(W, 1)]
 
+    idxs = vcat(r_idxs, c_idxs)
+
+    for (idx, type) in idxs
+        row = idx[1]
+        col = idx[2]
+        numerator = type == "row" ? W[idx] * node_strengths[row] : W[idx] * node_strengths[col]
+        denominator = 2 * (node_strengths[row] * node_strengths[col])^(3 / 2)
+        derivatives[idx] = -(numerator / denominator)
+    end
+    return derivatives
+end
+
+compute_derivative(W, node_strengths, CartesianIndex(1, 1))
