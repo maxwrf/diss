@@ -29,6 +29,7 @@ struct Spike_Train
         spike_counts = read(file, "sCount")
         recording_time = [minimum(spikes), maximum(spikes)]
         sample_electrode_names = read(file, "names")
+        firing_rates = read(file, "/summary/frate")
 
         if (dset_type == 1)
             age = read(file, "meta/age")[1]
@@ -45,6 +46,7 @@ struct Spike_Train
         sample_electrode_names, sttc, A_Y, A_init, m = prepare_sample(
             mea_type,
             sample_electrode_names,
+            firing_rates,
             all_electrodes,
             sttc,
             corr_cutoff
@@ -70,6 +72,7 @@ end
 function prepare_sample(
     mea_type::Int,
     sample_electrode_names::Vector{String},
+    firing_rates::Vector{Float64},
     all_electrodes::Vector{Tuple{Int,Int}},
     sttc::Matrix{Float64},
     corr_cutoff::Float64
@@ -82,7 +85,7 @@ function prepare_sample(
     sample_electrodes = Vector{Tuple{Int,Int}}()
     if (mea_type == 1 || mea_type == 2)
         for (i_active_electrode, sample_electrode_name) in enumerate(sample_electrode_names)
-            if (sample_electrode_name[6] == 'a' || sample_electrode_name[6] == 'A')
+            if ((sample_electrode_name[6] == 'a' || sample_electrode_name[6] == 'A') && (firing_rates[i_active_electrode] > 0.1))
                 x = Int(sample_electrode_name[4]) - Int('0')
                 y = Int(sample_electrode_name[5]) - Int('0')
                 push!(sample_electrodes, (x, y))
@@ -95,6 +98,7 @@ function prepare_sample(
 
     # Remove the invalid electrodes
     splice!(sample_electrode_names, removal_indices)
+    splice!(firing_rates, removal_indices)
     sttc = sttc[setdiff(1:size(sttc, 1), removal_indices),
         setdiff(1:size(sttc, 1), removal_indices)]
 
