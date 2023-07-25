@@ -27,16 +27,15 @@ struct Spike_Set
 
         spike_trains = Vector{Spike_Train}()
         for h5_file in h5_files
-            push!(spike_trains,
-                Spike_Train(
-                    joinpath(dir_path, h5_file),
-                    dset_type,
-                    mea_type,
-                    all_electrodes,
-                    dt,
-                    corr_cutoff
-                )
+            st = Spike_Train(
+                joinpath(dir_path, h5_file),
+                dset_type,
+                mea_type,
+                all_electrodes,
+                dt,
+                corr_cutoff
             )
+            push!(spike_trains, st)
         end
 
         new(h5_files, spike_trains, D)
