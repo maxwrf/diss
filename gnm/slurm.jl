@@ -1,5 +1,5 @@
 using Printf
-include("spike_set.jl")
+include("spike_sample.jl")
 include("gnm_utils.jl")
 
 function generate_inputs(
@@ -12,55 +12,77 @@ function generate_inputs(
     dt::Float64,
     corr_cutoff::Float64
 )
-    spike_set = Spike_Set(in_dir, mea_id, d_set_id, n_samples, dt, corr_cutoff)
-    param_space = generate_param_space(n_runs)
-
     # check the output directory exists
     if !isdir(out_dir)
         mkdir(out_dir)
     end
 
+    # prepare the parameter space
+    param_space = generate_param_space(n_runs)
+
+    # tracking number of files 
     file_num = 0
     spike_sets_prepared = 0
     spike_sets_skipped = 0
-    for (i_spike_train, spike_train) in enumerate(spike_set.spike_trains)
-        # get the number of connections in A_Y
-        file_name = basename(spike_train.file_path)
-        m = sum(spike_train.A_Y) / 2
-        m_max = (60 * 60 - 60) / 2
 
-        # if with the current dt and corr cutoff there are no connections, skip
-        if m == 0
-            println(file_name, " no connections, skipping.")
-            spike_sets_skipped += 1
-            continue
-        end
-        spike_sets_prepared += 1
-        println(file_name, " ", m, "/", m_max, "(", round(m / m_max * 100, digits=1), "%) connections.")
+    # get the directories
+    sample_dirs = filter(item -> isdir(joinpath(in_dir, item)), readdir(in_dir))
 
-        # fo every sample and every model one slurm file is prepared
-        for (model_id, model_name) in MODELS
-            file_num += 1
-            out_file = out_dir * "/sample_" * @sprintf("%05d", file_num) * ".dat"
-            file = h5open(out_file, "w")
+    # limit the number of samples
+    if n_samples != -1
+        sample_dirs = sample_dirs[1:n_samples]
+    end
 
-            # write the data
-            write(file, "A_Y", spike_train.A_Y)
-            write(file, "A_init", spike_train.A_init)
-            write(file, "D", spike_set.D)
-            write(file, "param_space", param_space)
+    # construct the datasets
+    for sample_dir in sample_dirs
+        sample_sts = Spike_Sample(
+            joinpath(in_dir, sample_dir),
+            mea_id,
+            d_set_id,
+            dt,
+            corr_cutoff
+        )
 
-            # write the meta data
-            meta_group = create_group(file, "meta")
-            attributes(meta_group)["data_set_id"] = d_set_id
-            attributes(meta_group)["data_set_name"] = DATA_SETS[d_set_id]
-            attributes(meta_group)["group_id"] = spike_train.group_id
-            attributes(meta_group)["model_id"] = model_id
-            attributes(meta_group)["model_name"] = model_name
+        for (i_spike_train, spike_train) in enumerate(sample_sts.spike_trains)
+            # get the number of connections in A_Y
+            file_name = basename(spike_train.file_path)
+            m = sum(spike_train.A_Y) / 2
+            m_max = (size(spike_train.A_Y, 1) * (size(spike_train.A_Y, 1) - 1)) / 2
 
-            close(file)
+            # if with the current dt and corr cutoff there are no connections, skip
+            if m == 0
+                println(file_name, " no connections, skipping.")
+                spike_sets_skipped += 1
+                continue
+            end
+            spike_sets_prepared += 1
+            println(file_name, " ", m, "/", m_max, "(", round(m / m_max * 100, digits=1), "%) connections.")
+
+            # fo every sample and every model one slurm file is prepared
+            for (model_id, model_name) in MODELS
+                file_num += 1
+                out_file = out_dir * "/sample_" * @sprintf("%05d", file_num) * ".dat"
+                file = h5open(out_file, "w")
+
+                # write the data
+                write(file, "A_Y", spike_train.A_Y)
+                write(file, "A_init", spike_train.A_init)
+                write(file, "D", spike_train.D)
+                write(file, "param_space", param_space)
+
+                # write the meta data
+                meta_group = create_group(file, "meta")
+                attributes(meta_group)["data_set_id"] = d_set_id
+                attributes(meta_group)["data_set_name"] = DATA_SETS[d_set_id]
+                attributes(meta_group)["group_id"] = spike_train.group_id
+                attributes(meta_group)["model_id"] = model_id
+                attributes(meta_group)["model_name"] = model_name
+
+                close(file)
+            end
         end
     end
+
     println("Skipped ", spike_sets_skipped, " spike sets for slurm run.")
     println("Prepared ", spike_sets_prepared, " spike sets for slurm run.")
     println("Prepared ", file_num, " files for slurm run.")
