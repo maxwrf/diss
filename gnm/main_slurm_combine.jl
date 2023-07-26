@@ -2,7 +2,7 @@ include("slurm.jl")
 
 const PARAMS = Dict(
     "cluster" => true,
-    "d_set" => 1
+    "d_set" => 3
 )
 
 const DATA_SETS = Dict(

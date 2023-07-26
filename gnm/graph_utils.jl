@@ -174,11 +174,11 @@ function betweenness_wei(G)
 end
 
 
-include("test_data.jl")
-W_Y, D, A_init = load_weight_test_data()
+# include("test_data.jl")
+# W_Y, D, A_init = load_weight_test_data()
 
 
 
 #weight_conversion(A)
-clustering_coef_wu(weight_conversion(W_Y))
-betweenness_wei(weight_conversion(W_Y))
+# clustering_coef_wu(weight_conversion(W_Y))
+# betweenness_wei(weight_conversion(W_Y))

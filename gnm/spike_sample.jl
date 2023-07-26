@@ -24,10 +24,9 @@ struct Spike_Sample
                 dt
             )
             push!(spike_trains, st)
-            println(length(st.electrode_names), " ", st.file_path)
         end
 
-        prepare_sample(spike_trains, corr_cutoff)
+        prepare_sample(spike_trains)
 
         new(
             h5_files,
@@ -36,7 +35,7 @@ struct Spike_Sample
     end
 end
 
-function prepare_sample(spike_trains::Vector{Spike_Train}, corr_cutoff::Float64)
+function prepare_sample(spike_trains::Vector{Spike_Train})
     # concatenate the electrode names and positions
     sample_electrode_names = vcat([st.electrode_names for st in spike_trains]...)
     sample_electrode_positions = vcat([st.electrode_positions for st in spike_trains]...)
@@ -52,11 +51,7 @@ function prepare_sample(spike_trains::Vector{Spike_Train}, corr_cutoff::Float64)
     for st in spike_trains
         # find the electrodes of that st in the sample
         electrode_idx = findall(e_name -> e_name in sample_electrode_names, st.electrode_names)
-        println(length(electrode_idx), " ", st.file_path)
         electrode_idx = [CartesianIndex(i, j) for i in electrode_idx, j in electrode_idx]
-
-        println(size(electrode_idx), " ", st.file_path)
-        println(size(st.functional_connects), " ", st.file_path)
 
         # initalize the adjacency matrices
         A_Y = zeros(size(D))
@@ -68,8 +63,6 @@ function prepare_sample(spike_trains::Vector{Spike_Train}, corr_cutoff::Float64)
         # compute the adjacency matrices
         A_Y[diagind(A_Y)] .= 0
         m = sum(A_Y) / 2
-
-        println(m, " ", st.file_path)
 
         # prepare the initalization matrix
         edges = findall(==(1), triu(A_Y, 1))

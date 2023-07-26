@@ -1,6 +1,7 @@
 using HDF5
 using LinearAlgebra: triu, Symmetric, diagind
 using StatsBase: sample
+using BenchmarkTools: @time
 
 include("sttc.jl")
 include("jitter.jl")
@@ -43,6 +44,16 @@ mutable struct Spike_Train
         end
         close(file)
 
+        # filter the electrodes
+        electrode_names, electrode_positions, spikes, spike_counts = filter_electrodes(
+            mea_type,
+            electrode_names,
+            electrode_positions,
+            firing_rates,
+            spikes,
+            spike_counts
+        )
+
         # functional connectivity inference
         functional_connects = functional_connectivity_inference(
             spikes,
@@ -51,22 +62,13 @@ mutable struct Spike_Train
             recording_time
         )
 
-        # prepare the samples
-        electrode_names, electrode_positions, sttc = prepare_sample(
-            mea_type,
-            electrode_names,
-            electrode_positions,
-            firing_rates,
-            functional_connects
-        )
-
         # construct the sample
         new(
             file_path,
             group_id,
             electrode_names,
             electrode_positions,
-            sttc,
+            functional_connects,
             nothing,
             nothing,
             nothing
@@ -81,8 +83,8 @@ function functional_connectivity_inference(
     recording_time::Vector{Float64}
 )::Matrix{Float64}
     # params
-    num_permutations = 1
-    p_value = 0.01
+    num_permutations = 1000
+    p_value = 0.1
     dt_jitter = 0.01
 
     # compute experimental sttc
@@ -91,8 +93,7 @@ function functional_connectivity_inference(
     # prepare permutations
     jittered_sttc = zeros(num_permutations, size(sttc)...)
     for i in 1:num_permutations
-        jittered_spikes = jitter_spikes(spikes, spike_counts, dt_jitter)
-        println(length(jittered_spikes))
+        jittered_spikes = jitter_spikes_fast(spikes, spike_counts, dt_jitter)
         jittered_sttc[i, :, :] = sttc_tiling(dt, recording_time, jittered_spikes, spike_counts)
     end
 
@@ -105,23 +106,23 @@ function functional_connectivity_inference(
         end
     end
 
-    println(sum(functional_connects) / 2)
-
     return functional_connects
 end
 
 
-function prepare_sample(
+function filter_electrodes(
     mea_type::Int,
     electrode_names::Vector{String},
     electrode_positions::Matrix{Float64},
     firing_rates::Vector{Float64},
-    functional_connects::Matrix{Float64}
+    spikes::Vector{Float64},
+    spike_counts::Vector{Int32}
 )
-
-    # For the samples find the electrod names as tuples
-    # Then identify the position of thes on the mea (needs all electrodes)
-    # Sometimes electrodes are invalid and need to be removed
+    """
+    Electrodes are invalid if:
+    1. Less than a certain Hz number
+    2. Two neurons on the same electrode, because then the distance is zero
+    """
     removal_indices = []
     if (mea_type == 1 || mea_type == 2)
         for (i_active_electrode, electrode_name) in enumerate(electrode_names)
@@ -130,7 +131,8 @@ function prepare_sample(
                 push!(removal_indices, i_active_electrode)
             end
         end
-    elseif (mea_type == 3) # TODO
+    elseif (mea_type == 3)
+        # TODO
     end
 
     # Remove the invalid electrodes from the firing rates, positions etc
@@ -138,9 +140,16 @@ function prepare_sample(
     splice!(firing_rates, removal_indices)
     electrode_positions = electrode_positions[
         setdiff(1:size(electrode_positions, 1), removal_indices), :]
-    functional_connects = functional_connects[setdiff(1:size(functional_connects, 1), removal_indices),
-        setdiff(1:size(functional_connects, 1), removal_indices)]
 
-    return electrode_names, electrode_positions, functional_connects
+    # remove the invalid electrodes from spikes and spike spike_counts
+    for (i_removal, removal_idx) in enumerate(removal_indices)
+        removal_idx = removal_idx - count(removal_indices[1:i_removal] .< removal_idx)
+        st_cumsum = [0; cumsum(spike_counts)]
+        st_range = (st_cumsum[removal_idx]+1):(st_cumsum[removal_idx+1])
+        splice!(spikes, st_range)
+        splice!(spike_counts, removal_idx)
+    end
+
+    return electrode_names, electrode_positions, spikes, spike_counts
 end
 
