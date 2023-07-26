@@ -50,8 +50,6 @@ mutable struct Spike_Train
             dt,
             recording_time
         )
-        x = 1
-
 
         # prepare the samples
         electrode_names, electrode_positions, sttc = prepare_sample(
@@ -77,13 +75,13 @@ mutable struct Spike_Train
 end
 
 function functional_connectivity_inference(
-    spikes,
-    spike_counts,
-    dt,
-    recording_time
-)
+    spikes::Vector{Float64},
+    spike_counts::Vector{Int32},
+    dt::Float64,
+    recording_time::Vector{Float64}
+)::Matrix{Float64}
     # params
-    num_permutations = 1000
+    num_permutations = 1
     p_value = 0.01
     dt_jitter = 0.01
 
@@ -94,17 +92,20 @@ function functional_connectivity_inference(
     jittered_sttc = zeros(num_permutations, size(sttc)...)
     for i in 1:num_permutations
         jittered_spikes = jitter_spikes(spikes, spike_counts, dt_jitter)
+        println(length(jittered_spikes))
         jittered_sttc[i, :, :] = sttc_tiling(dt, recording_time, jittered_spikes, spike_counts)
     end
 
     # compute p_value
     functional_connects = zeros(size(sttc))
-    for i in 1:size(functional_connects, 1)
-        for j in 1:size(functional_connects, 2)
+    for i in 1:length(spike_counts)
+        for j in 1:length(spike_counts)
             p_val = count(jittered_sttc[:, i, j] .>= sttc[i, j]) / num_permutations
-            functional_connects = Int(p_val <= p_value)
+            functional_connects[i, j] = Int(p_val <= p_value)
         end
     end
+
+    println(sum(functional_connects) / 2)
 
     return functional_connects
 end

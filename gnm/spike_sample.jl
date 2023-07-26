@@ -56,20 +56,16 @@ function prepare_sample(spike_trains::Vector{Spike_Train}, corr_cutoff::Float64)
         electrode_idx = [CartesianIndex(i, j) for i in electrode_idx, j in electrode_idx]
 
         println(size(electrode_idx), " ", st.file_path)
-        println(size(st.sttc), " ", st.file_path)
-        println(sum(st.sttc .> 0.2), " ", st.file_path)
-
-
+        println(size(st.functional_connects), " ", st.file_path)
 
         # initalize the adjacency matrices
         A_Y = zeros(size(D))
         A_init = zeros(size(D))
 
-        # paste the sttc elements into the A 
-        A_Y[electrode_idx] = st.sttc
+        # paste the functional elements into the A 
+        A_Y[electrode_idx] = st.functional_connects
 
         # compute the adjacency matrices
-        A_Y = Int.(A_Y .> corr_cutoff)
         A_Y[diagind(A_Y)] .= 0
         m = sum(A_Y) / 2
 
@@ -85,7 +81,5 @@ function prepare_sample(spike_trains::Vector{Spike_Train}, corr_cutoff::Float64)
         st.A_Y = A_Y
         st.A_init = A_init
         st.D = D
-
-
     end
 end
