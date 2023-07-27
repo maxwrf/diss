@@ -1,4 +1,6 @@
 using Printf
+using BenchmarkTools: @time
+
 include("spike_sample.jl")
 include("gnm_utils.jl")
 
@@ -9,8 +11,7 @@ function generate_inputs(
     n_runs::Int,
     d_set_id::Int,
     mea_id::Int,
-    dt::Float64,
-    corr_cutoff::Float64
+    dt::Float64
 )
     # check the output directory exists
     if !isdir(out_dir)
@@ -35,12 +36,10 @@ function generate_inputs(
 
     # construct the datasets
     for sample_dir in sample_dirs
-        sample_sts = Spike_Sample(
+        @time sample_sts = Spike_Sample(
             joinpath(in_dir, sample_dir),
             mea_id,
-            d_set_id,
-            dt,
-            corr_cutoff
+            dt
         )
 
         for (i_spike_train, spike_train) in enumerate(sample_sts.spike_trains)

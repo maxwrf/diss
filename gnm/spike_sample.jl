@@ -9,9 +9,7 @@ struct Spike_Sample
     function Spike_Sample(
         dir_path::String,
         mea_type::Int,
-        dset_type::Int,
-        dt::Float64,
-        corr_cutoff::Float64
+        dt::Float64
     )
         h5_files = filter(name -> endswith(name, ".h5"), readdir(dir_path))
 
@@ -19,7 +17,6 @@ struct Spike_Sample
         for h5_file in h5_files
             st = Spike_Train(
                 joinpath(dir_path, h5_file),
-                dset_type,
                 mea_type,
                 dt
             )

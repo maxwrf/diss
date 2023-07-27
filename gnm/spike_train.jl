@@ -20,7 +20,6 @@ mutable struct Spike_Train
 
     function Spike_Train(
         file_path::String,
-        dset_type::Int,
         mea_type::Int,
         dt::Float64
     )
@@ -33,15 +32,7 @@ mutable struct Spike_Train
         electrode_names = read(file, "names")
         electrode_positions = Matrix(read(file, "epos"))
         firing_rates = read(file, "/summary/frate")
-
-        if (dset_type == 1)
-            age = read(file, "meta/age")[1]
-            region = read(file, "meta/region")[1]
-            group_id = region * string(age)
-        elseif (dset_type == 3)
-            age = read(file, "meta/age")[1]
-            group_id = string(age)
-        end
+        group_id = string(read(file, "meta/age")[1])
         close(file)
 
         # filter the electrodes
@@ -122,17 +113,25 @@ function filter_electrodes(
     Electrodes are invalid if:
     1. Less than a certain Hz number
     2. Two neurons on the same electrode, because then the distance is zero
+
+    Always check for MEA types implemented
     """
     removal_indices = []
-    if (mea_type == 1 || mea_type == 2)
+
+    # For different mea types different indications for a second neuron at the electrode
+    if (mea_type == 1)
+        for (i_active_electrode, electrode_name) in enumerate(electrode_names)
+            if !((electrode_name[end] == '0') && (firing_rates[i_active_electrode] > 0.01))
+                push!(removal_indices, i_active_electrode)
+            end
+        end
+    elseif (mea_type == 2)
         for (i_active_electrode, electrode_name) in enumerate(electrode_names)
             if !((electrode_name[6] == 'a' || electrode_name[6] == 'A') &&
                  (firing_rates[i_active_electrode] > 0.01))
                 push!(removal_indices, i_active_electrode)
             end
         end
-    elseif (mea_type == 3)
-        # TODO
     end
 
     # Remove the invalid electrodes from the firing rates, positions etc

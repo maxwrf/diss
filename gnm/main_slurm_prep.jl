@@ -2,18 +2,16 @@ include("slurm.jl")
 
 const PARAMS = Dict(
     "cluster" => true,
-    "d_set" => 3,
-    "corr_cutoff" => 0.2,
+    "d_set" => 1,
     "n_samples" => -1,
     "n_runs" => 10000,
     "dt" => 0.01
 )
 
 const DATA_SETS = Dict(
-    1 => "Charlesworth2015",
-    2 => "Hennig2011",
+    1 => "Charlesworth2015/ctx",
+    2 => "Charlesworth2015/hpc",
     3 => "Demas2006",
-    4 => "Maccione2014"
 )
 
 const MEA_TYPES = Dict(
@@ -24,12 +22,10 @@ const MEA_TYPES = Dict(
 
 function main()
     # get mea type
-    if PARAMS["d_set"] == 1
+    if ((PARAMS["d_set"] == 1) || (PARAMS["d_set"] == 2))
         mea_type = 1
     elseif PARAMS["d_set"] == 3
         mea_type = 2
-    elseif PARAMS["d_set"] == 4
-        mea_type = 3
     end
 
     # set paths 
@@ -53,8 +49,7 @@ function main()
         PARAMS["n_runs"],
         PARAMS["d_set"],
         mea_type,
-        PARAMS["dt"],
-        PARAMS["corr_cutoff"]
+        PARAMS["dt"]
     )
 end
 
