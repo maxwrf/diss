@@ -2,6 +2,7 @@ using HDF5
 using DataFrames
 using Statistics
 using Plots
+using XLSX
 
 include("gnm_utils.jl")
 
@@ -11,7 +12,16 @@ function plot_landscape(df, group_res_p::String)
 
     for (model_id, model_name) in MODELS
         data = filter(row -> row.model_id == model_id, df)[:, ["sample", "eta", "gamma", "KS_MAX"]]
+
+        # we can miss a model
+        if isempty(data)
+            continue
+        end
+
         grouped_data = combine(groupby(data, [:eta, :gamma]), :KS_MAX => mean)
+
+        println(group_res_p, " ", model_id, " ", size(grouped_data))
+
         landscape = reshape(grouped_data.KS_MAX_mean,
             (length(unique(data.eta)), length(unique(data.gamma))))
         p = heatmap(landscape,
@@ -55,10 +65,12 @@ function analyze(group_res_p::String)
     # read the data
     results_group = file["results"]
     K_all = []
+    group_models = []
     for (model_id, _) in MODELS
         # 3D Array: n_sampels x params x 4
         try
             push!(K_all, read(results_group, string(model_id)))
+            push!(group_models, model_id)
         catch KeyError
             println("Model $model_id not found in $group_res_p.")
         end
@@ -68,7 +80,7 @@ function analyze(group_res_p::String)
 
     # prepare df of all results
     df_all = []
-    for (i_model, K_model) in enumerate(K_all)
+    for (i_model, K_model) in zip(group_models, K_all)
         # compute K max
         K_model_max = maximum(K_model, dims=ndims(K_model))
         K_model_max = dropdims(K_model_max, dims=ndims(K_model))
