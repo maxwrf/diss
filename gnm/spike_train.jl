@@ -20,7 +20,7 @@ mutable struct Spike_Train
 
     function Spike_Train(
         file_path::String,
-        mea_id::String,
+        dset_id::Int,
         dt::Float64
     )
 
@@ -38,7 +38,7 @@ mutable struct Spike_Train
 
         # filter the electrodes
         electrode_names, electrode_positions, spikes, spike_counts = filter_electrodes(
-            mea_id,
+            dset_id,
             electrode_names,
             electrode_positions,
             firing_rates,
@@ -115,7 +115,7 @@ end
 
 
 function filter_electrodes(
-    mea_id::String,
+    dset_id::Int,
     electrode_names::Vector{String},
     electrode_positions::Matrix{Float64},
     firing_rates::Vector{Float64},
@@ -126,26 +126,24 @@ function filter_electrodes(
     Electrodes are invalid if:
     1. Less than a certain Hz number
     2. Two neurons on the same electrode, because then the distance is zero
-
-    Always check for MEA types implemented
     """
     removal_indices = []
 
-    # For different mea types different indications for a second neuron at the electrode
-    if (mea_id == "1")
+    # For different dataset different indications for a second neuron at the electrode
+    if ((dset_id == 1) || (dset_id == 2))
         for (i_active_electrode, electrode_name) in enumerate(electrode_names)
             if !((electrode_name[end] == '0') && (firing_rates[i_active_electrode] > 0.01))
                 push!(removal_indices, i_active_electrode)
             end
         end
-    elseif (mea_id == "2")
+    elseif (dset_id == 2)
         for (i_active_electrode, electrode_name) in enumerate(electrode_names)
             if !((electrode_name[6] == 'a' || electrode_name[6] == 'A') &&
                  (firing_rates[i_active_electrode] > 0.01))
                 push!(removal_indices, i_active_electrode)
             end
         end
-    elseif (mea_id == "3")
+    elseif (dset_id == 3)
         for (i_active_electrode, electrode_name) in enumerate(electrode_names)
             # TODO: how are doubles indicated here?
             if !((firing_rates[i_active_electrode] > 0.01))

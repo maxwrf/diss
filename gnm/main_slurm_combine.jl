@@ -1,25 +1,13 @@
+using JSON
+
 include("slurm.jl")
 
-const PARAMS = Dict(
-    "cluster" => true,
-    "d_set" => 3
-)
-
-const DATA_SETS = Dict(
-    1 => "Charlesworth2015",
-    2 => "Hennig2011",
-    3 => "Demas2006",
-    4 => "Maccione2014"
-)
+const config = JSON.parsefile("/home/mw894/diss/gnm/config.json")
 
 function main()
     # set paths 
-    if PARAMS["cluster"]
-        in_dir = "/store/DAMTPEGLEN/mw894/slurm/" * DATA_SETS[PARAMS["d_set"]]
-    else
-        in_dir = "/Users/maxwuerfek/code/diss/gnm/slurm/" * DATA_SETS[PARAMS["d_set"]]
-    end
-
+    in_dir = "/store/DAMTPEGLEN/mw894/data/" * config["data_sets"][string(config["params"]["d_set"])]
+    println("reading from: ", in_dir)
     combine_res_files(in_dir)
 end
 

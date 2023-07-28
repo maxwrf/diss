@@ -7,8 +7,7 @@ include("gnm_utils.jl")
 function generate_inputs(
     file_name::String,
     n_runs::Int,
-    d_set_id::String,
-    mea_id::String,
+    dset_id::Int,
     dt::Float64
 )
     # prepare the parameter space
@@ -17,7 +16,7 @@ function generate_inputs(
     # generate the spike train
     spike_train = Spike_Train(
         file_name,
-        mea_id,
+        dset_id,
         dt
     )
 
@@ -50,8 +49,8 @@ function generate_inputs(
         # write the meta data
         meta_group = create_group(file, "meta")
         attributes(meta_group)["org_file_name"] = spike_train.org_file_name
-        attributes(meta_group)["data_set_id"] = d_set_id
-        attributes(meta_group)["data_set_name"] = config["data_sets"][d_set_id]
+        attributes(meta_group)["data_set_id"] = dset_id
+        attributes(meta_group)["data_set_name"] = config["data_sets"][string(dset_id)]
         attributes(meta_group)["group_id"] = spike_train.group_id
         attributes(meta_group)["model_id"] = model_id
         attributes(meta_group)["model_name"] = model_name
@@ -70,7 +69,7 @@ function combine_res_files(in_dir::String)
     group_ids = Vector{String}()
     model_ids = Vector{Int}()
     param_space = nothing
-    d_set_id = nothing
+    dset_id = nothing
     data_set_name = nothing
 
     for (i_res_files, res_file) in enumerate(res_files)
@@ -81,7 +80,7 @@ function combine_res_files(in_dir::String)
         if i_res_files == 1
             param_space = read(file, "param_space")
             meta_group = file["meta"]
-            d_set_id = read_attribute(meta_group, "data_set_id")
+            dset_id = read_attribute(meta_group, "data_set_id")
             data_set_name = read_attribute(meta_group, "data_set_name")
         end
 
@@ -103,7 +102,7 @@ function combine_res_files(in_dir::String)
         # one file for every group with meta data in common & params in common
         file = h5open(joinpath(in_dir, "group_" * string(group_id) * ".h5"), "w")
         meta_group = create_group(file, "meta")
-        attributes(meta_group)["data_set_id"] = d_set_id
+        attributes(meta_group)["data_set_id"] = dset_id
         attributes(meta_group)["data_set_name"] = data_set_name
         attributes(meta_group)["group_id"] = group_id
         write(file, "param_space", param_space)

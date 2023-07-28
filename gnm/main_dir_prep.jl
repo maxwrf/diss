@@ -20,4 +20,8 @@ end
 # main("/Users/maxwuerfek/code/diss/data/Charlesworth2015/ctx")
 # main("/Users/maxwuerfek/code/diss/data/Charlesworth2015/hpc")
 # main("/Users/maxwuerfek/code/diss/data/Demas2006/")
-main("/Users/maxwuerfek/code/diss/data/Maccione2014/")
+
+main("/store/DAMTPEGLEN/mw894/data/Maccione2014")
+main("/store/DAMTPEGLEN/mw894/data/Demas2006")
+main("/store/DAMTPEGLEN/mw894/data/Charlesworth2015/ctx")
+main("/store/DAMTPEGLEN/mw894/data/Charlesworth2015/hpc")
