@@ -1,0 +1,14 @@
+{
+    "params": {
+        "d_set": 3,
+        "n_runs": 10000,
+        "dt": 0.01
+    },
+    "cluster": true,
+    "data_sets": {
+        "1": "Charlesworth2015/ctx",
+        "2": "Charlesworth2015/hpc",
+        "3": "Demas2006",
+        "4": "Maccione2014"
+    }
+}
