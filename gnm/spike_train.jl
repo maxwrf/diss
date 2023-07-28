@@ -86,29 +86,20 @@ function functional_connectivity_inference(
     dt::Float64,
     recording_time::Vector{Float64}
 )::Matrix{Float64}
-    # params
-    num_permutations = 1000
-    p_value = 0.1
-    dt_jitter = 0.01
-
     # compute experimental sttc
     sttc = sttc_tiling(dt, recording_time, spikes, spike_counts)
 
     # prepare permutations
-    jittered_sttc = zeros(num_permutations, size(sttc)...)
-    for i in 1:num_permutations
-        jittered_spikes = jitter_spikes_fast(spikes, spike_counts, dt_jitter)
-        jittered_sttc[i, :, :] = sttc_tiling(dt, recording_time, jittered_spikes, spike_counts)
+    perm_test_counts = zeros(size(sttc))
+    for i in 1:config["params"]["num_perms"]
+        jittered_spikes = jitter_spikes_fast(spikes, spike_counts, config["params"]["dt_jitter"])
+        jittered_sttc = sttc_tiling(dt, recording_time, jittered_spikes, spike_counts)
+        jittered_sttc_counts .+= (jittered_sttc .>= sttc)
     end
 
-    # compute p_value
-    functional_connects = zeros(size(sttc))
-    for i in 1:length(spike_counts)
-        for j in 1:length(spike_counts)
-            p_val = count(jittered_sttc[:, i, j] .>= sttc[i, j]) / num_permutations
-            functional_connects[i, j] = Int(p_val <= p_value)
-        end
-    end
+    # compute p_value as in permutation test
+    p_vals = perm_test_counts ./ config["params"]["num_perms"]
+    functional_connects = Int.(p_vals .<= config["params"]["p_value"])
 
     return functional_connects
 end
@@ -132,21 +123,21 @@ function filter_electrodes(
     # For different dataset different indications for a second neuron at the electrode
     if ((dset_id == 1) || (dset_id == 2))
         for (i_active_electrode, electrode_name) in enumerate(electrode_names)
-            if !((electrode_name[end] == '0') && (firing_rates[i_active_electrode] > 0.01))
+            if !((electrode_name[end] == '0') && (firing_rates[i_active_electrode] > config["params"]["min_hz"]))
                 push!(removal_indices, i_active_electrode)
             end
         end
     elseif (dset_id == 2)
         for (i_active_electrode, electrode_name) in enumerate(electrode_names)
             if !((electrode_name[6] == 'a' || electrode_name[6] == 'A') &&
-                 (firing_rates[i_active_electrode] > 0.01))
+                 (firing_rates[i_active_electrode] > config["params"]["min_hz"]))
                 push!(removal_indices, i_active_electrode)
             end
         end
     elseif (dset_id == 3)
         for (i_active_electrode, electrode_name) in enumerate(electrode_names)
             # TODO: how are doubles indicated here?
-            if !((firing_rates[i_active_electrode] > 0.01))
+            if !((firing_rates[i_active_electrode] > config["params"]["min_hz"]))
                 push!(removal_indices, i_active_electrode)
             end
         end
