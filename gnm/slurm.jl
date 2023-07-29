@@ -67,6 +67,7 @@ function combine_res_files(in_dir::String)
 
     K_all = Vector{Matrix{Float64}}() #  each K is param combs x 4 evals
     group_ids = Vector{String}()
+    weeks = Vector{Int}()
     model_ids = Vector{Int}()
     param_space = nothing
     dset_id = nothing
@@ -88,8 +89,10 @@ function combine_res_files(in_dir::String)
         meta_group = file["meta"]
         group_id = read_attribute(meta_group, "group_id")
         model_id = read_attribute(meta_group, "model_id")
+        week = min(4, ceil.(Int, parse(Int, group_id) / 7))
         push!(group_ids, group_id)
         push!(model_ids, model_id)
+        push!(weeks, week)
 
         close(file)
     end
@@ -97,22 +100,22 @@ function combine_res_files(in_dir::String)
     println("Read ", length(res_files), " result files.")
 
     # write the combined results
-    unique_group_ids = unique(group_ids)
-    for group_id in unique_group_ids
+    unique_weeks = unique(weeks)
+    for week in unique_weeks
         # one file for every group with meta data in common & params in common
-        file = h5open(joinpath(in_dir, "group_" * string(group_id) * ".h5"), "w")
+        file = h5open(joinpath(in_dir, "group_week_" * string(week) * ".h5"), "w")
         meta_group = create_group(file, "meta")
         attributes(meta_group)["data_set_id"] = dset_id
         attributes(meta_group)["data_set_name"] = data_set_name
-        attributes(meta_group)["group_id"] = group_id
+        attributes(meta_group)["week"] = week
         write(file, "param_space", param_space)
 
         # one dataset for every model in the results group
         result_group = create_group(file, "results")
         for (model_id, _) in MODELS
-            indices = findall((group_ids .== group_id) .& (model_ids .== model_id))
+            indices = findall((weeks .== week) .& (model_ids .== model_id))
             if length(indices) == 0
-                println("Model ", model_id, " not found in group ", group_id, ".")
+                println("Model ", model_id, " not found in week ", week, ".")
                 continue
             end
 
@@ -127,5 +130,5 @@ function combine_res_files(in_dir::String)
         close(file)
     end
 
-    println("Wrote ", length(unique_group_ids), " group result files.")
+    println("Wrote ", length(unique_weeks), " week result files.")
 end

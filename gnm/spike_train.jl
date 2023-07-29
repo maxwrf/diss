@@ -88,7 +88,7 @@ function functional_connectivity_inference(
     spike_counts::Vector{Int32},
     dt::Float64,
     recording_time::Vector{Float64}
-)::Matrix{Float64}
+)
     # compute experimental sttc
     sttc = sttc_tiling(dt, recording_time, spikes, spike_counts)
 
