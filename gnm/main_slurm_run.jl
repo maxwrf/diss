@@ -12,7 +12,6 @@ function main(test_path::Union{String,Nothing}=nothing)
         error("Please provide a data file path.")
     end
 
-
     # read data
     file = h5open(file_path, "r")
     A_Y = read(file, "A_Y")
