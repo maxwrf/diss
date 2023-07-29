@@ -11,7 +11,8 @@ rm /store/DAMTPEGLEN/mw894/slurm/*.out
 ```
 
 ``` bash
- scp mw894@ssh.maths.cam.ac.uk:"/store/DAMTPEGLEN/mw894/slurm/Charlesworth2015/*.h5" ./
+ scp mw894@ssh.maths.cam.ac.uk:"/store/DAMTPEGLEN/mw894/data/Charlesworth2015/ctx/group_*.h5" ./
+ scp mw894@ssh.maths.cam.ac.uk:"/store/DAMTPEGLEN/mw894/data/Charlesworth2015/hcp/group_*.h5" ./
 ```
 
 ```bash

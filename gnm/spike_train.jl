@@ -14,9 +14,11 @@ mutable struct Spike_Train
     electrode_names::Vector{String}
     electrode_positions::Matrix{Float64}
 
-    A_Y::Union{Matrix{Float64},Nothing}
-    A_init::Union{Matrix{Float64},Nothing}
-    D::Union{Matrix{Float64},Nothing}
+    A_Y::Matrix{Float64}
+    A_init::Matrix{Float64}
+    D::Matrix{Float64}
+
+    sttc::Matrix{Float64}
 
     function Spike_Train(
         file_path::String,
@@ -47,7 +49,7 @@ mutable struct Spike_Train
         )
 
         # functional connectivity inference, i.e., adjacency matrix
-        A_Y = functional_connectivity_inference(
+        A_Y, sttc = functional_connectivity_inference(
             spikes,
             spike_counts,
             dt,
@@ -75,7 +77,8 @@ mutable struct Spike_Train
             electrode_positions,
             A_Y,
             A_init,
-            D
+            D,
+            sttc
         )
     end
 end
@@ -94,14 +97,14 @@ function functional_connectivity_inference(
     for i in 1:config["params"]["num_perms"]
         jittered_spikes = jitter_spikes_fast(spikes, spike_counts, config["params"]["dt_jitter"])
         jittered_sttc = sttc_tiling(dt, recording_time, jittered_spikes, spike_counts)
-        jittered_sttc_counts .+= (jittered_sttc .>= sttc)
+        perm_test_counts .+= (jittered_sttc .>= sttc)
     end
 
     # compute p_value as in permutation test
     p_vals = perm_test_counts ./ config["params"]["num_perms"]
     functional_connects = Int.(p_vals .<= config["params"]["p_value"])
 
-    return functional_connects
+    return functional_connects, sttc
 end
 
 
@@ -127,14 +130,14 @@ function filter_electrodes(
                 push!(removal_indices, i_active_electrode)
             end
         end
-    elseif (dset_id == 2)
+    elseif (dset_id == 3)
         for (i_active_electrode, electrode_name) in enumerate(electrode_names)
             if !((electrode_name[6] == 'a' || electrode_name[6] == 'A') &&
                  (firing_rates[i_active_electrode] > config["params"]["min_hz"]))
                 push!(removal_indices, i_active_electrode)
             end
         end
-    elseif (dset_id == 3)
+    elseif (dset_id == 4)
         for (i_active_electrode, electrode_name) in enumerate(electrode_names)
             # TODO: how are doubles indicated here?
             if !((firing_rates[i_active_electrode] > config["params"]["min_hz"]))
@@ -142,7 +145,7 @@ function filter_electrodes(
             end
         end
     else
-        error("MEA type not implemented.")
+        error("Data set type not implemented.")
     end
 
     # Remove the invalid electrodes from the firing rates, positions etc
