@@ -2,6 +2,8 @@ include("gnm.jl")
 
 using HDF5
 using .GNM_Mod
+using StatsBase: sample
+using LinearAlgebra: triu, Symmetric
 
 function main(test_path::Union{String,Nothing}=nothing)
     if length(ARGS) == 1
@@ -32,6 +34,27 @@ function main(test_path::Union{String,Nothing}=nothing)
     println("Group ID: ", group_id)
     println("Model: ", model_name)
     println("Runs: ", size(param_space, 1))
+
+
+    # downsample
+    m = sum(A_Y) / 2
+    if m > 1024
+        println("--DOWNSAMPLE--")
+
+        # downsample
+        edges = findall(==(1), triu(A_Y, 1))
+        removal_indices = sample(edges, m - 1024; replace=false)
+        A_Y[removal_indices] .= 0
+        A_Y = Symmetric(A_Y, :U)
+
+        # redo the init matrix
+        A_init = zeros(size(A_Y))
+        edges = findall(==(1), triu(A_Y, 1))
+        init_edges = sample(edges, Int(round(m * 0.2)); replace=false)
+        A_init[init_edges] .= 1
+        A_init = Symmetric(A_init, :U)
+    end
+
     println("M: ", sum(A_Y) / 2)
     println("M init: ", sum(A_init) / 2)
 

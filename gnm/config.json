@@ -1,6 +1,6 @@
 {
     "params": {
-        "d_set": 1,
+        "d_set": 3,
         "n_runs": 10000,
         "min_hz": 0.01,
         "dt": 0.01,

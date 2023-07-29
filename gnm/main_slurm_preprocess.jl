@@ -27,5 +27,5 @@ function main(test_path::Union{String,Nothing}=nothing)
     )
 end
 
-#main("/Users/maxwuerfek/code/diss/data/Maccione2014/sample_00045.h5")
+#main("/store/DAMTPEGLEN/mw894/data/Demas2006/sample_00009.h5")
 main()

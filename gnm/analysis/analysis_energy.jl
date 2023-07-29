@@ -117,5 +117,6 @@ function main(result_dir::String)
     end
 end
 
-
-main("/store/DAMTPEGLEN/mw894/data/Charlesworth2015/ctx")
+#main("/store/DAMTPEGLEN/mw894/data/Charlesworth2015/ctx")
+#main("/store/DAMTPEGLEN/mw894/data/Charlesworth2015/hpc")
+main("/store/DAMTPEGLEN/mw894/data/Demas2006")

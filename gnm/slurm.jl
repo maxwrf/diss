@@ -44,7 +44,8 @@ function generate_inputs(
         write(file, "A_Y", spike_train.A_Y)
         write(file, "A_init", spike_train.A_init)
         write(file, "D", spike_train.D)
-        write(file, "param_space", param_space)
+        write(file, "A_init", spike_train.A_init)
+        write(file, "sttc", spike_train.sttc)
 
         # write the meta data
         meta_group = create_group(file, "meta")
