@@ -51,6 +51,17 @@ function plot_landscape(df, result_name::String, result_path::String)
     savefig(p, "/home/mw894/diss/gnm/analysis/" * out_name)
 end
 
+function plot_histogram(df, result_name::String, result_path::String)
+    p = @df sub_df boxplot(:model_id, :KS_MAX, fillalpha=0.75, linewidth=2, legend=false, color=palette(:default))
+
+    #save
+    out_name = replace(result_path, "/store/DAMTPEGLEN/mw894/data/" => "")
+    out_name = replace(out_name, r"\.h5$" => "_bp.pdf")
+    out_name = replace(out_name, "/" => "_")
+
+    savefig(p, "/home/mw894/diss/gnm/analysis/" * out_name)
+end
+
 function analyze(result_path::String, result_name::String)
     """
     Warning: It is important to note that the loaded arrays for each model can 

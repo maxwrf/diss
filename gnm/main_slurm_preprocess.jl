@@ -19,12 +19,7 @@ function main(test_path::Union{String,Nothing}=nothing)
     println("File: ", file_path)
     println("Runs: ", config["params"]["n_runs"])
 
-    @time generate_inputs(
-        file_path,
-        config["params"]["n_runs"],
-        config["params"]["d_set"],
-        config["params"]["dt"]
-    )
+    @time generate_inputs(file_path)
 end
 
 #main("/store/DAMTPEGLEN/mw894/data/Demas2006/sample_00009.h5")

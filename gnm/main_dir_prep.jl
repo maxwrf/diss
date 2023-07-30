@@ -1,5 +1,8 @@
 using Printf
 using HDF5
+using JSON
+
+const config = JSON.parsefile("/home/mw894/diss/gnm/config.json")
 
 function main(dataset_dir::String)
     recording_files = filter(file -> endswith(file, ".h5") && !startswith(file, "sample"), readdir(dataset_dir))
@@ -10,16 +13,20 @@ function main(dataset_dir::String)
 
         println(recording_file, " => ", out_path)
 
+        # data set name
+        prefix = "/store/DAMTPEGLEN/mw894/data/"
+        data_set_name = replace(dataset_dir, prefix => "")
+        reverse_data_sets = Dict(value => key for (key, value) in config["data_sets"])
+        data_set_id = parse(Int, reverse_data_sets[data_set_name])
+
         # store the file name
         file = h5open(out_path, "cw")
         write(file, "meta/org_file_name", recording_file)
+        write(file, "meta/data_set_name", data_set_name)
+        write(file, "meta/data_set_id", data_set_id)
         close(file)
     end
 end
-
-# main("/Users/maxwuerfek/code/diss/data/Charlesworth2015/ctx")
-# main("/Users/maxwuerfek/code/diss/data/Charlesworth2015/hpc")
-# main("/Users/maxwuerfek/code/diss/data/Demas2006/")
 
 main("/store/DAMTPEGLEN/mw894/data/Maccione2014")
 main("/store/DAMTPEGLEN/mw894/data/Demas2006")

@@ -28,6 +28,7 @@ function main(test_path::Union{String,Nothing}=nothing)
     group_id = read_attribute(meta_group, "group_id")
     model_id = read_attribute(meta_group, "model_id")
     model_name = read_attribute(meta_group, "model_name")
+    org_file_name = read_attribute(meta_group, "org_file_name")
     close(file)
 
     println("Dataset: ", data_set_name)
@@ -43,9 +44,10 @@ function main(test_path::Union{String,Nothing}=nothing)
 
         # downsample
         edges = findall(==(1), triu(A_Y, 1))
-        removal_indices = sample(edges, m - 1024; replace=false)
+        removal_indices = sample(edges, Int(m - 1024); replace=false)
         A_Y[removal_indices] .= 0
         A_Y = Symmetric(A_Y, :U)
+        m = sum(A_Y) / 2
 
         # redo the init matrix
         A_init = zeros(size(A_Y))
@@ -53,9 +55,12 @@ function main(test_path::Union{String,Nothing}=nothing)
         init_edges = sample(edges, Int(round(m * 0.2)); replace=false)
         A_init[init_edges] .= 1
         A_init = Symmetric(A_init, :U)
+
+        A_Y = Matrix(A_Y)
+        A_init = Matrix(A_init)
     end
 
-    println("M: ", sum(A_Y) / 2)
+    println("M: ", m)
     println("M init: ", sum(A_init) / 2)
 
     # run model
@@ -72,12 +77,16 @@ function main(test_path::Union{String,Nothing}=nothing)
 
     attributes(meta_group)["data_set_id"] = d_set_id
     attributes(meta_group)["data_set_name"] = data_set_name
+
+
     attributes(meta_group)["group_id"] = group_id
     attributes(meta_group)["model_id"] = model_id
     attributes(meta_group)["model_name"] = model_name
+    attributes(meta_group)["org_file_name"] = org_file_name
 
     close(file)
 end
 
 
 main("/store/DAMTPEGLEN/mw894/slurm/Charlesworth2015/sample_00001.dat")
+#main("/store/DAMTPEGLEN/mw894/data/Maccione2014/sample_00416.dat")

@@ -9,6 +9,7 @@ include("jitter.jl")
 
 mutable struct Spike_Train
     file_path::String
+    dset_id::Int
     org_file_name::String
     group_id::String
     electrode_names::Vector{String}
@@ -20,12 +21,7 @@ mutable struct Spike_Train
 
     sttc::Matrix{Float64}
 
-    function Spike_Train(
-        file_path::String,
-        dset_id::Int,
-        dt::Float64
-    )
-
+    function Spike_Train(file_path::String)
         # read the h5 data
         file = h5open(file_path, "r")
         spikes = read(file, "spikes")
@@ -36,6 +32,7 @@ mutable struct Spike_Train
         firing_rates = read(file, "/summary/frate")
         group_id = string(read(file, "meta/age")[1])
         org_file_name = read(file, "meta/org_file_name")
+        dset_id = read(file, "meta/data_set_id")
         close(file)
 
         # filter the electrodes
@@ -52,7 +49,6 @@ mutable struct Spike_Train
         A_Y, sttc = functional_connectivity_inference(
             spikes,
             spike_counts,
-            dt,
             recording_time
         )
         A_Y[diagind(A_Y)] .= 0
@@ -71,6 +67,7 @@ mutable struct Spike_Train
         # construct the sample
         new(
             file_path,
+            dset_id,
             org_file_name,
             group_id,
             electrode_names,
@@ -86,17 +83,16 @@ end
 function functional_connectivity_inference(
     spikes::Vector{Float64},
     spike_counts::Vector{Int32},
-    dt::Float64,
     recording_time::Vector{Float64}
 )
     # compute experimental sttc
-    sttc = sttc_tiling(dt, recording_time, spikes, spike_counts)
+    sttc = sttc_tiling(config["params"]["dt"], recording_time, spikes, spike_counts)
 
     # prepare permutations
     perm_test_counts = zeros(size(sttc))
     for i in 1:config["params"]["num_perms"]
         jittered_spikes = jitter_spikes_fast(spikes, spike_counts, config["params"]["dt_jitter"])
-        jittered_sttc = sttc_tiling(dt, recording_time, jittered_spikes, spike_counts)
+        jittered_sttc = sttc_tiling(config["params"]["dt"], recording_time, jittered_spikes, spike_counts)
         perm_test_counts .+= (jittered_sttc .>= sttc)
     end
 
