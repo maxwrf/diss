@@ -250,7 +250,7 @@ function top_eta_gamma_combs(df_top)
             ylimits=(-7.5, 6), xlimits=(-7.5, 2.5), markersize=10)
 
         if (i - 1) % 4 == 0
-            ylabel!(row.data_set * "\n gamma")
+            ylabel!(row.data_set * "\ngamma")
         end
 
         if i > 8
@@ -265,17 +265,61 @@ function top_eta_gamma_combs(df_top)
     savefig(p, "gnm/analysis/eta_gamma_stab.pdf")
 end
 
-top_eta_gamma_combs(top_df)
+function top_landscapes(df_top)
+    plots = []
+    titles = []
 
+    i = 0
+    i_color = 1
+    for row in eachrow(df_top)
+        i += 1
+        # get the best performing model, per week and dataset
+        df_subset = filter(r -> (r.model_id == row.model_id) && (r.week == row.week) && (r.data_set == row.data_set), df_all)
+
+        # average across samples
+        plot_data = combine(groupby(df_subset, [:eta, :gamma]), :KS_MAX => mean)
+
+        # increase color index
+        if (i - 1) % 4 == 0
+            i_color += 1
+        end
+
+        # data for plot
+        landscape = reshape(plot_data.KS_MAX_mean, (length(unique(plot_data.eta)), length(unique(plot_data.gamma))))
+        p = heatmap(landscape, clim=(0, 1), c=:viridis, legend=:none, xticks=:none, yticks=:none, aspect_ratio=:equal, showaxis=false)
+        yflip!(true)
+
+        if (i - 1) % 4 == 0
+            ylabel!(row.data_set * "\ngamma (-7.5, +7.5)")
+        end
+
+        if i > 8
+            xlabel!("eta (-7.5, +7.5)")
+        end
+
+        push!(plots, p)
+        push!(titles, "DIV W" * string(row.week) * "\n Model: " * MODELS[row.model_id])
+    end
+
+    p = plot(plots...; format=grid(3, 4), fmt=:pdf, size=(1600, 1300), margin=9.5mm, title=reshape(titles, (1, 11)))
+    savefig(p, "gnm/analysis/top_landscapes.pdf")
+end
+
+# get dfs
 df_all = get_df_all()
+df_top = get_top_df()
 
+# overall performance
 get_overall_heatmap()
-top_df = get_top_df()
 
+# eta gamma sensitivity
+top_eta_gamma_combs(top_df)
+top_landscapes(df_top)
+
+# Sensitivtiy to samples
 get_freq_heatmap()
 
-
-
+# all
 heatmaps = get_heatmaps()
 
 
