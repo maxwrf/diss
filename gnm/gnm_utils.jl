@@ -39,15 +39,16 @@ function ks_test(x, y)
     return ks_statistic
 end
 
-function generate_param_space(n_runs::Int=100,
-    eta_limits::Array{Float64}=[-7.0, 7.0],
-    gamma_limits::Array{Float64}=[-7.0, 7.0])
+function generate_param_space(
+    n_runs::Int=100,
+    limits_one::Array{Float64}=[-7.0, 7.0],
+    limits_two::Array{Float64}=[-7.0, 7.0])
     """
     Creates a linear parameter space defined by the eta and gamma bounds
     for the desired number of runs
     """
-    p = range(eta_limits[1], stop=eta_limits[2], length=max(floor(Int64, sqrt(n_runs)), 2))
-    q = range(gamma_limits[1], stop=gamma_limits[2], length=max(floor(Int64, sqrt(n_runs)), 2))
+    p = range(limits_one[1], stop=limits_one[2], length=max(floor(Int64, sqrt(n_runs)), 2))
+    q = range(limits_two[1], stop=limits_two[2], length=max(floor(Int64, sqrt(n_runs)), 2))
 
     params_tups = unique(collect(Iterators.product(p, q)), dims=1)
     params_tups = vec(permutedims(params_tups, [2, 1]))

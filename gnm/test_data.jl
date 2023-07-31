@@ -23,6 +23,7 @@ end
 
 function load_weight_test_data()
     pData = "/Users/maxwuerfek/code/diss/gnm/test-weights/demo_data.mat"
+    pData = "/home/mw894/diss/gnm/test-weights/demo_data.mat"
     data = matread(pData)
     D = data["demo_data"]["D"]
     A_init = data["demo_data"]["seed"]

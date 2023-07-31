@@ -7,6 +7,13 @@
         "num_perms": 1000,
         "p_value": 0.1
     },
+    "params_w": {
+        "n_runs": 100,
+        "alpha_max": 0.01,
+        "alpha_min": 0.02,
+        "omega_max": 1.05,
+        "omega_min": 0.85
+    },
     "cluster": true,
     "data_sets": {
         "1": "Charlesworth2015/ctx",
