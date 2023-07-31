@@ -3,6 +3,7 @@ using DataFrames
 using Statistics
 using Plots
 using Measures
+using GLM
 
 Plots.scalefontsizes(1.5)
 
@@ -85,11 +86,12 @@ function get_overall_heatmap()
 
         # Compute the average across all samples
         avg_top_model_sample_combs = combine(groupby(top_model_sample_combs, [:model_id, :week]), :KS_MAX_best => mean => :KS_MAX_best_mean)
+        sort!(avg_top_model_sample_combs, [:week, :model_id])
 
         # data for plot
         p_data = reshape(avg_top_model_sample_combs.KS_MAX_best_mean,
-            length(unique(avg_top_model_sample_combs.week)),
-            length(unique(avg_top_model_sample_combs.model_id)))'
+            length(unique(avg_top_model_sample_combs.model_id)),
+            length(unique(avg_top_model_sample_combs.week)))
 
 
         p = heatmap(p_data, yticks=(1:13, values(MODELS)), interpolate=false, c=:viridis, xticks=(1:4), fill_z=p_data, fmt=:pdf)
@@ -114,7 +116,6 @@ function get_freq_heatmap()
     for dset in unique(df_all.data_set)
         push!(dset_names, dset)
 
-
         # get dataset df
         df_dataset = df_all[df_all.data_set.==dset, :]
 
@@ -128,12 +129,16 @@ function get_freq_heatmap()
         tops = combine(groupby(tops, [:model_id, :week]), :KS_MAX_best => length => :nrow)
 
         # combine because we dropped out
-        product = Iterators.product(1:13, 1:4)
+        if dset == "Demas2006"
+            product = Iterators.product(1:13, 1:3)
+        else
+            product = Iterators.product(1:13, 1:4)
+        end
         df_plot = DataFrame(product)
         rename!(df_plot, [:model_id, :week])
         df_plot = leftjoin(df_plot, tops, on=[:model_id, :week])
         replace!(df_plot.nrow, missing => 0)
-        sort!(df_plot, [:model_id, :week])
+        sort!(df_plot, [:week, :model_id])
 
         # data for plot
         p_data = reshape(df_plot.nrow,
@@ -157,8 +162,6 @@ function get_freq_heatmap()
     p = plot(plots...; format=grid(4, 4), fmt=:pdf, size=(1500, 1500), margin=5mm, title=reshape(dset_names, (1, 3)))
     savefig(p, "gnm/analysis/top_freqs.pdf")
 end
-
-get_freq_heatmap()
 
 function get_heatmaps()
     heatmaps = Dict()
@@ -222,13 +225,59 @@ function get_top_df()
     return top_df
 end
 
+function top_eta_gamma_combs(df_top)
+    plots = []
+    titles = []
 
-get_top_df()
+    i = 0
+    i_color = 1
+    for row in eachrow(df_top)
+        i += 1
+        # get the best performing model, per week and dataset
+        df_subset = filter(r -> (r.model_id == row.model_id) && (r.week == row.week) && (r.data_set == row.data_set), df_all)
+
+        # for every sample get the best performing parameter combination
+        df_subset = combine(g -> g[argmin(g.KS_MAX), :], groupby(df_subset, [:sample_name]))
+
+        # increase color index
+        if (i - 1) % 4 == 0
+            i_color += 1
+        end
+
+        # prep plot
+        p = scatter(df_subset.eta, df_subset.gamma, seriestype=:scatter, legend=:none, title=string(row.data_set, " ", row.week),
+            aspect_ratio=:equal, color=palette(:default)[i_color], markerstrokecolor=palette(:default)[i_color],
+            ylimits=(-7.5, 6), xlimits=(-7.5, 2.5), markersize=10)
+
+        if (i - 1) % 4 == 0
+            ylabel!(row.data_set * "\n gamma")
+        end
+
+        if i > 8
+            xlabel!("eta")
+        end
+
+        push!(plots, p)
+        push!(titles, "DIV W" * string(row.week) * "\n Model: " * MODELS[row.model_id])
+    end
+
+    p = plot(plots...; format=grid(3, 4), fmt=:pdf, size=(1500, 1500), margin=7mm, title=reshape(titles, (1, 11)))
+    savefig(p, "gnm/analysis/eta_gamma_stab.pdf")
+end
+
+top_eta_gamma_combs(top_df)
+
+df_all = get_df_all()
 
 get_overall_heatmap()
+top_df = get_top_df()
+
+get_freq_heatmap()
+
+
 
 heatmaps = get_heatmaps()
 
-df_all = get_df_all()
+
 
 
