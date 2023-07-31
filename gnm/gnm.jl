@@ -326,7 +326,9 @@ function norm_obj_func_auto_diff(W, D, ω)
     S = sqrt(inv(Diagonal(node_strengths)))
 
     # compute the objective
-    return sum((exponential!(copyto!(similar(W), S * W * S), ExpMethodHigham2005()) .* D) .^ ω)
+    C = exponential!(copyto!(similar(W), S * W * S), ExpMethodHigham2005())
+    C[diagind(C)] .= 0.0
+    return sum((C .* D) .^ ω)
 end
 
 function generate_models(model::GNM_Weighted)
@@ -364,7 +366,7 @@ function generate_models(model::GNM_Weighted)
             model.A_keep[i_param, (i_edge-model.m_seed), :, :] = model.A_current
 
             if (i_edge >= (model.start_edge + model.m_seed + 1))
-                println("Tune ", i_edge, " / ", model.m)
+                # println("Tune ", i_edge, " / ", model.m)
                 # Init W current
                 if (i_edge == (model.start_edge + model.m_seed + 1))
                     model.W_current = copy(model.A_current)

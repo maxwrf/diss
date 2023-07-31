@@ -1,6 +1,6 @@
 {
     "params": {
-        "n_runs": 10000,
+        "n_runs": 4000,
         "min_hz": 0.01,
         "dt": 0.01,
         "dt_jitter": 0.01,
@@ -8,7 +8,7 @@
         "p_value": 0.1
     },
     "params_w": {
-        "n_runs": 100,
+        "n_runs": 1000,
         "alpha_max": 0.01,
         "alpha_min": 0.02,
         "omega_max": 1.05,
@@ -18,7 +18,6 @@
     "data_sets": {
         "1": "Charlesworth2015/ctx",
         "2": "Charlesworth2015/hpc",
-        "3": "Demas2006",
-        "4": "Maccione2014"
+        "3": "Demas2006"
     }
 }

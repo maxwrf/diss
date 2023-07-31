@@ -161,7 +161,7 @@ function betweenness_wei(G)
             V = findall(x -> x == minD, D)
         end
 
-        DP = zeros(Int, n)   # Dependency
+        DP = zeros(n)   # Dependency
         for w in Q[1:n-1]
             BC[w] += DP[w]
             for v in findall(x -> x != 0, P[w, :])

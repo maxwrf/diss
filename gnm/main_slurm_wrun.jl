@@ -9,7 +9,15 @@ using JSON
 
 const config = JSON.parsefile("/home/mw894/diss/gnm/config.json")
 
-function main(file_path::String)
+function main(test_path::Union{String,Nothing}=nothing)
+    if length(ARGS) == 1
+        file_path = ARGS[1]
+    elseif test_path !== nothing
+        file_path = test_path
+    else
+        error("Please provide a data file path.")
+    end
+
     # get the best eta gamma combination from the standard GNM run
     res_path = replace(file_path, ".dat" => ".res")
     println(res_path)
@@ -20,8 +28,8 @@ function main(file_path::String)
 
     K_MAX = dropdims(maximum(K, dims=2); dims=2)
     _, top_idx = findmin(K_MAX)
-    etas = repeat([param_space[top_idx, 1]], config["params_w"]["n_runs"])
-    gammas = repeat([param_space[top_idx, 2]], config["params_w"]["n_runs"])
+    eta = param_space[top_idx, 1]
+    gamma = param_space[top_idx, 2]
 
     # a little clean up to be sure
     K = nothing
@@ -35,6 +43,8 @@ function main(file_path::String)
         [config["params_w"]["omega_min"], config["params_w"]["omega_max"]]
     )
 
+    etas = repeat([eta], size(alpha_omga_space, 1))
+    gammas = repeat([gamma], size(alpha_omga_space, 1))
     param_space = hcat(etas, gammas, alpha_omga_space[:, 1], alpha_omga_space[:, 2])
 
     # read data from the .dat file
