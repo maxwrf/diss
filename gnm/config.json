@@ -5,7 +5,9 @@
         "dt": 0.01,
         "dt_jitter": 0.01,
         "num_perms": 1000,
-        "p_value": 0.1
+        "p_value": 0.1,
+        "subsample": true,
+        "subsample_factor": 0.75
     },
     "params_w": {
         "n_runs": 1000,

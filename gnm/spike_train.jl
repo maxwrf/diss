@@ -35,6 +35,15 @@ mutable struct Spike_Train
         dset_id = read(file, "meta/data_set_id")
         close(file)
 
+        # subsample the spikes
+        if config["params"]["subsample"]
+            spikes, spike_counts, firing_rates, recording_time = subsample_strains(
+                spikes,
+                spike_counts,
+                recording_time
+            )
+        end
+
         # filter the electrodes
         electrode_names, electrode_positions, spikes, spike_counts = filter_electrodes(
             dset_id,
@@ -78,6 +87,31 @@ mutable struct Spike_Train
             sttc
         )
     end
+end
+
+function subsample_strains(spikes, spike_counts, recording_time)
+    # compute the number of electrodes
+    n_electrodes = length(spike_counts)
+
+    # compute the new max recording time
+    new_max_time = recording_time[end] * config["params"]["subsample_factor"]
+    new_recording_time = Float64[recording_time[1], new_max_time]
+
+    # adapt the spikes and spike counts, and firing rate
+    st_cumsum = [0; cumsum(spike_counts)]
+
+    new_spike_counts = Int32[]
+    new_spikes = Float64[]
+    new_firing_rates = Float64[]
+    for i in 1:n_electrodes
+        st = spikes[(st_cumsum[i]+1):(st_cumsum[i+1])]
+        st = st[st.<new_max_time]
+        push!(new_spike_counts, length(st))
+        append!(new_spikes, st)
+        push!(new_firing_rates, length(st) / new_max_time)
+    end
+
+    return new_spikes, new_spike_counts, new_firing_rates, new_recording_time
 end
 
 function functional_connectivity_inference(

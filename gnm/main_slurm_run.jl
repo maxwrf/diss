@@ -1,9 +1,12 @@
-include("gnm.jl")
+include("gnm.jl") #  do not change order
 
+using JSON
 using HDF5
 using .GNM_Mod
 using StatsBase: sample
 using LinearAlgebra: triu, Symmetric
+
+const config = JSON.parsefile("/home/mw894/diss/gnm/config.json")
 
 function main(test_path::Union{String,Nothing}=nothing)
     if length(ARGS) == 1
@@ -68,7 +71,12 @@ function main(test_path::Union{String,Nothing}=nothing)
     @time GNM_Mod.generate_models(model)
 
     # save results
-    res_file_path = replace(file_path, r"\.dat$" => ".res")
+    if config["params"]["subsample"]
+        res_file_path = replace(file_path, r"\.dat$" => ".subres")
+    else
+        res_file_path = replace(file_path, r"\.dat$" => ".res")
+    end
+
     file = h5open(res_file_path, "w")
 
     write(file, "K", model.K)
@@ -88,5 +96,5 @@ function main(test_path::Union{String,Nothing}=nothing)
 end
 
 
-main("/store/DAMTPEGLEN/mw894/slurm/Charlesworth2015/sample_00001.dat")
+main("/store/DAMTPEGLEN/mw894/data/Charlesworth2015/ctx/sample_00001.dat")
 #main("/store/DAMTPEGLEN/mw894/data/Maccione2014/sample_00416.dat")

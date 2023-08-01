@@ -4,6 +4,8 @@ using Statistics
 using Plots
 using Measures
 using GLM
+using LaTeXStrings
+using StatsBase
 
 Plots.scalefontsizes(1.5)
 
@@ -208,6 +210,28 @@ function get_heatmaps()
     return heatmaps
 end
 
+function get_top_freq_df()
+    # groupby datset and week and get the best performing parameter combination
+    tops = combine(g -> g[argmin(g.KS_MAX), :], groupby(df_all, [:data_set, :sample_name, :week, :model_id]))
+
+    # across models get the best model for each sample
+    tops = combine(g -> g[argmin(g.KS_MAX), :], groupby(tops, [:data_set, :sample_name, :week]))
+
+    # For each model count the samples
+    tops = combine(groupby(tops, [:data_set, :week, :model_id]), :KS_MAX => length => :ntop, :eta => mean => :mean_eta, :gamma => mean => :mean_gamma)
+
+    # get freqs
+    freqs = combine(groupby(tops, [:data_set, :week]), :ntop => sum => :nsamples)
+
+    # get maximum count
+    tops = combine(g -> g[argmax(g.ntop), :], groupby(tops, [:data_set, :week]))
+
+    tops = innerjoin(tops, freqs; on=[:data_set, :week])
+    tops.fractop = tops.ntop ./ tops.nsamples
+    sort!(tops, [:data_set, :week])
+    return tops
+end
+
 function get_top_df()
     # groupby datset and week and get the best performing parameter combination
     tops = combine(g -> g[argmin(g.KS_MAX), :], groupby(df_all, [:data_set, :model_id, :sample_name, :week]))
@@ -248,6 +272,13 @@ function top_eta_gamma_combs(df_top)
         p = scatter(df_subset.eta, df_subset.gamma, seriestype=:scatter, legend=:none, title=string(row.data_set, " ", row.week),
             aspect_ratio=:equal, color=palette(:default)[i_color], markerstrokecolor=palette(:default)[i_color],
             ylimits=(-7.5, 6), xlimits=(-7.5, 2.5), markersize=10)
+
+        # add fitted line
+        m = lm(@formula(gamma ~ eta), df_subset)
+        Plots.abline!(coef(m)[2], coef(m)[1], color=palette(:default)[i_color])
+
+        annotate!(-5.5, 0.1, "R2: " * string(round(r2(m), digits=2)), 12)
+
 
         if (i - 1) % 4 == 0
             ylabel!(row.data_set * "\ngamma")
@@ -305,6 +336,58 @@ function top_landscapes(df_top)
     savefig(p, "gnm/analysis/top_landscapes.pdf")
 end
 
+function top_energy_factor(df_top)
+    plots = []
+    titles = []
+
+    i = 0
+    i_color = 1
+    for row in eachrow(df_top)
+        i += 1
+        # get the best performing model, per week and dataset
+        df_subset = filter(r -> (r.model_id == row.model_id) && (r.week == row.week) && (r.data_set == row.data_set), df_all)
+
+        # for every sample get the best performing parameter combination
+        df_subset = combine(g -> g[argmin(g.KS_MAX), :], groupby(df_subset, [:sample_name]))
+
+        # increase color index
+        if (i - 1) % 4 == 0
+            i_color += 1
+        end
+
+        # compute the realtive frequencies
+        top_energies = reduce(append!, map(r -> findall([r.KS_K, r.KS_C, r.KS_B, r.KS_E] .== r.KS_MAX), eachrow(df_subset)))
+        top_energies_counts = countmap(top_energies)
+        top_energies_relative_freqs = Dict(key => count / length(top_energies) for (key, count) in top_energies_counts)
+
+        # prep plot
+        x = keys(top_energies_relative_freqs)
+        y = values(top_energies_relative_freqs)
+        order = sortperm(collect(x))
+        y = collect(y)[order]
+        x = collect(x)[order]
+
+        p = bar(x, y, l=0.5, xticks=(1:4, ["KS K", "KS C", "KS B", "KS E"]), legend=false, ylim=(0, 0.5),
+            c=palette(:default)[i_color], title=string(row.data_set, " ", row.week))
+
+        if (i - 1) % 4 == 0
+            ylabel!(row.data_set * "\n% maximum energy (KS max)")
+        end
+
+        if i > 8
+            xlabel!("Energy factor")
+        end
+
+        push!(plots, p)
+        push!(titles, "DIV W" * string(row.week) * "\n Model: " * MODELS[row.model_id])
+    end
+
+    p = plot(plots...; format=grid(3, 4), fmt=:pdf, size=(1500, 1500), margin=7mm, title=reshape(titles, (1, 11)))
+    savefig(p, "gnm/analysis/energy_factors.pdf")
+end
+
+top_energy_factor(df_top)
+
 # get dfs
 df_all = get_df_all()
 df_top = get_top_df()
@@ -313,7 +396,7 @@ df_top = get_top_df()
 get_overall_heatmap()
 
 # eta gamma sensitivity
-top_eta_gamma_combs(top_df)
+top_eta_gamma_combs(df_top)
 top_landscapes(df_top)
 
 # Sensitivtiy to samples
