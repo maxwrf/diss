@@ -10,6 +10,10 @@ const config = JSON.parsefile("/home/mw894/diss/gnm/config.json")
 function main(test_path::Union{String,Nothing}=nothing)
     if length(ARGS) == 1
         file_path = ARGS[1]
+        subsample = false
+    elseif length(ARGS) == 2
+        file_path = ARGS[1]
+        subsample = parse(Bool, ARGS[2])
     elseif test_path !== nothing
         file_path = test_path
     else
@@ -18,12 +22,13 @@ function main(test_path::Union{String,Nothing}=nothing)
 
     println("File: ", file_path)
     println("Runs: ", config["params"]["n_runs"])
+    println("Subsample: ", subsample)
 
     # prepare the parameter space
     param_space = generate_param_space(config["params"]["n_runs"])
 
     # generate the spike train
-    spike_train = Spike_Train(file_path)
+    spike_train = Spike_Train(file_path, subsample)
     m = sum(spike_train.A_Y) / 2
     m_max = (size(spike_train.A_Y, 1) * (size(spike_train.A_Y, 1) - 1)) / 2
 
@@ -41,7 +46,7 @@ function main(test_path::Union{String,Nothing}=nothing)
 
     # for every recording prepare 13 files for each model
     for (model_id, model_name) in MODELS
-        if config["params"]["subsample"]
+        if subsample
             out_file = base * "_" * @sprintf("%05d", ((recording_num - 1) * length(MODELS)) + model_id) * ".subdat"
         else
             out_file = base * "_" * @sprintf("%05d", ((recording_num - 1) * length(MODELS)) + model_id) * ".dat"

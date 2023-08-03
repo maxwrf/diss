@@ -21,7 +21,7 @@ mutable struct Spike_Train
 
     sttc::Matrix{Float64}
 
-    function Spike_Train(file_path::String)
+    function Spike_Train(file_path::String, subsample::Bool)
         # read the h5 data
         file = h5open(file_path, "r")
         spikes = read(file, "spikes")
@@ -36,7 +36,7 @@ mutable struct Spike_Train
         close(file)
 
         # subsample the spikes
-        if config["params"]["subsample"]
+        if subsample
             spikes, spike_counts, firing_rates, recording_time = subsample_strains(
                 spikes,
                 spike_counts,

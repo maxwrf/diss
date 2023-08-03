@@ -7,7 +7,10 @@ using GLM
 using LaTeXStrings
 using StatsBase
 
-Plots.scalefontsizes(1.5)
+using StatsPlots
+using Plots
+
+# Plots.scalefontsizes(1.5)
 
 include("/home/mw894/diss/gnm/gnm_utils.jl")
 
@@ -17,10 +20,14 @@ datasets = [
     "/store/DAMTPEGLEN/mw894/data/Demas2006"
 ]
 
-function get_df_all()
+function get_df_all(subsample=false)
     df_all = DataFrame[]
     for in_dir in datasets
-        res_files = filter(name -> endswith(name, ".res"), readdir(in_dir))
+        if subsample
+            res_files = filter(name -> endswith(name, ".subres"), readdir(in_dir))
+        else
+            res_files = filter(name -> endswith(name, ".res"), readdir(in_dir))
+        end
         res_files = map(name -> joinpath(in_dir, name), res_files)
         res_files
 
@@ -71,10 +78,48 @@ function get_df_all()
 
     df_all = vcat(df_all...)
 
+    # remove zeros
+    df_all = df_all[df_all.KS_MAX.!=0, :]
+
+    families = Dict(
+        1 => "spatial",
+        2 => "homophilic",
+        3 => "homophilic",
+        4 => "cluster",
+        5 => "cluster",
+        6 => "cluster",
+        7 => "cluster",
+        8 => "cluster",
+        9 => "degree",
+        10 => "degree",
+        11 => "degree",
+        12 => "degree",
+        13 => "degree"
+    )
+
+    model_names = Dict(
+        1 => "spatial",
+        2 => "match",
+        3 => "neigh",
+        4 => "clu-avg",
+        5 => "clu-min",
+        6 => "clu-max",
+        7 => "clu-dist",
+        8 => "clu-prod",
+        9 => "deg-avg",
+        10 => "deg-min",
+        11 => "deg-max",
+        12 => "deg-dist",
+        13 => "deg-prod"
+    )
+
+    df_all.families = map(id -> families[id], df_all.model_id)
+    df_all.model_names = map(id -> model_names[id], df_all.model_id)
+
     return df_all
 end
 
-function get_overall_heatmap()
+function get_overall_heatmap(subsample=false)
     plots = []
     dset_names = []
     for dset in unique(df_all.data_set)
@@ -96,11 +141,11 @@ function get_overall_heatmap()
             length(unique(avg_top_model_sample_combs.week)))
 
 
-        p = heatmap(p_data, yticks=(1:13, values(MODELS)), interpolate=false, c=:viridis, xticks=(1:4), fill_z=p_data, fmt=:pdf)
+        p = heatmap(p_data, yticks=(1:13, values(MODELS)), interpolate=false, c=:viridis, xticks=(1:4), fill_z=p_data, fmt=:pdf, legend=:none)
 
         # annotate
         nrow, ncol = size(p_data)
-        fontsize = 11
+        fontsize = 12
         ann = [(j, i, text(round(p_data[i, j], digits=3), fontsize, :white, :center, :bold)) for i in 1:nrow for j in 1:ncol]
         annotate!(ann, linecolor=:white)
         xlabel!("DIV in number of weeks")
@@ -109,10 +154,16 @@ function get_overall_heatmap()
     end
 
     p = plot(plots...; format=grid(4, 4), fmt=:pdf, size=(1500, 1500), margin=5mm, title=reshape(dset_names, (1, 3)))
-    savefig(p, "gnm/analysis/top_scores.pdf")
+
+    if subsample
+        savefig(p, "gnm/analysis/top_scores_sub.pdf")
+    else
+        savefig(p, "gnm/analysis/top_scores.pdf")
+    end
+
 end
 
-function get_freq_heatmap()
+function get_freq_heatmap(subsample=false)
     plots = []
     dset_names = []
     for dset in unique(df_all.data_set)
@@ -150,22 +201,27 @@ function get_freq_heatmap()
         p_data = p_data ./ sum(p_data, dims=1)
 
 
-        p = heatmap(p_data, yticks=(1:13, values(MODELS)), interpolate=false, xticks=(1:4), fill_z=p_data, fmt=:pdf)
+        p = heatmap(p_data, yticks=(1:13, values(MODELS)), interpolate=false, xticks=(1:4), fill_z=p_data, fmt=:pdf, legend=:none, c=:RdYlBu_3)
 
         # annotate
         nrow, ncol = size(p_data)
-        fontsize = 11
-        ann = [(j, i, text(round(p_data[i, j], digits=3), fontsize, :white, :center, :bold)) for i in 1:nrow for j in 1:ncol]
+        fontsize = 12
+        ann = [(j, i, text(round(p_data[i, j], digits=3), fontsize, :black, :center, :bold)) for i in 1:nrow for j in 1:ncol]
         annotate!(ann, linecolor=:white)
         xlabel!("DIV in number of weeks")
 
         push!(plots, p)
     end
     p = plot(plots...; format=grid(4, 4), fmt=:pdf, size=(1500, 1500), margin=5mm, title=reshape(dset_names, (1, 3)))
-    savefig(p, "gnm/analysis/top_freqs.pdf")
+
+    if subsample
+        savefig(p, "gnm/analysis/top_freqs_sub.pdf")
+    else
+        savefig(p, "gnm/analysis/top_freqs.pdf")
+    end
 end
 
-function get_heatmaps()
+function get_heatmaps(subsample=false)
     heatmaps = Dict()
     for dset in unique(df_all.data_set)
         heatmaps[dset] = Dict()
@@ -204,7 +260,11 @@ function get_heatmaps()
 
             heatmaps[dset][week] = plots
 
-            savefig(p, "gnm/analysis/" * replace(dset, "/" => "_") * "_" * string(week) * "_heatmaps.png")
+            if subsample
+                savefig(p, "gnm/analysis/" * replace(dset, "/" => "_") * "_" * string(week) * "_heatmaps_sub.pdf")
+            else
+                savefig(p, "gnm/analysis/" * replace(dset, "/" => "_") * "_" * string(week) * "_heatmaps.pdf")
+            end
         end
     end
     return heatmaps
@@ -239,17 +299,30 @@ function get_top_df()
     # Compute the average across all samples
     avg_tops = combine(groupby(tops, [:data_set, :model_id, :week]),
         :KS_MAX => mean => :KS_MAX_best_mean,
+        :KS_MAX => median => :KS_MAX_best_median,
+        :KS_MAX => std => :KS_MAX_best_std,
+        :KS_MAX => iqr => :KS_MAX_best_iqr,
         :eta => mean => :eta_mean,
         :gamma => mean => :gamma_mean)
 
     top_df = combine(g -> g[argmin(g.KS_MAX_best_mean), :], groupby(avg_tops, [:data_set, :week]))
+    top_df_median = combine(g -> g[argmin(g.KS_MAX_best_median), :], groupby(avg_tops, [:data_set, :week]))
+
+    #top_df = outerjoin(top_df, top_df2; on=[:data_set, :week], makeunique=true)
 
     sort!(top_df, [:data_set, :week])
+    sort!(top_df_median, [:data_set, :week])
 
-    return top_df
+
+    cols = [:KS_MAX_best_mean, :KS_MAX_best_median, :KS_MAX_best_std, :KS_MAX_best_iqr, :eta_mean, :gamma_mean]
+
+    top_df[!, cols] = round.(top_df[!, cols], digits=3)
+    top_df_median[!, cols] = round.(top_df_median[!, cols], digits=3)
+
+    return top_df, top_df_median
 end
 
-function top_eta_gamma_combs(df_top)
+function top_eta_gamma_combs(df_top, subsample=false)
     plots = []
     titles = []
 
@@ -271,7 +344,7 @@ function top_eta_gamma_combs(df_top)
         # prep plot
         p = scatter(df_subset.eta, df_subset.gamma, seriestype=:scatter, legend=:none, title=string(row.data_set, " ", row.week),
             aspect_ratio=:equal, color=palette(:default)[i_color], markerstrokecolor=palette(:default)[i_color],
-            ylimits=(-7.5, 6), xlimits=(-7.5, 2.5), markersize=10)
+            markersize=10) #limits=(-7.5, 6), xlimits=(-7.5, 2.5),
 
         # add fitted line
         m = lm(@formula(gamma ~ eta), df_subset)
@@ -293,10 +366,15 @@ function top_eta_gamma_combs(df_top)
     end
 
     p = plot(plots...; format=grid(3, 4), fmt=:pdf, size=(1500, 1500), margin=7mm, title=reshape(titles, (1, 11)))
-    savefig(p, "gnm/analysis/eta_gamma_stab.pdf")
+
+    if subsample
+        savefig(p, "gnm/analysis/eta_gamma_stab_sub.pdf")
+    else
+        savefig(p, "gnm/analysis/eta_gamma_stab.pdf")
+    end
 end
 
-function top_landscapes(df_top)
+function top_landscapes(df_top, subsample=false)
     plots = []
     titles = []
 
@@ -308,7 +386,7 @@ function top_landscapes(df_top)
         df_subset = filter(r -> (r.model_id == row.model_id) && (r.week == row.week) && (r.data_set == row.data_set), df_all)
 
         # average across samples
-        plot_data = combine(groupby(df_subset, [:eta, :gamma]), :KS_MAX => mean)
+        plot_data = combine(groupby(df_subset, [:eta, :gamma]), :KS_MAX => median => :KS_MAX_mean)
 
         # increase color index
         if (i - 1) % 4 == 0
@@ -333,10 +411,15 @@ function top_landscapes(df_top)
     end
 
     p = plot(plots...; format=grid(3, 4), fmt=:pdf, size=(1600, 1300), margin=9.5mm, title=reshape(titles, (1, 11)))
-    savefig(p, "gnm/analysis/top_landscapes.pdf")
+
+    if subsample
+        savefig(p, "gnm/analysis/top_landscapes_sub.pdf")
+    else
+        savefig(p, "gnm/analysis/top_landscapes.pdf")
+    end
 end
 
-function top_energy_factor(df_top)
+function top_energy_factor(df_top, subsample=false)
     plots = []
     titles = []
 
@@ -383,28 +466,68 @@ function top_energy_factor(df_top)
     end
 
     p = plot(plots...; format=grid(3, 4), fmt=:pdf, size=(1500, 1500), margin=7mm, title=reshape(titles, (1, 11)))
-    savefig(p, "gnm/analysis/energy_factors.pdf")
+
+    if subsample
+        savefig(p, "gnm/analysis/energy_factors_sub.pdf")
+    else
+        savefig(p, "gnm/analysis/energy_factors.pdf")
+    end
 end
 
-top_energy_factor(df_top)
+function get_overall_boxplots(subsample=false)
+    plots = [] # 11 plots
+    titles = []
+    for dset in unique(df_all.data_set)
+        for week in unique(df_all.week)
+            # Demas does not have week 4
+            if (week == 4) && (dset == "Demas2006")
+                continue
+            end
 
+            # get subset
+            df_subset = filter(r -> (r.week == week) && (r.data_set == dset), df_all)
+
+            # Get best performing parameter combination 
+            df_subset_top = combine(groupby(df_subset, [:model_names, :sample_name, :week]), :KS_MAX => minimum => :KS_MAX_best, :families)
+
+
+            p = @df df_subset_top boxplot(:model_names, group=:families, :KS_MAX_best, xrotation=45, fillalpha=0.75, linewidth=2, legend=false, outliers=false)
+            push!(plots, p)
+            push!(titles, dset * "_w " * string(week))
+        end
+    end
+
+    p = plot(plots...; layout=grid(3, 4), size=(1500, 1500), fmt=:pdf, margin=5mm, title=reshape(titles, (1, 11)))
+
+    if subsample
+        savefig(p, "gnm/analysis/boxplots_sub.pdf")
+    else
+        savefig(p, "gnm/analysis/boxplots.pdf")
+    end
+end
+
+subsample = true
 # get dfs
-df_all = get_df_all()
-df_top = get_top_df()
+df_all = get_df_all(subsample)
+df_top, df_top_median = get_top_df()
+df_top_freq = get_top_freq_df()
 
 # overall performance
-get_overall_heatmap()
+get_overall_boxplots(subsample)
+get_overall_heatmap(subsample)
 
 # eta gamma sensitivity
-top_eta_gamma_combs(df_top)
-top_landscapes(df_top)
+top_eta_gamma_combs(df_top_median, subsample)
+
+Plots.scalefontsizes(1.25)
+top_landscapes(df_top_median)
 
 # Sensitivtiy to samples
-get_freq_heatmap()
+get_freq_heatmap(subsample)
+
+# energy factor reps
+top_energy_factor(df_top_median, subsample)
 
 # all
-heatmaps = get_heatmaps()
-
-
-
+heatmaps = get_heatmaps(subsample)
 
