@@ -333,7 +333,8 @@ end
 
 function generate_models(model::GNM_Weighted)
     # start model generation
-    for i_param in 1:size(model.params, 1)
+    @time for i_param in 1:size(model.params, 1)
+        println("i_param: ", i_param)
         eta, gamma, α, ω = model.params[i_param, :]
         model.A_current = copy(model.A_init)
         model.k_current = dropdims(sum(model.A_current, dims=1), dims=1)

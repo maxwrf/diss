@@ -42,7 +42,7 @@ function main()
                     W_Y,
                     start_edge
                 )
-                model.m = 80
+                #model.m = 80
                 GNM_Mod.generate_models(model)
                 # TODO: Need to change for prod
                 K[i_sample, 1, :, :] = model.K
