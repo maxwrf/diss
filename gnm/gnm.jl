@@ -60,8 +60,8 @@ mutable struct GNM_Weighted <: GNM
     W_Y::Matrix{Float64}
     start_edge::Int
     W_current::Matrix{Float64}
-    A_keep::Array{Float64,4}
-    W_keep::Array{Float64,4}
+    A_final::Array{Float64,3}
+    W_final::Array{Float64,3}
     K_W::Matrix{Float64}
     energy_Y_W::Matrix{Float64}
 end
@@ -119,8 +119,8 @@ function GNM(
     else
         # for weighted model all is tracked
         W_current = zeros(n_nodes, n_nodes)
-        A_keep = zeros(size(params, 1), Int(m - m_seed), n_nodes, n_nodes)
-        W_keep = zeros(size(params, 1), Int(m - m_seed), n_nodes, n_nodes)
+        A_final = zeros(size(params, 1), n_nodes, n_nodes)
+        W_final = zeros(size(params, 1), n_nodes, n_nodes)
 
         # compute weighted network sample energy
         K_W = zeros(Int(size(params, 1)), 3)
@@ -151,8 +151,8 @@ function GNM(
             W_Y,
             start_edge,
             W_current,
-            A_keep,
-            W_keep,
+            A_final,
+            W_final,
             K_W,
             energy_Y_W
         )
@@ -334,7 +334,6 @@ end
 function generate_models(model::GNM_Weighted)
     # start model generation
     @time for i_param in 1:size(model.params, 1)
-        println("i_param: ", i_param)
         eta, gamma, α, ω = model.params[i_param, :]
         model.A_current = copy(model.A_init)
         model.k_current = dropdims(sum(model.A_current, dims=1), dims=1)
@@ -364,7 +363,6 @@ function generate_models(model::GNM_Weighted)
             end
             P = [Ff[model.u[i], model.v[i]] for i in 1:length(model.u)]
 
-            model.A_keep[i_param, (i_edge-model.m_seed), :, :] = model.A_current
 
             if (i_edge >= (model.start_edge + model.m_seed + 1))
                 # println("Tune ", i_edge, " / ", model.m)
@@ -372,7 +370,7 @@ function generate_models(model::GNM_Weighted)
                 if (i_edge == (model.start_edge + model.m_seed + 1))
                     model.W_current = copy(model.A_current)
                 else
-                    model.W_current = model.W_keep[i_param, (i_edge-model.m_seed-1), :, :]
+                    # model.W_current = model.W_keep[i_param, (i_edge-model.m_seed-1), :, :]
                     model.W_current[uu, vv] = model.W_current[vv, uu] = 1.0
                 end
 
@@ -391,13 +389,10 @@ function generate_models(model::GNM_Weighted)
                     model.W_current[edge] = max(0, model.W_current[edge] - (α * derivative(g, 0.0)))
                     model.W_current[CartesianIndex(edge[2], edge[1])] = model.W_current[edge]
                 end
-                # save the output
-                model.W_keep[i_param, (i_edge-model.m_seed), :, :] = model.W_current
             end
         end
 
         # evaluate the param combination
-        edge_indices = [Int((idx[1] + 1) * 10^(ceil(log10(idx[2] + 1)))) + idx[2] for idx in findall(==(1), model.A_current)]
         energy_Y_head = zeros(4, model.n_nodes)
         energy_Y_head[1, :] = sum(model.A_current, dims=1)
         energy_Y_head[2, :] = get_clustering_coeff(model.A_current, model.n_nodes)
@@ -416,6 +411,10 @@ function generate_models(model::GNM_Weighted)
         model.K_W[i_param, 1] = ks_test(model.energy_Y_W[1, :], energy_Y_W_head[1, :])
         model.K_W[i_param, 2] = ks_test(model.energy_Y_W[2, :], energy_Y_W_head[2, :])
         model.K_W[i_param, 3] = ks_test(model.energy_Y_W[3, :], energy_Y_W_head[3, :])
+
+        # save matrices
+        model.W_final[i_param, :, :] = model.W_current
+        model.A_final[i_param, :, :] = model.A_current
     end
 end
 

@@ -109,7 +109,7 @@ function clustering_coef_wu(A::Matrix{Float64})
     return C
 end
 
-function betweenness_wei(G)
+function betweenness_wei(G; norm=true)
     # n is the number of nodes in the graph
     n = size(G, 1)
 
@@ -170,7 +170,11 @@ function betweenness_wei(G)
         end
     end
 
-    return BC
+    if norm
+        return BC ./ ((n - 1) * (n - 2))
+    else
+        return BC
+    end
 end
 
 
