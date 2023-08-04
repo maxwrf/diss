@@ -29,7 +29,7 @@ function main(test_path::Union{String,Nothing}=nothing)
     println("Params: ", params)
 
 
-    model = GNM_Mod.GNM(A_Y, D, A_init, reshape(params, (1, 4)), 3, true, W_Y, 0)
+    model = GNM_Mod.GNM(A_Y, D, A_init, reshape(params, (1, 4)), 4, true, W_Y, 0)
     GNM_Mod.generate_models(model)
 
     # store results

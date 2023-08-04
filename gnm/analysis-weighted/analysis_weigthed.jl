@@ -62,12 +62,12 @@ function landscape_plot(df)
     sort!(df_eta_gamma, [:eta, :gamma])
 
     landscape = reshape(df_eta_gamma.KS_MAX, (length(unique(df_eta_gamma.eta)), length(unique(df_eta_gamma.gamma))))
-    p1 = heatmap(unique(df_eta_gamma.eta), unique(df_eta_gamma.gamma), landscape, xlabel="eta", ylabel="gamma", title="KS_MAX (best eta gamma)",
+    p1 = heatmap(unique(df_eta_gamma.eta), unique(df_eta_gamma.gamma), landscape, xlabel="eta", ylabel="gamma", title="KS max (best eta gamma)",
         clim=(0, 1), c=:viridis)
 
     # best KS W for eta gamma
     landscape = reshape(df_eta_gamma.KS_W_MAX, (length(unique(df_eta_gamma.eta)), length(unique(df_eta_gamma.gamma))))
-    p2 = heatmap(unique(df_eta_gamma.eta), unique(df_eta_gamma.gamma), landscape, xlabel="eta", ylabel="gamma", title="KS W MAX (best eta gamma)",
+    p2 = heatmap(unique(df_eta_gamma.eta), unique(df_eta_gamma.gamma), landscape, xlabel="eta", ylabel="gamma", title="KS W max (best eta gamma)",
         clim=(0, 1), c=:viridis)
 
     # best KS W for eta gamma
@@ -75,7 +75,7 @@ function landscape_plot(df)
     sort!(df_alpha_omega, [:alpha, :omega])
 
     landscape = reshape(df_alpha_omega.KS_W_MAX, (length(unique(df_alpha_omega.alpha)), length(unique(df_alpha_omega.omega))))
-    p3 = heatmap(unique(df_alpha_omega.alpha), unique(df_alpha_omega.omega), landscape, xlabel="alpha", ylabel="omega", title="KS_MAX (best alpha omega)",
+    p3 = heatmap(unique(df_alpha_omega.alpha), unique(df_alpha_omega.omega), landscape, xlabel="alpha", ylabel="omega", title="KS W max (best alpha omega)",
         clim=(0, 1), c=:viridis)
 
     p = plot(p1, p2, p3;
@@ -197,9 +197,9 @@ end
 df_all = load_files()
 landscape_plot(df_all)
 dist_plot_A(df_all)
-dist_plot(df_all)
+dist_plot_W(df_all)
 
-#x = df_all[argmin(df_all.KS_W_MAX), :]
+x = df_all[argmin(df_all.KS_MAX), :]
 y = df_all[argmin(df_all.KS_W_MAX), :]
 
 

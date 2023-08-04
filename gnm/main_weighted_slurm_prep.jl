@@ -6,9 +6,9 @@ include("test_data.jl")
 
 function main()
     # params
-    n_runs = 3000
+    n_runs = 6000
     limits_one = [-7.0, 7.0] #  eta
-    limits_two = [-7.0, 10.0] # gamma [7,7]
+    limits_two = [-7.0, 7.0] # gamma [7,7]
 
     limits_three = [0.02, 0.4] # [0.02, 0.1] [0.02, 0.2] alpha
     limits_four = [0.8, 2.0] # [0.8, 1.2] omega
