@@ -1,9 +1,10 @@
 using LinearAlgebra
 using ExponentialUtilities
 using Zygote
-using Plots
+#using Plots
 using Measures
 using StatsBase
+using HDF5
 
 include("gnm/graph_utils.jl")
 include("gnm/test_data.jl")
@@ -120,7 +121,7 @@ function gradient_descent(x, D, W_Y, η, γ, T, callback, eval_tracker, loss_tra
     x
 end
 
-function main()
+function main_local()
     W_Y, D, _, _ = load_weight_test_data()
     η = 0.001
     γ = 1
@@ -139,5 +140,65 @@ function main()
     learning_plot(loss_tracker, eval_tracker, η, γ)
 end
 
-main()
+function main(test_path::Union{String,Nothing}=nothing)
+    if length(ARGS) == 1
+        file_path = ARGS[1]
+    elseif test_path !== nothing
+        file_path = test_path
+    else
+        error("Please provide a data file path.")
+    end
+
+    # load the parameter combination 
+    file = h5open(file_path, "r")
+    meta_group = file["meta"]
+    η = read_attribute(meta_group, "eta")
+    γ = read_attribute(meta_group, "gamma")
+    close(file)
+
+    # only if we have not done this one
+    res_file_path = replace(file_path, r"\.h5$" => ".res")
+    if isfile(res_file_path)
+        println("File already exists: ", res_file_path)
+        return
+    end
+
+    # load the data
+    W_Y, D, _, _ = load_weight_test_data()
+    n_iter = 30
+
+    loss_tracker = Float64[]
+    eval_tracker = Vector{Float64}[]
+    dist_tracker = Matrix{Float64}[]
+
+    # intialize
+    W_init = rand(size(W_Y)...)
+    W_init = W_init .* (W_Y .> 0)
+    W_init = Matrix(Symmetric(W_init))
+
+    W_final = gradient_descent(triu(W_init), D, W_Y, η, γ, n_iter, callback, eval_tracker, loss_tracker, dist_tracker)
+
+    # save the results
+    file = h5open(res_file_path, "w")
+
+    write(file, "W_final", W_final)
+    write(file, "loss_tracker", loss_tracker)
+    write(file, "eval_tracker", Matrix(hcat(eval_tracker...)')) # n_iter x 3
+
+
+    # niter x 3 x n_nodes
+    distr_tracker_store = zeros(length(dist_tracker), size(dist_tracker[1])...)
+    for (i, dist) in enumerate(dist_tracker)
+        distr_tracker_store[i, :, :] = dist
+    end
+    write(file, "dist_tracker", distr_tracker_store)
+
+
+    meta_group = create_group(file, "meta")
+    attributes(meta_group)["eta"] = η
+    attributes(meta_group)["gamma"] = γ
+    close(file)
+end
+
+main("/store/DAMTPEGLEN/mw894/data/weighted/sample_01446.h5")
 
