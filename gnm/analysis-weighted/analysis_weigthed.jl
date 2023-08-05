@@ -203,8 +203,8 @@ x = df_all[argmin(df_all.KS_MAX), :]
 y = df_all[argmin(df_all.KS_W_MAX), :]
 
 
-W_Y, D, A_init, coord = load_weight_test_data()
-A_Y = Float64.(W_Y .> 0)
-S_Y = dropdims(sum(weight_conversion(W_Y), dims=1), dims=1)
-WC_Y = dropdims(clustering_coef_wu(weight_conversion(W_Y)), dims=2)
-WB_Y = betweenness_wei(weight_conversion(W_Y))
+# W_Y, D, A_init, coord = load_weight_test_data()
+# A_Y = Float64.(W_Y .> 0)
+# S_Y = dropdims(sum(weight_conversion(W_Y), dims=1), dims=1)
+# WC_Y = dropdims(clustering_coef_wu(weight_conversion(W_Y)), dims=2)
+# WB_Y = betweenness_wei(weight_conversion(W_Y))

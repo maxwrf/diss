@@ -26,11 +26,11 @@ function main(test_path::Union{String,Nothing}=nothing)
     A_init = read(file, "A_init")
     D = read(file, "D")
     params = read(file, "params")
-    println("Params: ", params)
+    close(file)
 
 
     model = GNM_Mod.GNM(A_Y, D, A_init, reshape(params, (1, 4)), 4, true, W_Y, 0)
-    GNM_Mod.generate_models(model)
+    GNM_Mod.my_generate_models(model)
 
     # store results
     file = h5open(res_file_path, "w")

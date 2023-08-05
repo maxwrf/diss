@@ -3,7 +3,7 @@ module GNM_Mod
 using Statistics
 using Distances
 using ForwardDiff: derivative
-using LinearAlgebra: Diagonal, norm, triu
+using LinearAlgebra: Diagonal, norm, triu, Symmetric
 using ExponentialUtilities
 
 include("gnm_utils.jl")
@@ -319,19 +319,22 @@ function generate_models(model::GNM_Binary)
     end
 end
 
-function norm_obj_func_auto_diff(W, D, ω)
+function my_objective(W, ω, edges, sym_edges)
+
     # compute S
     node_strengths = dropdims(sum(W, dims=2), dims=2)
     node_strengths[node_strengths.==0] .= 1e-5
     S = sqrt(inv(Diagonal(node_strengths)))
 
-    # compute the objective
+    # compute communicability
     C = exponential!(copyto!(similar(W), S * W * S), ExpMethodHigham2005())
     C[diagind(C)] .= 0.0
-    return sum((C .* D) .^ ω)
+
+    # the weights must be at that position nad larger than zero
+    return sum((W .* C) .^ ω) + (sum(W[edges] .> 0) != length(edges)) * Inf + (sum(W[sym_edges] .> 0) != length(edges)) * Inf
 end
 
-function generate_models(model::GNM_Weighted)
+function my_generate_models(model::GNM_Weighted)
     # start model generation
     @time for i_param in 1:size(model.params, 1)
         eta, gamma, α, ω = model.params[i_param, :]
@@ -362,35 +365,38 @@ function generate_models(model::GNM_Weighted)
                 Ff[bth_i, :] = Ff[:, bth_i] = Fd[bth_i, :] .* model.K_current[bth_i, :] .^ gamma .* (model.A_current[bth_i, :] .== 0)
             end
             P = [Ff[model.u[i], model.v[i]] for i in 1:length(model.u)]
-
-
-            if (i_edge >= (model.start_edge + model.m_seed + 1))
-                # println("Tune ", i_edge, " / ", model.m)
-                # Init W current
-                if (i_edge == (model.start_edge + model.m_seed + 1))
-                    model.W_current = copy(model.A_current)
-                else
-                    # model.W_current = model.W_keep[i_param, (i_edge-model.m_seed-1), :, :]
-                    model.W_current[uu, vv] = model.W_current[vv, uu] = 1.0
-                end
-
-                # find edges
-                edges = findall(==(1), triu(model.A_current, 1))
-
-                # Compute the derivative
-                W = copy(model.W_current)
-                for edge in edges
-                    # because we break symmmetry, we differentiate with respect to both edges at once
-                    tangent = zeros(size(model.W_current))
-                    tangent[edge] = tangent[CartesianIndex(edge[2], edge[1])] = 1.0
-                    g(t) = norm_obj_func_auto_diff(W + t * tangent, model.D, ω)
-
-                    # update the weight matrix
-                    model.W_current[edge] = max(0, model.W_current[edge] - (α * derivative(g, 0.0)))
-                    model.W_current[CartesianIndex(edge[2], edge[1])] = model.W_current[edge]
-                end
-            end
         end
+
+        # my  opti process
+        model.W_current = copy(model.A_current)
+        edges = findall(==(1), triu(model.A_current, 1))
+        sym_edges = [CartesianIndex(edge[2], edge[1]) for edge in edges]
+
+        for iter in 1:20
+            println("current loss ", my_objective(model.W_current, ω, edges, sym_edges))
+            # Compute the derivative
+            for (edge, sym_edge) in zip(edges, sym_edges)
+                # because we break symmmetry, we differentiate with respect to both
+                tangent = zeros(size(model.W_current))
+                tangent[edge] = tangent[sym_edge] = 1.0
+
+                g(t) = my_objective(model.W_current + t * tangent, ω, edges, sym_edges)
+                change = (α * derivative(g, 0.0))
+                model.W_current[edge] = model.W_current[sym_edge] = max(1e-5, model.W_current[edge] - change)
+            end
+
+            # evaluate the weights
+            energy_Y_W_head = zeros(3, model.n_nodes)
+            energy_Y_W_head[1, :] = sum(weight_conversion(model.W_current), dims=1)
+            energy_Y_W_head[2, :] = clustering_coef_wu(weight_conversion(model.W_current))
+            energy_Y_W_head[3, :] = betweenness_wei(weight_conversion(model.W_current))
+            model.K_W[i_param, 1] = ks_test(model.energy_Y_W[1, :], energy_Y_W_head[1, :])
+            model.K_W[i_param, 2] = ks_test(model.energy_Y_W[2, :], energy_Y_W_head[2, :])
+            model.K_W[i_param, 3] = ks_test(model.energy_Y_W[3, :], energy_Y_W_head[3, :])
+            println("K ", model.K_W)
+            println(maximum(model.K_W[i_param, :]))
+        end
+
 
         # evaluate the param combination
         energy_Y_head = zeros(4, model.n_nodes)
@@ -411,6 +417,9 @@ function generate_models(model::GNM_Weighted)
         model.K_W[i_param, 1] = ks_test(model.energy_Y_W[1, :], energy_Y_W_head[1, :])
         model.K_W[i_param, 2] = ks_test(model.energy_Y_W[2, :], energy_Y_W_head[2, :])
         model.K_W[i_param, 3] = ks_test(model.energy_Y_W[3, :], energy_Y_W_head[3, :])
+
+        println("K ", model.K_W)
+
 
         # save matrices
         model.W_final[i_param, :, :] = model.W_current

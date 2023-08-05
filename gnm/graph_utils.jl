@@ -177,6 +177,48 @@ function betweenness_wei(G; norm=true)
     end
 end
 
+function global_efficiency(W)
+    n = size(W,1)                  # number of nodes
+
+    L = copy(W)                    # connection-length matrix
+    A = W .> 0                     # adjacency matrix
+    L[A] .= 1 ./ L[A]
+    
+    D = Inf .+ zeros(n, n)            # distance matrix
+    D[1:n + 1:end] .= 0
+
+
+    for u in 1:n
+        S = trues(n)                # distance permanence (true is temporary)
+        W1_ = copy(L)
+        V = [u]
+        while true
+            S[V] .= false              # distance u->V is now permanent
+            W1_[:, V] .= 0            # no in-edges as already shortest
+            for v in V
+                T = findall(W1_[v, :] .> 0) # neighbours of shortest nodes
+                
+                D[u, T] .= min.(D[u, T], D[u, v] .+ W1_[v, T]) # smallest of old/new path lengths
+            end
+
+            minD = sum(D[u, S]) > 0 ? minimum(D[u, S]) : []
+            if isempty(minD) || isinf(minD)  # isempty: all nodes reached; isinf: some nodes cannot be reached
+                break
+            end
+
+            V = findall(D[u, :] .== minD)
+        end
+    end
+
+    D = 1. ./ D                         # invert distance
+    D[1:n + 1:end] .= 0
+
+    di = D
+    E = sum(di) / (n^2 - n)    
+
+    return E
+end
+
 
 # include("test_data.jl")
 # W_Y, D, A_init = load_weight_test_data()
