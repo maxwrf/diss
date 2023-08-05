@@ -178,14 +178,13 @@ function betweenness_wei(G; norm=true)
 end
 
 function global_efficiency(W)
-    n = size(W,1)                  # number of nodes
+    n = size(W, 1)                  # number of nodes
 
-    L = copy(W)                    # connection-length matrix
-    A = W .> 0                     # adjacency matrix
-    L[A] .= 1 ./ L[A]
-    
+
+    L = (1 ./ W) .* (W .> 0)
+
     D = Inf .+ zeros(n, n)            # distance matrix
-    D[1:n + 1:end] .= 0
+    D = D .* (Matrix(I(n)) .!= 1)
 
 
     for u in 1:n
@@ -193,12 +192,29 @@ function global_efficiency(W)
         W1_ = copy(L)
         V = [u]
         while true
-            S[V] .= false              # distance u->V is now permanent
-            W1_[:, V] .= 0            # no in-edges as already shortest
+            tempS = Zygote.Buffer(S)
+            tempS[:] = S
             for v in V
+                tempS[v] = false        # distance v->u is now permanent
+            end
+            S = copy(tempS)
+
+            tempW1_ = Zygote.Buffer(W1_)
+            tempW1_[:, :] = W1_
+            for v in V
+                for i in 1:size(W1_, 1)
+                    tempW1_[i, v] = 0 # no in-edges as already shortest # tempW1_[:, V] .= 0      
+                end
+            end
+
+            W1_ = copy(tempW1_)
+
+            for v in V
+                tempD = Zygote.Buffer(D)
+                tempD[:, :] = D
                 T = findall(W1_[v, :] .> 0) # neighbours of shortest nodes
-                
-                D[u, T] .= min.(D[u, T], D[u, v] .+ W1_[v, T]) # smallest of old/new path lengths
+                tempD[u, T] = min.(D[u, T], D[u, v] .+ W1_[v, T]) # smallest of old/new path lengths
+                D = copy(tempD)
             end
 
             minD = sum(D[u, S]) > 0 ? minimum(D[u, S]) : []
@@ -210,11 +226,11 @@ function global_efficiency(W)
         end
     end
 
-    D = 1. ./ D                         # invert distance
-    D[1:n + 1:end] .= 0
+    D = 1.0 ./ D                         # invert distance
+    D = D .* (Matrix(I(n)) .!= 1)
 
     di = D
-    E = sum(di) / (n^2 - n)    
+    E = sum(di) / (n^2 - n)
 
     return E
 end

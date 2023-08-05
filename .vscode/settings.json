@@ -82,6 +82,5 @@
         "vector": "cpp"
     },
     "r.lsp.promptToInstall": false,
-    "cmake.configureOnOpen": false,
-    "julia.environmentPath": "/home/mw894/.julia/environments/v1.9"
+    "cmake.configureOnOpen": false
 }
