@@ -1,10 +1,14 @@
 using LinearAlgebra
 using ExponentialUtilities
 using Zygote
-#using Plots
+using Plots
 using Measures
 using StatsBase
 using HDF5
+using Random
+
+
+Random.seed!(1234)
 
 include("gnm/graph_utils.jl")
 include("gnm/test_data.jl")
@@ -18,7 +22,7 @@ function dist_plot(W_Y, dist_tracker)
     ]
 
     # pred
-    dists_Y_pred = [dist_tracker[end][1, :], dist_tracker[end][2, :], dist_tracker[end][3, :]]
+    dists_Y_pred = [dist_tracker[end, 1, :], dist_tracker[end, 2, :], dist_tracker[end, 3, :]]
 
     plots = []
     for (e_Y, e_Y_pred) in zip(dists_Y, dists_Y_pred)
@@ -49,15 +53,19 @@ function dist_plot(W_Y, dist_tracker)
         title=reshape(["Strength", "Weighted clustering", "Weighted betweness"], (1, 3)),
         margin=5mm
     )
+
+    savefig(p, "w_dist.pdf")
 end
 
 function learning_plot(loss_tracker, eval_tracker, η, γ)
     evals = hcat(eval_tracker...)'
-    plot(evals, lw=2, marker=3, label=["Strength" "Clustering" "Betweenness"], margin=5mm, fmt=:pdf)
+    evals = eval_tracker
+    p = plot(evals, lw=2, marker=3, label=["Strength" "Clustering" "Betweenness"], margin=5mm, fmt=:pdf)
     xlabel!("Iteration")
     ylabel!("KS statisitc")
     title!("η =" * string(η) * ", γ =" * string(γ))
     plot!(twinx(), loss_tracker, color=:black, marker=3, linestyle=:dash, legend=false, ylabel="Loss")
+    savefig(p, "learning_curve.pdf")
 end
 
 function callback(x, W_Y, f_loss, eval_tracker, loss_tracker, dist_tracker)
@@ -83,8 +91,7 @@ function callback(x, W_Y, f_loss, eval_tracker, loss_tracker, dist_tracker)
     push!(loss_tracker, cur_loss)
     push!(dist_tracker, energy_W_head)
 
-    println("loss: ", cur_loss)
-    println(K_W)
+    println("loss: ", cur_loss, ", K_W: ", K_W)
 end
 
 function gradient_descent(x, D, W_Y, η, γ, T, callback, eval_tracker, loss_tracker, dist_tracker)
@@ -121,11 +128,14 @@ function gradient_descent(x, D, W_Y, η, γ, T, callback, eval_tracker, loss_tra
     x
 end
 
-function main_local()
+function main_test()
     W_Y, D, _, _ = load_weight_test_data()
     η = 0.001
     γ = 1
     n_iter = 30
+
+    η = 0.002
+    γ = 0.844444
 
     loss_tracker = Float64[]
     eval_tracker = Vector[]
@@ -138,67 +148,52 @@ function main_local()
     x = gradient_descent(triu(W_init), D, W_Y, η, γ, n_iter, callback, eval_tracker, loss_tracker, dist_tracker)
     dist_plot(W_Y, dist_tracker)
     learning_plot(loss_tracker, eval_tracker, η, γ)
+
 end
 
-function main(test_path::Union{String,Nothing}=nothing)
-    if length(ARGS) == 1
-        file_path = ARGS[1]
-    elseif test_path !== nothing
-        file_path = test_path
-    else
-        error("Please provide a data file path.")
-    end
 
-    # load the parameter combination 
-    file = h5open(file_path, "r")
-    meta_group = file["meta"]
-    η = read_attribute(meta_group, "eta")
-    γ = read_attribute(meta_group, "gamma")
-    close(file)
-
-    # only if we have not done this one
-    res_file_path = replace(file_path, r"\.h5$" => ".res")
-    if isfile(res_file_path)
-        println("File already exists: ", res_file_path)
-        return
-    end
-
-    # load the data
+function main()
+    n_iter = 20
     W_Y, D, _, _ = load_weight_test_data()
-    n_iter = 30
-
-    loss_tracker = Float64[]
-    eval_tracker = Vector{Float64}[]
-    dist_tracker = Matrix{Float64}[]
-
-    # intialize
     W_init = rand(size(W_Y)...)
     W_init = W_init .* (W_Y .> 0)
     W_init = Matrix(Symmetric(W_init))
 
-    W_final = gradient_descent(triu(W_init), D, W_Y, η, γ, n_iter, callback, eval_tracker, loss_tracker, dist_tracker)
+    # params
+    n_runs = 100
+    eta_range = [0.001, 0.01] # [0.8, 1.2] omeg
+    gamma_range = [0.8, 1.2]
+    params = generate_param_space(n_runs, eta_range, gamma_range)
 
-    # save the results
-    file = h5open(res_file_path, "w")
+    # write files
+    for n_combi in 1:size(params, 1)
+        η = params[n_combi, 1]
+        γ = params[n_combi, 2]
 
-    write(file, "W_final", W_final)
-    write(file, "loss_tracker", loss_tracker)
-    write(file, "eval_tracker", Matrix(hcat(eval_tracker...)')) # n_iter x 3
+        loss_tracker = Float64[]
+        eval_tracker = Vector[]
+        dist_tracker = Matrix{Float64}[]
+        @time W_final = gradient_descent(triu(W_init), D, W_Y, η, γ, n_iter, callback, eval_tracker, loss_tracker, dist_tracker)
 
+        # save the results
+        file = h5open("/Users/maxwuerfek/code/diss/data/" * string(n_combi) * ".res", "w")
 
-    # niter x 3 x n_nodes
-    distr_tracker_store = zeros(length(dist_tracker), size(dist_tracker[1])...)
-    for (i, dist) in enumerate(dist_tracker)
-        distr_tracker_store[i, :, :] = dist
+        write(file, "W_final", W_final)
+        write(file, "loss_tracker", loss_tracker)
+        write(file, "eval_tracker", Matrix(hcat(eval_tracker...)')) # n_iter x 3
+
+        # niter x 3 x n_nodes
+        distr_tracker_store = zeros(length(dist_tracker), size(dist_tracker[1])...)
+        for (i, dist) in enumerate(dist_tracker)
+            distr_tracker_store[i, :, :] = dist
+        end
+        write(file, "dist_tracker", distr_tracker_store)
+
+        meta_group = create_group(file, "meta")
+        attributes(meta_group)["eta"] = η
+        attributes(meta_group)["gamma"] = γ
+        close(file)
     end
-    write(file, "dist_tracker", distr_tracker_store)
-
-
-    meta_group = create_group(file, "meta")
-    attributes(meta_group)["eta"] = η
-    attributes(meta_group)["gamma"] = γ
-    close(file)
 end
 
-main("/store/DAMTPEGLEN/mw894/data/weighted/sample_01446.h5")
-
+main()

@@ -1,11 +1,17 @@
+using DataFrames
+using HDF5
+using Plots
+using Measures
+
 function load_files()
     # load generate
-    res_files = filter(file -> endswith(file, ".res"), readdir("/store/DAMTPEGLEN/mw894/data/weighted"))
+    dir_p = "./data"
+    res_files = filter(file -> endswith(file, ".res"), readdir(dir_p))
     df_all = DataFrame[]
 
     for (i_res_files, res_file) in enumerate(res_files)
 
-        file = h5open(joinpath("/store/DAMTPEGLEN/mw894/data/weighted", res_file), "r")
+        file = h5open(joinpath(dir_p, res_file), "r")
         df_file = DataFrame()
 
         # read meta data
@@ -19,13 +25,13 @@ function load_files()
         eval_last = eval_tracker[end, :]
         close(file)
 
-        println("File: ", res_file, "params: ", params)
+        println("File: ", res_file)
 
         # make df
-        df_file.file_name = [file_path]
+        df_file.file_name = [joinpath(dir_p, res_file)]
         df_file.eta = [η]
         df_file.gamma = [γ]
-        df_file.loss = [loss_tracker[-1]]
+        df_file.loss = [loss_tracker[end]]
         df_file.KS_S = [eval_last[1]]
         df_file.KS_WC = [eval_last[2]]
         df_file.KS_WB = [eval_last[3]]
@@ -40,11 +46,11 @@ end
 
 function landscape_plot(df)
     # best KS for eta gamma
-    df_eta_gamma = combine(groupby(df, [:eta, :gamma]), :KS_MAX => minimum => :KS_MAX, :KS_S => minimum => :KS_S, :KS_WC => minimum => :KS_WC, :KS_WB => minimum => :KS_WB)
+    df_eta_gamma = combine(groupby(df, [:eta, :gamma]), :KS_W_MAX => minimum => :KS_W_MAX, :KS_S => minimum => :KS_S, :KS_WC => minimum => :KS_WC, :KS_WB => minimum => :KS_WB)
     sort!(df_eta_gamma, [:eta, :gamma])
 
-    landscape = reshape(df_eta_gamma.KS_MAX, (length(unique(df_eta_gamma.eta)), length(unique(df_eta_gamma.gamma))))
-    p1 = heatmap(unique(df_eta_gamma.eta), unique(df_eta_gamma.gamma), landscape, xlabel="eta", ylabel="gamma", title="Best: KS Max", clim=(0, 1), c=:viridis)
+    landscape = reshape(df_eta_gamma.KS_W_MAX, (length(unique(df_eta_gamma.eta)), length(unique(df_eta_gamma.gamma))))
+    p1 = heatmap(unique(df_eta_gamma.eta), unique(df_eta_gamma.gamma), landscape, xlabel="eta", ylabel="gamma", title="Best: KS W Max", clim=(0, 1), c=:viridis)
 
     landscape = reshape(df_eta_gamma.KS_S, (length(unique(df_eta_gamma.eta)), length(unique(df_eta_gamma.gamma))))
     p2 = heatmap(unique(df_eta_gamma.eta), unique(df_eta_gamma.gamma), landscape, xlabel="eta", ylabel="gamma", title="Best: KS S", clim=(0, 1), c=:viridis)
@@ -61,5 +67,9 @@ function landscape_plot(df)
         size=(1500, 1400),
         margin=8mm)
 
-    savefig(p, "/home/mw894/diss/gnm/analysis-weighted/w_landscapes.pdf")
+    savefig(p, "w_landscapes.pdf")
 end
+
+df = load_files()
+landscape_plot(df)
+df[argmin(df.KS_W_MAX), :]
